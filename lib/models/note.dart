@@ -21,6 +21,25 @@ class Note {
     @required this.date,
   });
 
+  Note.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        title = json['title'],
+        content = json['content'],
+        decryptShift = json['decryptShift'],
+        isEncrypted = json['isEncrypted'],
+        password = json['password'],
+        date = json['date'];
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'content': content,
+        'decryptShift': decryptShift,
+        'isEncrypted': isEncrypted,
+        'password': password,
+        'date': date,
+      };
+
   void encrypt() {
     this.decryptShift = Random().nextInt(255);
     StringBuffer encryptedStr = StringBuffer();

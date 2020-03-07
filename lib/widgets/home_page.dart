@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/services/auth_service.dart';
 
+import 'note/note_list.dart';
 import 'note/note_view.dart';
-import 'note/notes.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key}) : super(key: key);
@@ -15,16 +15,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   AuthService _authService = AuthService();
 
-  List<Note> _myNotes = [
-    Note(id: UniqueKey().toString(), title: 'T', date: DateTime.now()),
-    Note(id: UniqueKey().toString(), title: 'Te', date: DateTime.now().subtract(Duration(days: 9))),
-    Note(id: UniqueKey().toString(), title: 'Tes', date: DateTime.now().subtract(Duration(days: 7))),
-    Note(id: UniqueKey().toString(), title: 'Test', date: DateTime.now().subtract(Duration(days: 5))),
-    Note(id: UniqueKey().toString(), title: 'Testi', date: DateTime.now().subtract(Duration(days: 4))),
-    Note(id: UniqueKey().toString(), title: 'Testin', date: DateTime.now().subtract(Duration(days: 2))),
-    Note(id: UniqueKey().toString(), title: 'Testing', date: DateTime.now().subtract(Duration(days: 3))),
-    Note(id: UniqueKey().toString(), title: 'Testing goo', date: DateTime.now().subtract(Duration(days: 1))),
-  ];
+  List<Note> _myNotes = [];
 
   void _newNote() {
     setState(() {
@@ -109,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 top: BorderSide(width: 0.5, color: Colors.grey),
               ),
             ),
-            child: Notes(_myNotes.where((note) => note.title.isNotEmpty || note.content.isNotEmpty).toList()
+            child: NoteList(_myNotes.where((note) => note.title.isNotEmpty || note.content.isNotEmpty).toList()
               ..sort((a, b) => b.date.compareTo(a.date))),
           ),
         ),

@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import '../../models/note.dart';
 import 'note_info.dart';
 
-class Notes extends StatefulWidget {
+class NoteList extends StatefulWidget {
   List<Note> noteList;
 
-  Notes(this.noteList);
+  NoteList(this.noteList);
 
   @override
-  _NotesState createState() => _NotesState();
+  _NoteListState createState() => _NoteListState();
 }
 
-class _NotesState extends State<Notes> {
+class _NoteListState extends State<NoteList> {
   @override
   void initState() {
     super.initState();
