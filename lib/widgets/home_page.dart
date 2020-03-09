@@ -1,8 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:jumblebook/models/note.dart';
+import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/services/db_service.dart';
+import 'package:provider/provider.dart';
 
 import 'note/note_list.dart';
 import 'note/note_view.dart';
@@ -16,38 +17,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   AuthService _authService = AuthService();
-  List<Note> _myNotes = [];
 
-  @override
-  void initState() {
-    getNotes();
-    super.initState();
-  }
-
-  Future getNotes() async {
-    try {
-      FirebaseUser user = await FirebaseAuth.instance.currentUser();
-      _myNotes = await DbService(user.uid).getNotes();
-      _myNotes.where((note) => note.title.isNotEmpty || note.content.isNotEmpty).toList()..sort((a, b) => b.date.compareTo(a.date));
-    } catch (e) {
-      print(e.toString());
-    }
-  }
-
-  void _newNote() {
-    setState(() {
-      _myNotes.add(Note(id: UniqueKey().toString(), date: DateTime.now()));
-    });
+  void _newNote(String uid) {
+    Note newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
+    DbService(uid).updateNote(newNote);
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NoteView(_myNotes[_myNotes.length - 1]),
+        builder: (context) => NoteView(newNote, uid),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<User>(context);
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -117,14 +101,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 top: BorderSide(width: 0.5, color: Colors.grey),
               ),
             ),
-            child: _myNotes.length > 0 ? NoteList(_myNotes) : null,
+            child: NoteList(),
           ),
         ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32.0),
         child: FloatingActionButton(
-          onPressed: _newNote,
+          onPressed: () => _newNote(user.uid),
           tooltip: 'New',
           child: Icon(Icons.add),
         ),

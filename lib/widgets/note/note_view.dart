@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:jumblebook/models/note.dart';
+import 'package:jumblebook/services/db_service.dart';
 
 class NoteView extends StatefulWidget {
-  Note note;
+  final Note note;
+  final String uid;
 
-  NoteView(this.note);
+  NoteView(this.note, this.uid);
 
   @override
   _NoteViewState createState() => _NoteViewState();
@@ -45,6 +47,7 @@ class _NoteViewState extends State<NoteView> {
   @override
   void dispose() {
     // Clean up the focus node and controllers when the note is disposed.
+    DbService(widget.uid).updateNote(widget.note);
     noteContentFocusNode.dispose();
     titleController.dispose();
     noteContentController.dispose();

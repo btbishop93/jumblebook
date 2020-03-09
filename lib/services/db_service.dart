@@ -2,20 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jumblebook/models/note.dart';
 
 class DbService {
-  final CollectionReference notesCollection = Firestore.instance.collection('notes');
+  final CollectionReference notesCollection = Firestore.instance.collection('users');
   final String uid;
-
-  List<Note> notes = [];
 
   DbService(this.uid);
 
   Future updateNote(Note note) async {
-    return await notesCollection.document(uid).setData({'${note.id}': note.toJson()}, merge: true);
+    return await notesCollection.document(uid).collection('notes').document(note.id).setData(note.toJson(), merge: true);
   }
 
-  Future getNotes() async {
-    var fbNotes = await notesCollection.document(uid).get();
-    fbNotes.data.forEach((key, val) => {notes.add(Note.fromJson(val))});
-    return notes;
+  Stream<QuerySnapshot> get notes {
+    return notesCollection.document(uid).collection('notes').snapshots();
+  }
+
+  Future deleteNote(String noteId) {
+    return notesCollection.document(uid).collection('notes').document(noteId).delete();
   }
 }

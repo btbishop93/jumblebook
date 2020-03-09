@@ -16,9 +16,9 @@ class Note {
     @required this.id,
     this.title = "",
     this.content = "",
-    this.decryptShift,
+    this.decryptShift = 0,
     this.isEncrypted = false,
-    this.password,
+    this.password = false,
     @required this.date,
   });
 
@@ -40,6 +40,15 @@ class Note {
         'password': password,
         'date': date,
       };
+
+  Note.fromSnapshot(DocumentSnapshot snapshot)
+      : id = snapshot.data['id'],
+        title = snapshot.data['title'],
+        content = snapshot.data['content'],
+        decryptShift = snapshot.data['decryptShift'],
+        isEncrypted = snapshot.data['isEncrypted'],
+        password = snapshot.data['password'],
+        date = snapshot.data['date'] != null ? (snapshot.data['date'] as Timestamp).toDate() : null;
 
   void encrypt() {
     this.decryptShift = Random().nextInt(255);

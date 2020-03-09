@@ -1,50 +1,55 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:jumblebook/models/note.dart';
+import 'package:jumblebook/models/user.dart';
+import 'package:jumblebook/services/db_service.dart';
+import 'package:provider/provider.dart';
 
-import '../../models/note.dart';
 import 'note_info.dart';
 
 class NoteList extends StatefulWidget {
-  List<Note> noteList;
-
-  NoteList(this.noteList);
-
   @override
   _NoteListState createState() => _NoteListState();
 }
 
 class _NoteListState extends State<NoteList> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: widget.noteList.length,
-      itemBuilder: (context, index) {
-        return Dismissible(
-          direction: DismissDirection.endToStart,
-          key: Key(widget.noteList[index].id),
-          background: Container(
-            alignment: AlignmentDirectional.centerEnd,
-            color: Colors.red,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(0.0, 0.0, 20.0, 0.0),
-              child: Icon(
-                Icons.delete_sweep,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          onDismissed: (direction) {
-            setState(() {
-              widget.noteList.removeAt(index);
-            });
-          },
-          child: NoteInfo(widget.noteList[index]),
-        );
-      },
-    );
+    final user = Provider.of<User>(context);
+    return StreamBuilder<QuerySnapshot>(
+        stream: DbService(user.uid).notes,
+        builder: (context, snapshot) {
+          switch (snapshot.connectionState) {
+            case ConnectionState.none:
+            case ConnectionState.waiting:
+              return Center(child: CircularProgressIndicator());
+            default:
+              var noteList = snapshot.data.documents.map((doc) => Note.fromSnapshot(doc)).toList();
+              return ListView.builder(
+                itemCount: snapshot.data.documents.length,
+                itemBuilder: (context, index) {
+                  return Dismissible(
+                    direction: DismissDirection.endToStart,
+                    key: Key(noteList[index].id),
+                    background: Container(
+                      alignment: AlignmentDirectional.centerEnd,
+                      color: Colors.red,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(0.0, 0.0, 20.0, 0.0),
+                        child: Icon(
+                          Icons.delete_sweep,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    onDismissed: (direction) {
+                      DbService(user.uid).deleteNote(noteList[index].id);
+                    },
+                    child: NoteInfo(noteList[index]),
+                  );
+                },
+              );
+          }
+        });
   }
 }
