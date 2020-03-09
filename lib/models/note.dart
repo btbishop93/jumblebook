@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 
 class Note {
@@ -28,7 +29,7 @@ class Note {
         decryptShift = json['decryptShift'],
         isEncrypted = json['isEncrypted'],
         password = json['password'],
-        date = json['date'];
+        date = (json['date'] as Timestamp).toDate();
 
   Map<String, dynamic> toJson() => {
         'id': id,

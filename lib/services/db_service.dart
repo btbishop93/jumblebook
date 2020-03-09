@@ -5,10 +5,17 @@ class DbService {
   final CollectionReference notesCollection = Firestore.instance.collection('notes');
   final String uid;
 
+  List<Note> notes = [];
+
   DbService(this.uid);
 
-  Future updateUserData(Note note) async {
-    // asd
+  Future updateNote(Note note) async {
     return await notesCollection.document(uid).setData({'${note.id}': note.toJson()}, merge: true);
+  }
+
+  Future getNotes() async {
+    var fbNotes = await notesCollection.document(uid).get();
+    fbNotes.data.forEach((key, val) => {notes.add(Note.fromJson(val))});
+    return notes;
   }
 }
