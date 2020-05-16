@@ -8,6 +8,7 @@ class DbService {
   DbService(this.uid);
 
   Future updateNote(Note note) async {
+    note.date = DateTime.now();
     return await notesCollection.document(uid).collection('notes').document(note.id).setData(note.toJson(), merge: true);
   }
 

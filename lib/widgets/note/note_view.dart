@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/services/db_service.dart';
+import 'package:local_auth/local_auth.dart';
+
+import 'encrypt_prompt.dart';
 
 class NoteView extends StatefulWidget {
   final Note note;
@@ -15,6 +19,8 @@ class NoteView extends StatefulWidget {
 class _NoteViewState extends State<NoteView> {
   final titleController = TextEditingController();
   final noteContentController = TextEditingController();
+  final LocalAuthentication _localAuthentication = LocalAuthentication();
+
   FocusNode titleFocusNode;
   FocusNode noteContentFocusNode;
   bool titleFocused = false;
@@ -84,15 +90,89 @@ class _NoteViewState extends State<NoteView> {
     if (editingNoteContent) {
       _updateNoteContent();
     } else {
-      setState(() {
-        if (!widget.note.isEncrypted) {
-          widget.note.encrypt();
+      if (!widget.note.isEncrypted) {
+        if (widget.note.password.isEmpty) {
+          _encryptNotePrompt();
         } else {
-          widget.note.decrypt();
+          setState(() {
+            widget.note.encrypt();
+            noteContentController.text = widget.note.content;
+          });
         }
+      } else {
+        _decryptNotePrompt();
+      }
+    }
+  }
+
+  // To check if any type of biometric authentication
+  // hardware is available.
+  Future<bool> _isBiometricAvailable() async {
+    bool isAvailable = false;
+    try {
+      isAvailable = await _localAuthentication.canCheckBiometrics;
+    } on PlatformException catch (e) {
+      print(e);
+    }
+
+    if (!mounted) return isAvailable;
+
+    return isAvailable;
+  }
+
+  // Process of authentication user using
+  // biometrics.
+  Future<bool> _authenticateNote() async {
+    bool isAuthenticated = false;
+    try {
+      isAuthenticated = await _localAuthentication.authenticateWithBiometrics(
+        localizedReason: "Please authenticate to view your note",
+        useErrorDialogs: true,
+        stickyAuth: true,
+      );
+    } on PlatformException catch (e) {
+      print(e);
+    }
+
+    if (!mounted) return false;
+
+    return isAuthenticated;
+  }
+
+  void _encryptNotePrompt() async {
+    final Prompt result = await encryptPrompt(context, 'Set a password', widget.note);
+    if (result.password.isNotEmpty) {
+      setState(() {
+        widget.note.password = result.password;
+        widget.note.encrypt();
         noteContentController.text = widget.note.content;
       });
     }
+    DbService(widget.uid).updateNote(widget.note);
+  }
+
+  void _decryptNotePrompt() async {
+    Prompt result = new Prompt("", 0);
+    if (await _isBiometricAvailable()) {
+      if (await _authenticateNote()) {
+      } else {
+        result = await encryptPrompt(context, 'Enter password', widget.note);
+      }
+    } else {
+      result = await encryptPrompt(context, 'Enter password', widget.note);
+    }
+    setState(() {
+      widget.note.lockCounter = result.lockCounter;
+    });
+    if (result.password == widget.note.password) {
+      setState(() {
+        widget.note.lockCounter = 0;
+        widget.note.decrypt();
+        noteContentController.text = widget.note.content;
+      });
+    }
+    DbService(widget.uid).updateNote(widget.note);
+// TODO: if biometrics and/or password fails, delete note (max 5 tries, 2 bio, 3 password attempts)
   }
 
   Widget _getAppBarTitle() {
@@ -156,6 +236,7 @@ class _NoteViewState extends State<NoteView> {
           child: Container(
             padding: EdgeInsets.only(left: 15.0, right: 15.0),
             child: TextField(
+              enabled: !widget.note.isEncrypted,
               controller: noteContentController,
               focusNode: noteContentFocusNode,
               keyboardType: TextInputType.multiline,

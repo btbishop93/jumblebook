@@ -24,7 +24,8 @@ class _NoteListState extends State<NoteList> {
             case ConnectionState.waiting:
               return Center(child: CircularProgressIndicator());
             default:
-              var noteList = snapshot.data.documents.map((doc) => Note.fromSnapshot(doc)).toList();
+              var noteList = snapshot.data.documents.map((doc) => Note.fromSnapshot(doc)).toList()
+                ..sort((a, b) => b.date.compareTo(a.date));
               return ListView.builder(
                 itemCount: snapshot.data.documents.length,
                 itemBuilder: (context, index) {

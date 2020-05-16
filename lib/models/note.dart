@@ -9,8 +9,9 @@ class Note {
   String content;
   int decryptShift;
   bool isEncrypted;
-  var password;
+  String password;
   DateTime date;
+  int lockCounter;
 
   Note({
     @required this.id,
@@ -18,7 +19,8 @@ class Note {
     this.content = "",
     this.decryptShift = 0,
     this.isEncrypted = false,
-    this.password = false,
+    this.lockCounter = 0,
+    this.password = "",
     @required this.date,
   });
 
@@ -28,6 +30,7 @@ class Note {
         content = json['content'],
         decryptShift = json['decryptShift'],
         isEncrypted = json['isEncrypted'],
+        lockCounter = json['lockCounter'],
         password = json['password'],
         date = (json['date'] as Timestamp).toDate();
 
@@ -37,6 +40,7 @@ class Note {
         'content': content,
         'decryptShift': decryptShift,
         'isEncrypted': isEncrypted,
+        'lockCounter': lockCounter,
         'password': password,
         'date': date,
       };
@@ -47,6 +51,7 @@ class Note {
         content = snapshot.data['content'],
         decryptShift = snapshot.data['decryptShift'],
         isEncrypted = snapshot.data['isEncrypted'],
+        lockCounter = snapshot.data['lockCounter'],
         password = snapshot.data['password'],
         date = snapshot.data['date'] != null ? (snapshot.data['date'] as Timestamp).toDate() : null;
 
