@@ -36,6 +36,8 @@ class _NoteViewState extends State<NoteView> {
         titleFocused = titleFocusNode.hasFocus;
         if (titleFocused == false) {
           this._updateTitle();
+        } else {
+          this._updateNoteContent();
         }
       });
     });
@@ -75,8 +77,8 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _updateNoteContent() {
+    noteContentFocusNode.unfocus();
     final inputContent = noteContentController.text;
-    FocusScope.of(context).unfocus();
     if (inputContent.isEmpty) {
       return;
     }
@@ -179,9 +181,10 @@ class _NoteViewState extends State<NoteView> {
     return widget.note.title.isNotEmpty && !titleFocused
         ? GestureDetector(
             onTap: () {
+              noteContentFocusNode.unfocus();
               setState(() {
-                titleController.text = widget.note.title;
                 titleFocused = true;
+                titleController.text = widget.note.title;
               });
             },
             child: Text(
@@ -196,7 +199,7 @@ class _NoteViewState extends State<NoteView> {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Title...',
-              hasFloatingPlaceholder: false,
+              floatingLabelBehavior: FloatingLabelBehavior.never,
             ),
             onSubmitted: (_) => _updateTitle(),
           );

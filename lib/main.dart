@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
           primaryColor: Color.fromRGBO(245, 148, 46, 1.0),
           textTheme: TextTheme(
             subtitle1: TextStyle(fontSize: 18.0),
-            button: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+            button: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700),
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
             backgroundColor: Color.fromRGBO(245, 148, 46, 1.0), // Background color (orange in my case).

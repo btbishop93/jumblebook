@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:jumblebook/models/note.dart';
+import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 
 class Prompt {
   String password = "";
@@ -42,45 +43,22 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
               !note.isEncrypted
                   ? TextFormField(
                       obscureText: true,
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(1.0),
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock),
-                        fillColor: Colors.white,
-                        filled: true,
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.white, width: 2),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-                        ),
-                      ),
+                      decoration: CustomInputDecoration.formStyle(context: context, icon: Icon(Icons.lock), labelTextStr: 'Password'),
                       onChanged: (val) {
                         result.password = val;
                       },
+                      textInputAction: TextInputAction.next,
+                      onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                     )
                   : Container(),
               TextFormField(
                 obscureText: true,
                 enabled: result.lockCounter < 3,
-                decoration: InputDecoration(
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  errorMaxLines: 3,
-                  labelText: note.isEncrypted ? 'Password' : 'Confirmation',
-                  errorText: result.lockCounter > 0 ? _getWrongAttemptMessage() : null,
-                  errorStyle: TextStyle(
-                    color: Colors.red, // or any other color
-                  ),
-                  prefixIcon: Icon(Icons.lock),
-                  fillColor: Colors.white,
-                  filled: true,
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white, width: 2),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-                  ),
+                decoration: CustomInputDecoration.formStyle(
+                  context: context,
+                  icon: Icon(Icons.lock),
+                  labelTextStr: note.isEncrypted ? 'Password' : 'Confirmation',
+                  errorTextStr: result.lockCounter > 0 ? _getWrongAttemptMessage() : null,
                 ),
                 validator: (val) {
                   if (val.isEmpty) {
@@ -99,6 +77,8 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
                   }
                 },
                 onChanged: (val) {},
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
               ),
             ],
           ),
