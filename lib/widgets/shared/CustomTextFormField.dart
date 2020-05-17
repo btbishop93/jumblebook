@@ -21,13 +21,16 @@ class CustomInputDecoration {
       prefixIcon: icon,
       fillColor: Colors.white,
       errorMaxLines: 3,
+      focusedErrorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 2),
+      ),
       errorStyle: TextStyle(
         color: Colors.red, // or any other color
       ),
       errorText: errorTextStr,
       filled: true,
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.white, width: 2),
+        borderSide: BorderSide(color: Colors.black26, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),

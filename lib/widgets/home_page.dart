@@ -63,16 +63,25 @@ class _MyHomePageState extends State<MyHomePage> {
               child: DrawerHeader(
                 child: Text(
                   'Settings',
+                  style: TextStyle(fontSize: 18),
                 ),
               ),
             ),
             ListTile(
-              title: Row(
+              title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   FlatButton.icon(
                     icon: Icon(Icons.exit_to_app), //`Icon` to display
                     label: Text('Log out'), //`Text` to display
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _authService.signOut();
+                    },
+                  ),
+                  FlatButton.icon(
+                    icon: Icon(Icons.security), //`Icon` to display
+                    label: Text('Reset password'), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
                       await _authService.signOut();

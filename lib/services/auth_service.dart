@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:jumblebook/models/user.dart';
 
 class AuthService {
@@ -20,6 +21,17 @@ class AuthService {
       AuthResult result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       FirebaseUser fbUser = result.user;
       return _userFromFirebaseUser(fbUser);
+    } on PlatformException catch (err) {
+      // Handle err
+      return err.code;
+    } catch (e) {
+      // other types of Exceptions
+    }
+  }
+
+  Future resetPassword(String password) async {
+    try {
+      // get user
     } catch (e) {
       print(e.toString());
       return null;
@@ -32,9 +44,11 @@ class AuthService {
       AuthResult result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       FirebaseUser fbUser = result.user;
       return _userFromFirebaseUser(fbUser);
+    } on PlatformException catch (err) {
+      // Handle err
+      return err.code;
     } catch (e) {
-      print(e.toString());
-      return null;
+      // other types of Exceptions
     }
   }
 

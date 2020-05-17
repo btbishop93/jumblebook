@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:jumblebook/models/auth_errors.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 import 'package:loading_overlay/loading_overlay.dart';
@@ -15,10 +17,12 @@ class SignIn extends StatefulWidget {
 class _SignInState extends State<SignIn> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  bool _validate = false;
 
-  String email = "";
-  String password = "";
-  String error = "";
+  String _email = "";
+  String _password = "";
+  String _emailErrorText;
+  String _passwordErrorText;
   bool loading = false;
 
   FocusNode _emailFocusNode = new FocusNode();
@@ -35,117 +39,238 @@ class _SignInState extends State<SignIn> {
     setState(() {});
   }
 
+  validateCredentials() async {
+    FocusScope.of(context).unfocus();
+    if (_formKey.currentState.validate()) {
+      _formKey.currentState.save();
+      setState(() {
+        _validate = true;
+        loading = true;
+      });
+      dynamic result = await _authService.signInWithEmailAndPassword(_email, _password);
+      if (result != null) {
+        setState(() {
+          loading = false;
+        });
+        applyErrorCodeResponse(result);
+      }
+    } else {
+      setState(() {
+        _validate = true;
+      });
+    }
+  }
+
+  String validateEmail(String value) {
+    Pattern pattern =
+        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+    RegExp regex = new RegExp(pattern);
+    if (!regex.hasMatch(value))
+      return 'Enter a valid email.';
+    else
+      return null;
+  }
+
+  String validatePassword(String value) {
+    return value.length == 0 ? 'Enter a password.' : null;
+  }
+
+  applyErrorCodeResponse(String code) {
+    AuthError reason = AuthError.values.firstWhere((e) => e.toString() == 'AuthError.' + code, orElse: () => null);
+    setState(() {
+      switch (reason) {
+        case AuthError.ERROR_USER_NOT_FOUND:
+          {
+            _emailErrorText = "We could not find an account for that email address.";
+            FocusScope.of(context).requestFocus(_emailFocusNode);
+          }
+          break;
+        default:
+          {
+            _passwordErrorText = "The email or password you entered is incorrect.";
+            FocusScope.of(context).requestFocus(_passwordFocusNode);
+          }
+          break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-//        appBar: AppBar(
-//          title: Image.asset(
-//            'assets/images/title.png',
-//            fit: BoxFit.contain,
-//            height: 36,
-//          ),
-//          backgroundColor: Colors.transparent,
-//          elevation: 0,
-//        ),
-        body: LoadingOverlay(
-      color: Colors.grey,
-      isLoading: loading,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(width: 0.5, color: Colors.grey),
-          ),
-        ),
+        body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).requestFocus(new FocusNode());
+      },
+      child: LoadingOverlay(
+        color: Colors.grey,
+        isLoading: loading,
         child: Container(
-          padding: EdgeInsets.all(30),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/title.png',
-                  fit: BoxFit.contain,
-                  height: 36,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  keyboardType: TextInputType.emailAddress,
-                  focusNode: _emailFocusNode,
-                  decoration: CustomInputDecoration.formStyle(
-                    context: context,
-                    icon: Icon(Icons.email),
-                    labelTextStr: 'Email',
-                    floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 0.5, color: Colors.grey),
+            ),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.all(30),
+                child: Form(
+                  key: _formKey,
+                  autovalidate: _validate,
+                  child: Container(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        Image.asset(
+                          'assets/images/title.png',
+                          fit: BoxFit.contain,
+                          height: 54,
+                        ),
+                        SizedBox(
+                          height: 15,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Login using social media',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.GoogleDark,
+                              onPressed: () {},
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.AppleDark,
+                              onPressed: () {},
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.Facebook,
+                              onPressed: () {},
+                            ),
+                          ),
+                        ),
+                        Row(children: <Widget>[
+                          Expanded(
+                              child: Divider(
+                            color: Colors.black54,
+                          )),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          ),
+                          Expanded(
+                              child: Divider(
+                            color: Colors.black54,
+                          )),
+                        ]),
+                        SizedBox(height: 10),
+                        TextFormField(
+                          keyboardType: TextInputType.emailAddress,
+                          focusNode: _emailFocusNode,
+                          decoration: CustomInputDecoration.formStyle(
+                            context: context,
+                            icon: Icon(Icons.email),
+                            labelTextStr: 'Email',
+                            floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                            errorTextStr: _emailErrorText,
+                          ),
+                          validator: validateEmail,
+                          onSaved: (val) => _email = val,
+                          onChanged: (val) => setState(() {
+                            _emailErrorText = null;
+                          }),
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        TextFormField(
+                          obscureText: true,
+                          focusNode: _passwordFocusNode,
+                          decoration: CustomInputDecoration.formStyle(
+                            context: context,
+                            icon: Icon(Icons.lock),
+                            labelTextStr: 'Password',
+                            floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                            errorTextStr: _passwordErrorText,
+                          ),
+                          onChanged: (val) => setState(() {
+                            _passwordErrorText = null;
+                          }),
+                          validator: validatePassword,
+                          onSaved: (val) => _password = val,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => validateCredentials(),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        SizedBox(
+                          width: double.maxFinite,
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColor,
+                            textColor: Colors.white,
+                            child: Text("Log in"),
+                            onPressed: validateCredentials,
+                          ),
+                        ),
+                        IntrinsicHeight(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              FlatButton(
+                                textColor: Theme.of(context).primaryColor,
+                                child: Text(
+                                  'Forgot password?',
+                                  style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                                ),
+                                onPressed: () => {},
+                              ),
+                              SizedBox(
+                                height: 20,
+                                width: 5,
+                                child: VerticalDivider(thickness: 1, color: Colors.black54),
+                              ),
+                              FlatButton(
+                                textColor: Theme.of(context).primaryColor,
+                                child: Text(
+                                  'Create an account',
+                                  style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                                ),
+                                onPressed: widget.toggleView,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  validator: (val) => val.isEmpty ? 'Please enter an email' : null,
-                  onChanged: (val) {
-                    setState(() {
-                      email = val;
-                    });
-                  },
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                TextFormField(
-                  obscureText: true,
-                  focusNode: _passwordFocusNode,
-                  decoration: CustomInputDecoration.formStyle(
-                    context: context,
-                    icon: Icon(Icons.lock),
-                    labelTextStr: 'Password',
-                    floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
-                  ),
-                  validator: (val) => val.isEmpty ? 'Please enter a password' : null,
-                  onChanged: (val) {
-                    setState(() {
-                      password = val;
-                    });
-                  },
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
-                ),
-                SizedBox(
-                  height: 45,
-                ),
-                RaisedButton(
-                  color: Theme.of(context).primaryColor,
-                  textColor: Colors.white,
-                  child: Text("Log in"),
-                  onPressed: () async {
-                    if (_formKey.currentState.validate()) {
-                      setState(() {
-                        loading = true;
-                      });
-                      dynamic result = await _authService.signInWithEmailAndPassword(email, password);
-                      if (result == null) {
-                        // handle error results properly, i.e. incorrect email/password, too many login attempts, etc.
-                        setState(() {
-                          loading = false;
-                          error = "Please enter the correct email and/or password.";
-                        });
-                      }
-                    }
-                  },
-                ),
-                Text(
-                  error,
-                  style: TextStyle(color: Colors.red, fontSize: 14),
-                ),
-                FlatButton(
-                  textColor: Theme.of(context).primaryColor,
-                  child: Text(
-                    'I dont have an account',
-                    style: TextStyle(fontWeight: FontWeight.normal),
-                  ),
-                  onPressed: widget.toggleView,
-                ),
-              ],
+              ),
             ),
           ),
         ),

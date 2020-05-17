@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jumblebook/models/auth_errors.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 import 'package:loading_overlay/loading_overlay.dart';
@@ -18,6 +19,8 @@ class _RegisterState extends State<Register> {
   bool _validate = false;
   String _email = "";
   String _password = "";
+  String _emailErrorText;
+  String _passwordErrorText;
   String error = "";
   bool loading = false;
 
@@ -33,6 +36,48 @@ class _RegisterState extends State<Register> {
 
   _onOnFocusNodeEvent() {
     setState(() {});
+  }
+
+  validateCredentials() async {
+    FocusScope.of(context).unfocus();
+    if (_formKey.currentState.validate()) {
+      _formKey.currentState.save();
+      setState(() {
+        _validate = true;
+        loading = true;
+      });
+      dynamic result = await _authService.registerWithEmailAndPassword(_email, _password);
+      if (result != null) {
+        setState(() {
+          loading = false;
+        });
+        applyErrorCodeResponse(result);
+      }
+    } else {
+      setState(() {
+        _validate = true;
+      });
+    }
+  }
+
+  applyErrorCodeResponse(String code) {
+    AuthError reason = AuthError.values.firstWhere((e) => e.toString() == 'AuthError.' + code, orElse: () => null);
+    setState(() {
+      switch (reason) {
+        case AuthError.ERROR_EMAIL_ALREADY_IN_USE:
+          {
+            _emailErrorText = "This email address is already registered.";
+            FocusScope.of(context).requestFocus(_emailFocusNode);
+          }
+          break;
+        default:
+          {
+            _passwordErrorText = "We cannot create your account at this time. Try again later.";
+            FocusScope.of(context).requestFocus(_passwordFocusNode);
+          }
+          break;
+      }
+    });
   }
 
   String validateEmail(String value) {
@@ -55,105 +100,100 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: LoadingOverlay(
-      isLoading: loading,
-      color: Colors.grey,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(width: 0.5, color: Colors.grey),
-          ),
-        ),
+        body: GestureDetector(
+      onTap: () {
+        FocusScope.of(context).requestFocus(new FocusNode());
+      },
+      child: LoadingOverlay(
+        isLoading: loading,
+        color: Colors.grey,
         child: Container(
-          padding: EdgeInsets.all(30),
-          child: Form(
-            key: _formKey,
-            autovalidate: _validate,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/title.png',
-                  fit: BoxFit.contain,
-                  height: 36,
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  focusNode: _emailFocusNode,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: CustomInputDecoration.formStyle(
-                    context: context,
-                    icon: Icon(Icons.email),
-                    labelTextStr: 'Email',
-                    floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 0.5, color: Colors.grey),
+            ),
+          ),
+          child: SingleChildScrollView(
+            child: SafeArea(
+              child: Container(
+                padding: EdgeInsets.all(30),
+                child: Form(
+                  key: _formKey,
+                  autovalidate: _validate,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Image.asset(
+                        'assets/images/title.png',
+                        fit: BoxFit.contain,
+                        height: 54,
+                      ),
+                      SizedBox(
+                        height: 25,
+                      ),
+                      TextFormField(
+                        focusNode: _emailFocusNode,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: CustomInputDecoration.formStyle(
+                          context: context,
+                          icon: Icon(Icons.email),
+                          labelTextStr: 'Email',
+                          floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                          errorTextStr: _emailErrorText,
+                        ),
+                        validator: validateEmail,
+                        onSaved: (val) => _email = val,
+                        onChanged: (val) => setState(() {
+                          _emailErrorText = null;
+                        }),
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      TextFormField(
+                        obscureText: true,
+                        focusNode: _passwordFocusNode,
+                        decoration: CustomInputDecoration.formStyle(
+                          context: context,
+                          icon: Icon(Icons.lock),
+                          labelTextStr: 'Password',
+                          helperTextStr: 'Use 8 or more characters with a mix of letters, numbers & symbols',
+                          floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                        ),
+                        validator: validatePassword,
+                        onSaved: (val) => _password = val,
+                        onChanged: (val) => setState(() {
+                          _passwordErrorText = null;
+                        }),
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => validateCredentials(),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      SizedBox(
+                        width: double.maxFinite,
+                        child: RaisedButton(
+                          color: Theme.of(context).primaryColor,
+                          textColor: Colors.white,
+                          child: Text("Sign up"),
+                          onPressed: validateCredentials,
+                        ),
+                      ),
+                      FlatButton(
+                        textColor: Theme.of(context).primaryColor,
+                        child: Text(
+                          'Log in',
+                          style: TextStyle(fontWeight: FontWeight.normal),
+                        ),
+                        onPressed: widget.toggleView,
+                      ),
+                    ],
                   ),
-                  validator: validateEmail,
-                  onSaved: (val) => _email = val,
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                TextFormField(
-                  obscureText: true,
-                  focusNode: _passwordFocusNode,
-                  decoration: CustomInputDecoration.formStyle(
-                    context: context,
-                    icon: Icon(Icons.lock),
-                    labelTextStr: 'Password',
-                    helperTextStr: 'Use 8 or more characters with a mix of letters, numbers & symbols',
-                    floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
-                  ),
-                  validator: validatePassword,
-                  onSaved: (val) => _password = val,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                RaisedButton(
-                  color: Theme.of(context).primaryColor,
-                  textColor: Colors.white,
-                  child: Text("Sign up"),
-                  onPressed: () async {
-                    if (_formKey.currentState.validate()) {
-                      _formKey.currentState.save();
-                      setState(() {
-                        loading = true;
-                      });
-                      dynamic result = await _authService.registerWithEmailAndPassword(_email, _password);
-                      if (result == null) {
-                        // handle error results properly, i.e. invalid email
-                        setState(() {
-                          loading = false;
-                          error = "There was a problem creating your account. Please verify your email.";
-                        });
-                      }
-                    } else {
-                      // validation error
-                      setState(() {
-                        _validate = true;
-                      });
-                    }
-                  },
-                ),
-                Text(
-                  error,
-                  style: TextStyle(color: Colors.red, fontSize: 14),
-                ),
-                FlatButton(
-                  textColor: Theme.of(context).primaryColor,
-                  child: Text(
-                    'Log in',
-                    style: TextStyle(fontWeight: FontWeight.normal),
-                  ),
-                  onPressed: widget.toggleView,
-                ),
-              ],
+              ),
             ),
           ),
         ),
