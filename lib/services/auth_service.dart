@@ -1,18 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:jumblebook/models/user.dart';
 
-class AuthService {
+class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // convert firebase user to jumblebook user
   User _userFromFirebaseUser(FirebaseUser user) {
-    return user != null ? User(uid: user.uid) : null;
+    return user != null ? User(uid: user.uid, email: user.email) : null;
   }
 
   // auth change user stream
-  Stream<User> get user {
-    return _auth.onAuthStateChanged.map(_userFromFirebaseUser);
+  Future<User> get user {
+    return _auth.currentUser().then((user) => _userFromFirebaseUser(user));
   }
 
   // sign in with email/password
@@ -20,18 +21,18 @@ class AuthService {
     try {
       AuthResult result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       FirebaseUser fbUser = result.user;
+      notifyListeners();
       return _userFromFirebaseUser(fbUser);
     } on PlatformException catch (err) {
-      // Handle err
       return err.code;
     } catch (e) {
-      // other types of Exceptions
+      print(e);
     }
   }
 
-  Future resetPassword(String password) async {
+  Future resetPassword(String email) async {
     try {
-      // get user
+      return await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
       print(e.toString());
       return null;
@@ -43,6 +44,7 @@ class AuthService {
     try {
       AuthResult result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       FirebaseUser fbUser = result.user;
+      notifyListeners();
       return _userFromFirebaseUser(fbUser);
     } on PlatformException catch (err) {
       // Handle err
@@ -55,7 +57,9 @@ class AuthService {
   //sign out
   Future signOut() async {
     try {
-      return await _auth.signOut();
+      var result = await _auth.signOut();
+      notifyListeners();
+      return result;
     } catch (e) {
       print(e.toString());
     }

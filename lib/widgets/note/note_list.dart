@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/db_service.dart';
-import 'package:provider/provider.dart';
 
 import 'note_info.dart';
 
 class NoteList extends StatefulWidget {
+  final User currentUser;
+
+  NoteList(this.currentUser);
+
   @override
   _NoteListState createState() => _NoteListState();
 }
@@ -15,9 +18,8 @@ class NoteList extends StatefulWidget {
 class _NoteListState extends State<NoteList> {
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<User>(context);
     return StreamBuilder<QuerySnapshot>(
-        stream: DbService(user.uid).notes,
+        stream: DbService(widget.currentUser.uid).notes,
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -44,9 +46,9 @@ class _NoteListState extends State<NoteList> {
                       ),
                     ),
                     onDismissed: (direction) {
-                      DbService(user.uid).deleteNote(noteList[index].id);
+                      DbService(widget.currentUser.uid).deleteNote(noteList[index].id);
                     },
-                    child: NoteInfo(noteList[index]),
+                    child: NoteInfo(widget.currentUser, noteList[index]),
                   );
                 },
               );

@@ -3,24 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/models/user.dart';
-import 'package:provider/provider.dart';
 
 import './note_view.dart';
 
 class NoteInfo extends StatelessWidget {
+  final User currentUser;
   final Note inputNote;
 
-  NoteInfo(this.inputNote);
+  NoteInfo(this.currentUser, this.inputNote);
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<User>(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => NoteView(inputNote, user.uid),
+            builder: (context) => NoteView(inputNote, currentUser.uid),
           ),
         );
       },

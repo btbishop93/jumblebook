@@ -4,6 +4,7 @@ import 'package:jumblebook/models/auth_errors.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:provider/provider.dart';
 
 class SignIn extends StatefulWidget {
   final Function toggleView;
@@ -15,7 +16,6 @@ class SignIn extends StatefulWidget {
 }
 
 class _SignInState extends State<SignIn> {
-  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   bool _validate = false;
 
@@ -47,12 +47,14 @@ class _SignInState extends State<SignIn> {
         _validate = true;
         loading = true;
       });
-      dynamic result = await _authService.signInWithEmailAndPassword(_email, _password);
+      dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithEmailAndPassword(_email, _password);
       if (result != null) {
         setState(() {
           loading = false;
         });
-        applyErrorCodeResponse(result);
+        if (result is String) {
+          applyErrorCodeResponse(result);
+        }
       }
     } else {
       setState(() {
@@ -100,7 +102,7 @@ class _SignInState extends State<SignIn> {
     return Scaffold(
         body: GestureDetector(
       onTap: () {
-        FocusScope.of(context).requestFocus(new FocusNode());
+        FocusScope.of(context).unfocus();
       },
       child: LoadingOverlay(
         color: Colors.grey,
@@ -129,63 +131,8 @@ class _SignInState extends State<SignIn> {
                           height: 54,
                         ),
                         SizedBox(
-                          height: 15,
+                          height: 20,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            'Login using social media',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 35,
-                            child: SignInButton(
-                              Buttons.GoogleDark,
-                              onPressed: () {},
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 35,
-                            child: SignInButton(
-                              Buttons.AppleDark,
-                              onPressed: () {},
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 35,
-                            child: SignInButton(
-                              Buttons.Facebook,
-                              onPressed: () {},
-                            ),
-                          ),
-                        ),
-                        Row(children: <Widget>[
-                          Expanded(
-                              child: Divider(
-                            color: Colors.black54,
-                          )),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              "OR",
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                          ),
-                          Expanded(
-                              child: Divider(
-                            color: Colors.black54,
-                          )),
-                        ]),
-                        SizedBox(height: 10),
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           focusNode: _emailFocusNode,
@@ -253,7 +200,7 @@ class _SignInState extends State<SignIn> {
                               SizedBox(
                                 height: 20,
                                 width: 5,
-                                child: VerticalDivider(thickness: 1, color: Colors.black54),
+                                child: VerticalDivider(color: Colors.black54),
                               ),
                               FlatButton(
                                 textColor: Theme.of(context).primaryColor,
@@ -264,6 +211,63 @@ class _SignInState extends State<SignIn> {
                                 onPressed: widget.toggleView,
                               ),
                             ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(children: <Widget>[
+                          Expanded(
+                              child: Divider(
+                            color: Colors.black54,
+                          )),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                          ),
+                          Expanded(
+                              child: Divider(
+                            color: Colors.black54,
+                          )),
+                        ]),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            'Login using social media',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.GoogleDark,
+                              onPressed: () {},
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.AppleDark,
+                              onPressed: () {},
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 35,
+                            child: SignInButton(
+                              Buttons.Facebook,
+                              onPressed: () {},
+                            ),
                           ),
                         ),
                       ],

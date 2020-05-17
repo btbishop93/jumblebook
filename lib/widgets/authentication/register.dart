@@ -3,6 +3,7 @@ import 'package:jumblebook/models/auth_errors.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:provider/provider.dart';
 
 class Register extends StatefulWidget {
   final Function toggleView;
@@ -46,12 +47,14 @@ class _RegisterState extends State<Register> {
         _validate = true;
         loading = true;
       });
-      dynamic result = await _authService.registerWithEmailAndPassword(_email, _password);
+      dynamic result = await Provider.of<AuthService>(context, listen: false).registerWithEmailAndPassword(_email, _password);
       if (result != null) {
         setState(() {
           loading = false;
         });
-        applyErrorCodeResponse(result);
+        if (result is String) {
+          applyErrorCodeResponse(result);
+        }
       }
     } else {
       setState(() {
@@ -102,7 +105,7 @@ class _RegisterState extends State<Register> {
     return Scaffold(
         body: GestureDetector(
       onTap: () {
-        FocusScope.of(context).requestFocus(new FocusNode());
+        FocusScope.of(context).unfocus();
       },
       child: LoadingOverlay(
         isLoading: loading,

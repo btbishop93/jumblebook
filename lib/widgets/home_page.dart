@@ -9,7 +9,9 @@ import 'note/note_list.dart';
 import 'note/note_view.dart';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  final User currentUser;
+
+  MyHomePage(this.currentUser);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -31,7 +33,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<User>(context);
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -76,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     label: Text('Log out'), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
-                      await _authService.signOut();
+                      await Provider.of<AuthService>(context, listen: false).signOut();
                     },
                   ),
                   FlatButton.icon(
@@ -84,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     label: Text('Reset password'), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
-                      await _authService.signOut();
+                      await Provider.of<AuthService>(context, listen: false).signOut();
                     },
                   ),
                 ],
@@ -110,14 +111,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 top: BorderSide(width: 0.5, color: Colors.grey),
               ),
             ),
-            child: NoteList(),
+            child: NoteList(widget.currentUser),
           ),
         ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32.0),
         child: FloatingActionButton(
-          onPressed: () => _newNote(user.uid),
+          onPressed: () => _newNote(widget.currentUser.uid),
           tooltip: 'New',
           child: Icon(Icons.add),
         ),
