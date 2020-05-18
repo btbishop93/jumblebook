@@ -32,7 +32,6 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
       case AuthError.ERROR_USER_NOT_FOUND:
         {
           _emailErrorText = "We could not find an account for that email address.";
-          Navigator.of(context).pop();
           FocusScope.of(context).requestFocus(_emailFocusNode);
         }
         break;

@@ -14,8 +14,9 @@ class InputForm extends StatefulWidget {
 
   // Create a function on parent to setState with updated formData to do xyz.
   final ValueChanged<CustomInputForm> emitFormDataFunction;
+  final CustomInputForm formData;
 
-  InputForm({@required this.formType, this.emitFormDataFunction});
+  InputForm({@required this.formType, this.emitFormDataFunction, this.formData});
 
   @override
   _InputFormState createState() => _InputFormState();
@@ -23,7 +24,7 @@ class InputForm extends StatefulWidget {
 
 class _InputFormState extends State<InputForm> {
   final _formKey = GlobalKey<FormState>();
-  CustomInputForm _formData = CustomInputForm();
+  CustomInputForm _formData;
   bool _validate = false;
   String _emailErrorText;
   String _passwordErrorText;
@@ -34,6 +35,7 @@ class _InputFormState extends State<InputForm> {
   @override
   void initState() {
     super.initState();
+    _formData = widget.formData != null ? widget.formData : CustomInputForm();
     _emailFocusNode.addListener(_onOnFocusNodeEvent);
     _passwordFocusNode.addListener(_onOnFocusNodeEvent);
   }
@@ -62,6 +64,11 @@ class _InputFormState extends State<InputForm> {
         case FormType.LOGIN:
           {
             result = await Provider.of<AuthService>(context, listen: false).signInWithEmailAndPassword(_formData.email, _formData.password);
+          }
+          break;
+        case FormType.FORGOT_PASSWORD:
+          {
+            result = await Provider.of<AuthService>(context, listen: false).resetPassword(_formData.email);
           }
           break;
         default:
