@@ -26,12 +26,13 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
       return null;
   }
 
-  applyErrorCodeResponse(String code) {
+  void applyErrorCodeResponse(String code) {
     AuthError reason = AuthError.values.firstWhere((e) => e.toString() == 'AuthError.' + code, orElse: () => null);
     switch (reason) {
       case AuthError.ERROR_USER_NOT_FOUND:
         {
           _emailErrorText = "We could not find an account for that email address.";
+          Navigator.of(context).pop();
           FocusScope.of(context).requestFocus(_emailFocusNode);
         }
         break;
@@ -41,6 +42,31 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
           FocusScope.of(context).unfocus();
         }
         break;
+    }
+  }
+
+  void validator() async {
+    dynamic result;
+    FocusScope.of(context).unfocus();
+    if (user == null) {
+      if (_formKey.currentState.validate()) {
+        _formKey.currentState.save();
+        result = await Provider.of<AuthService>(context, listen: false).resetPassword(_email);
+        if (result is String) {
+          applyErrorCodeResponse(result);
+        } else {
+          Navigator.of(context).pop('Okay');
+        }
+      } else {
+        _validate = true;
+      }
+    } else {
+      result = await Provider.of<AuthService>(context, listen: false).resetPassword(user.email);
+      if (result is String) {
+        applyErrorCodeResponse(result);
+      } else {
+        Navigator.of(context).pop('Okay');
+      }
     }
   }
 
@@ -57,11 +83,13 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
         title: Center(child: Text(_title)),
         content: Form(
           key: _formKey,
+          autovalidate: _validate,
           child: new Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               user == null
                   ? TextFormField(
+                      focusNode: _emailFocusNode,
                       keyboardType: TextInputType.emailAddress,
                       decoration: CustomInputDecoration.formStyle(
                         context: context,
@@ -117,25 +145,7 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
                 Expanded(
                   child: OutlineButton(
                     child: Text('Ok'),
-                    onPressed: () async {
-                      if (user == null) {
-                        // User is not logged in and providing an email
-                        if (_formKey.currentState.validate()) {
-                          _formKey.currentState.save();
-                          // TODO: send password reset, if success close, if not display errorText
-                          var result = await Provider.of<AuthService>(context, listen: false).resetPassword(_email);
-                          Navigator.of(context).pop('Okay');
-                        } else {
-                          // TODO: handle validators
-                          _validate = true;
-                        }
-                      } else {
-                        // User is logged in
-                        var result = await Provider.of<AuthService>(context, listen: false).resetPassword(user.email);
-                        // TODO: send password reset, if success close, if not display errorText
-                        Navigator.of(context).pop('Okay');
-                      }
-                    },
+                    onPressed: validator,
                   ),
                 ),
               ],
