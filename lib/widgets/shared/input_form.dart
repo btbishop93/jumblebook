@@ -15,8 +15,9 @@ class InputForm extends StatefulWidget {
   // Create a function on parent to setState with updated formData to do xyz.
   final ValueChanged<CustomInputForm> emitFormDataFunction;
   final CustomInputForm formData;
+  Stream<bool> triggerValidation;
 
-  InputForm({@required this.formType, this.emitFormDataFunction, this.formData});
+  InputForm({@required this.formType, this.emitFormDataFunction, this.formData, this.triggerValidation});
 
   @override
   _InputFormState createState() => _InputFormState();
@@ -36,6 +37,13 @@ class _InputFormState extends State<InputForm> {
   void initState() {
     super.initState();
     _formData = widget.formData != null ? widget.formData : CustomInputForm();
+    if (widget.triggerValidation != null) {
+      widget.triggerValidation.listen((bool) {
+        if (bool == true) {
+          validateCredentials();
+        }
+      });
+    }
     _emailFocusNode.addListener(_onOnFocusNodeEvent);
     _passwordFocusNode.addListener(_onOnFocusNodeEvent);
   }
@@ -69,6 +77,13 @@ class _InputFormState extends State<InputForm> {
         case FormType.FORGOT_PASSWORD:
           {
             result = await Provider.of<AuthService>(context, listen: false).resetPassword(_formData.email);
+            if (result == null) {
+              setState(() {
+                _formData.loading = false;
+                _formData.success = true;
+                widget.emitFormDataFunction(_formData);
+              });
+            }
           }
           break;
         default:
@@ -108,10 +123,28 @@ class _InputFormState extends State<InputForm> {
           break;
         default:
           {
-            _passwordErrorText = widget.formType == FormType.REGISTER
-                ? 'We cannot create your account at this time. Try again later.'
-                : 'The email or password you entered is incorrect.';
-            FocusScope.of(context).requestFocus(_passwordFocusNode);
+            switch (widget.formType) {
+              case FormType.REGISTER:
+                {
+                  _emailErrorText = 'We cannot create your account at this time. Try again later.';
+                  FocusScope.of(context).requestFocus(_emailFocusNode);
+                }
+                break;
+              case FormType.LOGIN:
+                {
+                  _passwordErrorText = 'The email or password you entered is incorrect.';
+                  FocusScope.of(context).requestFocus(_passwordFocusNode);
+                }
+                break;
+              case FormType.FORGOT_PASSWORD:
+                {
+                  _passwordErrorText = 'We cannot reset your password at this time. Try again later.';
+                  FocusScope.of(context).requestFocus(_emailFocusNode);
+                }
+                break;
+              default:
+                {}
+            }
           }
           break;
       }
@@ -127,58 +160,69 @@ class _InputFormState extends State<InputForm> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TextFormField(
-            focusNode: _emailFocusNode,
-            keyboardType: TextInputType.emailAddress,
-            decoration: CustomInputDecoration.formStyle(
-              context: context,
-              icon: Icon(Icons.email),
-              labelTextStr: 'Email',
-              floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
-              errorTextStr: _emailErrorText,
-            ),
-            validator: Validator.validateEmail,
-            onSaved: (val) => _formData.email = val,
-            onChanged: (val) => setState(() {
-              _emailErrorText = null;
-            }),
-            textInputAction: TextInputAction.next,
-            onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
-          ),
+          // EMAIL INPUT, NOT FOR ENCRYPT/DECRYPT
+          widget.formType != FormType.ENCRYPT && widget.formType != FormType.DECRYPT
+              ? TextFormField(
+                  focusNode: _emailFocusNode,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: CustomInputDecoration.formStyle(
+                    context: context,
+                    icon: Icon(Icons.email),
+                    labelTextStr: 'Email',
+                    floatingLabel: _emailFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                    errorTextStr: _emailErrorText,
+                  ),
+                  validator: Validator.validateEmail,
+                  onSaved: (val) => _formData.email = val,
+                  onChanged: (val) => setState(() {
+                    _emailErrorText = null;
+                  }),
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                )
+              : Container(),
           SizedBox(
             height: 10,
           ),
-          TextFormField(
-            obscureText: true,
-            focusNode: _passwordFocusNode,
-            decoration: CustomInputDecoration.formStyle(
-              context: context,
-              icon: Icon(Icons.lock),
-              labelTextStr: 'Password',
-              helperTextStr: 'Use 8 or more characters with a mix of letters, numbers & symbols.',
-              floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
-              errorTextStr: _passwordErrorText,
-            ),
-            validator: (val) => Validator.validatePassword(val, widget.formType),
-            onSaved: (val) => _formData.password = val,
-            onChanged: (val) => setState(() {
-              _passwordErrorText = null;
-            }),
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => validateCredentials(),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          SizedBox(
-            width: double.maxFinite,
-            child: RaisedButton(
-              color: Theme.of(context).primaryColor,
-              textColor: Colors.white,
-              child: Text(_submitButton),
-              onPressed: validateCredentials,
-            ),
-          ),
+          // Password INPUT, not for FORGOT_PASSWORD or PASSWORD_RESET forms
+          widget.formType != FormType.FORGOT_PASSWORD && widget.formType != FormType.PASSWORD_RESET
+              ? TextFormField(
+                  obscureText: true,
+                  focusNode: _passwordFocusNode,
+                  decoration: CustomInputDecoration.formStyle(
+                    context: context,
+                    icon: Icon(Icons.lock),
+                    labelTextStr: 'Password',
+                    helperTextStr:
+                        widget.formType == FormType.REGISTER ? 'Use 8 or more characters with a mix of letters, numbers & symbols.' : null,
+                    floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
+                    errorTextStr: _passwordErrorText,
+                  ),
+                  validator: (val) => Validator.validatePassword(val, widget.formType),
+                  onSaved: (val) => _formData.password = val,
+                  onChanged: (val) => setState(() {
+                    _passwordErrorText = null;
+                  }),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => validateCredentials(),
+                )
+              : Container(),
+          widget.formType == FormType.REGISTER || widget.formType == FormType.LOGIN
+              ? SizedBox(
+                  height: 20,
+                )
+              : Container(),
+          widget.formType == FormType.REGISTER || widget.formType == FormType.LOGIN
+              ? SizedBox(
+                  width: double.maxFinite,
+                  child: RaisedButton(
+                    color: Theme.of(context).primaryColor,
+                    textColor: Colors.white,
+                    child: Text(_submitButton),
+                    onPressed: validateCredentials,
+                  ),
+                )
+              : Container(),
         ],
       ),
     );
