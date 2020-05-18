@@ -6,6 +6,8 @@ import 'package:jumblebook/widgets/shared/CustomTextFormField.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:provider/provider.dart';
 
+import 'reset_password.dart';
+
 class SignIn extends StatefulWidget {
   final Function toggleView;
 
@@ -195,7 +197,9 @@ class _SignInState extends State<SignIn> {
                                   'Forgot password?',
                                   style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
                                 ),
-                                onPressed: () => {},
+                                onPressed: () async {
+                                  await resetPasswordPrompt(context, null);
+                                },
                               ),
                               SizedBox(
                                 height: 20,

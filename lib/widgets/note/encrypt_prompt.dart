@@ -14,6 +14,7 @@ class Prompt {
 Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) async {
   final _formKey = GlobalKey<FormState>();
   Prompt result = new Prompt("", note.lockCounter);
+
   String _getWrongAttemptMessage() {
     if (result.lockCounter == 1) {
       return 'Warning! This note will be locked after 2 more failed attempts.';
@@ -43,7 +44,12 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
               !note.isEncrypted
                   ? TextFormField(
                       obscureText: true,
-                      decoration: CustomInputDecoration.formStyle(context: context, icon: Icon(Icons.lock), labelTextStr: 'Password'),
+                      decoration: CustomInputDecoration.formStyle(
+                        context: context,
+                        icon: Icon(Icons.lock),
+                        labelTextStr: 'Password',
+                        noFocusBorderColor: Colors.white,
+                      ),
                       onChanged: (val) {
                         result.password = val;
                       },
@@ -59,6 +65,7 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
                   icon: Icon(Icons.lock),
                   labelTextStr: note.isEncrypted ? 'Password' : 'Confirmation',
                   errorTextStr: result.lockCounter > 0 ? _getWrongAttemptMessage() : null,
+                  noFocusBorderColor: Colors.white,
                 ),
                 validator: (val) {
                   if (val.isEmpty) {
@@ -94,6 +101,7 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
                   child: OutlineButton(
                     child: Text('Cancel'),
                     onPressed: () {
+                      result.password = "";
                       Navigator.of(context).pop(result);
                     },
                   ),

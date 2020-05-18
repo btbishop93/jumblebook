@@ -8,6 +8,7 @@ class CustomInputDecoration {
     String hintTextStr = "",
     String errorTextStr,
     String helperTextStr,
+    Color noFocusBorderColor = Colors.black26,
     FloatingLabelBehavior floatingLabel = FloatingLabelBehavior.auto,
   }) {
     return InputDecoration(
@@ -30,7 +31,7 @@ class CustomInputDecoration {
       errorText: errorTextStr,
       filled: true,
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.black26, width: 1),
+        borderSide: BorderSide(color: noFocusBorderColor, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),

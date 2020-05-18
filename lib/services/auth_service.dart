@@ -27,12 +27,16 @@ class AuthService with ChangeNotifier {
       return err.code;
     } catch (e) {
       print(e);
+      return null;
     }
   }
 
   Future resetPassword(String email) async {
     try {
       return await _auth.sendPasswordResetEmail(email: email);
+    } on PlatformException catch (err) {
+      // Handle err
+      return err.code;
     } catch (e) {
       print(e.toString());
       return null;
@@ -50,7 +54,8 @@ class AuthService with ChangeNotifier {
       // Handle err
       return err.code;
     } catch (e) {
-      // other types of Exceptions
+      print(e.toString());
+      return null;
     }
   }
 

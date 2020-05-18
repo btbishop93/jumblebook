@@ -29,6 +29,7 @@ class _NoteViewState extends State<NoteView> {
   @override
   void initState() {
     super.initState();
+    DbService(widget.uid).updateNote(widget.note);
     noteContentController.text = widget.note.content;
     titleFocusNode = FocusNode();
     titleFocusNode.addListener(() {

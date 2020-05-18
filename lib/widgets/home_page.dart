@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/auth_service.dart';
-import 'package:jumblebook/services/db_service.dart';
 import 'package:provider/provider.dart';
 
+import 'authentication/reset_password.dart';
 import 'note/note_list.dart';
 import 'note/note_view.dart';
 
@@ -18,11 +18,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  AuthService _authService = AuthService();
-
   void _newNote(String uid) {
     Note newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
-    DbService(uid).updateNote(newNote);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -85,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     label: Text('Reset password'), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
-                      await Provider.of<AuthService>(context, listen: false).signOut();
+                      await resetPasswordPrompt(context, widget.currentUser);
                     },
                   ),
                 ],
