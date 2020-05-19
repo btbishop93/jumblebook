@@ -169,7 +169,7 @@ class _InputFormState extends State<InputForm> {
       autovalidate: _validate,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: widget.formType != FormType.LOGIN && widget.formType != FormType.REGISTER ? MainAxisSize.min : null,
+        mainAxisSize: widget.formType != FormType.LOGIN && widget.formType != FormType.REGISTER ? MainAxisSize.min : MainAxisSize.max,
         children: <Widget>[
           // EMAIL INPUT, NOT FOR ENCRYPT/DECRYPT
           widget.formType != FormType.ENCRYPT && widget.formType != FormType.DECRYPT
@@ -234,7 +234,7 @@ class _InputFormState extends State<InputForm> {
                         ? FloatingLabelBehavior.auto
                         : FloatingLabelBehavior.never,
                     errorTextStr: _passwordErrorText,
-                    noFocusBorderColor: widget.formType == FormType.ENCRYPT ? Colors.white : null,
+                    noFocusBorderColor: widget.formType == FormType.ENCRYPT ? Colors.white : Colors.black26,
                   ),
                   validator: (val) => Validator.validatePassword(value: val, type: widget.formType, formData: _formData),
                   onSaved: (val) => _formData.password = val,
