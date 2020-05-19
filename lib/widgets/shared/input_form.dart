@@ -188,8 +188,12 @@ class _InputFormState extends State<InputForm> {
                   onChanged: (val) => setState(() {
                     _emailErrorText = null;
                   }),
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
+                  textInputAction: widget.formType != FormType.FORGOT_PASSWORD && widget.formType != FormType.PASSWORD_RESET
+                      ? TextInputAction.next
+                      : TextInputAction.send,
+                  onFieldSubmitted: (_) => widget.formType != FormType.FORGOT_PASSWORD && widget.formType != FormType.PASSWORD_RESET
+                      ? FocusScope.of(context).nextFocus()
+                      : validateCredentials(),
                 )
               : TextFormField(
                   enabled: widget.formType == FormType.DECRYPT ? _formData.lockCounter < 3 : true,

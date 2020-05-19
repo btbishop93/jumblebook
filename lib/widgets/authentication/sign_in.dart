@@ -128,7 +128,15 @@ class _SignInState extends State<SignIn> {
                           child: SignInButton(
                             Buttons.AppleDark,
                             onPressed: () async {
-                              await Provider.of<AuthService>(context, listen: false).signInWithApple();
+                              setState(() {
+                                this.loading = true;
+                              });
+                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithApple();
+                              if (result != null) {
+                                setState(() {
+                                  this.loading = false;
+                                });
+                              }
                             },
                           ),
                         ),
@@ -140,7 +148,15 @@ class _SignInState extends State<SignIn> {
                           child: SignInButton(
                             Buttons.GoogleDark,
                             onPressed: () async {
-                              await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
+                              setState(() {
+                                this.loading = true;
+                              });
+                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
+                              if (result != null) {
+                                setState(() {
+                                  this.loading = false;
+                                });
+                              }
                             },
                           ),
                         ),

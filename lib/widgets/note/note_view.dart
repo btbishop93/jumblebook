@@ -158,6 +158,11 @@ class _NoteViewState extends State<NoteView> {
     Prompt result = new Prompt("", 0);
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote()) {
+        setState(() {
+          widget.note.lockCounter = 0;
+          widget.note.decrypt();
+          noteContentController.text = widget.note.content;
+        });
       } else {
         result = await encryptPrompt(context, 'Enter password', widget.note);
       }

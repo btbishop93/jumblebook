@@ -25,13 +25,11 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
           Prompt result = new Prompt("", note.lockCounter);
 
           void onConfirmAction() async {
-            setState(() {
-              if (result.lockCounter < 3) {
-                _controller.add(true);
-              } else {
-                Navigator.of(context).pop(result);
-              }
-            });
+            if (note.lockCounter >= 3) {
+              Navigator.of(context).pop(result);
+            } else {
+              _controller.add(true);
+            }
           }
 
           void _updateFormData(CustomInputForm form) {

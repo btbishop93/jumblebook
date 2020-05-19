@@ -33,11 +33,12 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
         void _updateFormData(CustomInputForm form) {
           setState(() {
             _loading = form.loading;
-            if (form.success == true) {
-              _controller.close();
-              Navigator.of(context).pop('Okay');
-            }
           });
+          if (form.success == true) {
+            _loading = false;
+            _controller.close();
+            Navigator.of(context).pop('Okay');
+          }
         }
 
         return AlertDialog(
