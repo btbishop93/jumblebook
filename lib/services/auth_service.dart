@@ -1,10 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jumblebook/models/user.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // convert firebase user to jumblebook user
   User _userFromFirebaseUser(FirebaseUser user) {
@@ -31,14 +34,47 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future resetPassword(String email) async {
+  // sign in with Google
+  Future signInWithGoogle() async {
     try {
-      return await _auth.sendPasswordResetEmail(email: email);
+      final GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth = await googleSignInAccount.authentication;
+      final AuthCredential authCredential = GoogleAuthProvider.getCredential(
+        idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
+      );
+      FirebaseUser fbUser = (await _auth.signInWithCredential(authCredential)).user;
+      notifyListeners();
+      return _userFromFirebaseUser(fbUser);
     } on PlatformException catch (err) {
-      // Handle err
       return err.code;
     } catch (e) {
-      print(e.toString());
+      print(e);
+      return null;
+    }
+  }
+
+  // sign in with Apple
+  Future signInWithApple() async {
+    try {
+      final AuthorizationCredentialAppleID appleSignInAccount = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final OAuthProvider oAuthProvider = OAuthProvider(providerId: 'apple.com');
+      final AuthCredential authCredential = oAuthProvider.getCredential(
+        idToken: appleSignInAccount.identityToken,
+        accessToken: appleSignInAccount.authorizationCode,
+      );
+      FirebaseUser fbUser = (await _auth.signInWithCredential(authCredential)).user;
+      notifyListeners();
+      return _userFromFirebaseUser(fbUser);
+    } on PlatformException catch (err) {
+      return err.code;
+    } catch (e) {
+      print(e);
       return null;
     }
   }
@@ -50,6 +86,18 @@ class AuthService with ChangeNotifier {
       FirebaseUser fbUser = result.user;
       notifyListeners();
       return _userFromFirebaseUser(fbUser);
+    } on PlatformException catch (err) {
+      // Handle err
+      return err.code;
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  Future resetPassword(String email) async {
+    try {
+      return await _auth.sendPasswordResetEmail(email: email);
     } on PlatformException catch (err) {
       // Handle err
       return err.code;

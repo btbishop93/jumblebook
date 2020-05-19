@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:jumblebook/models/form.dart';
 import 'package:jumblebook/models/user.dart';
+import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/input_form.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:provider/provider.dart';
 
 Future<String> resetPasswordPrompt(BuildContext context, User user) async {
   String _title = user != null ? 'Are you sure?' : 'Forgot password?';
-  StreamController<bool> _controller = StreamController<bool>();
   bool _loading = false;
 
   return showDialog<String>(
@@ -18,14 +19,22 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
     barrierDismissible: false, // dialog is dismissible with a tap on the barrier
     builder: (BuildContext context) {
       return StatefulBuilder(builder: (context, setState) {
+        StreamController<bool> _controller = StreamController<bool>();
+
         void onConfirmReset() async {
-          _controller.add(true);
+          if (user != null) {
+            await Provider.of<AuthService>(context, listen: false).resetPassword(user.email);
+            Navigator.of(context).pop('Okay');
+          } else {
+            _controller.add(true);
+          }
         }
 
         void _updateFormData(CustomInputForm form) {
           setState(() {
             _loading = form.loading;
             if (form.success == true) {
+              _controller.close();
               Navigator.of(context).pop('Okay');
             }
           });

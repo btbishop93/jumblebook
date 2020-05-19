@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/input_form.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:provider/provider.dart';
 
 import 'reset_password.dart';
 
@@ -124,18 +126,10 @@ class _SignInState extends State<SignIn> {
                         child: SizedBox(
                           height: 35,
                           child: SignInButton(
-                            Buttons.GoogleDark,
-                            onPressed: () {},
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 35,
-                          child: SignInButton(
                             Buttons.AppleDark,
-                            onPressed: () {},
+                            onPressed: () async {
+                              await Provider.of<AuthService>(context, listen: false).signInWithApple();
+                            },
                           ),
                         ),
                       ),
@@ -144,8 +138,10 @@ class _SignInState extends State<SignIn> {
                         child: SizedBox(
                           height: 35,
                           child: SignInButton(
-                            Buttons.Facebook,
-                            onPressed: () {},
+                            Buttons.GoogleDark,
+                            onPressed: () async {
+                              await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
+                            },
                           ),
                         ),
                       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:jumblebook/models/auth_errors.dart';
 import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/validators_util.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +17,9 @@ class InputForm extends StatefulWidget {
   final ValueChanged<CustomInputForm> emitFormDataFunction;
   final CustomInputForm formData;
   Stream<bool> triggerValidation;
+  final Note note;
 
-  InputForm({@required this.formType, this.emitFormDataFunction, this.formData, this.triggerValidation});
+  InputForm({@required this.formType, this.emitFormDataFunction, this.formData, this.triggerValidation, this.note});
 
   @override
   _InputFormState createState() => _InputFormState();
@@ -32,6 +34,7 @@ class _InputFormState extends State<InputForm> {
 
   FocusNode _emailFocusNode = new FocusNode();
   FocusNode _passwordFocusNode = new FocusNode();
+  FocusNode _confirmPasswordFocusNode = new FocusNode();
 
   @override
   void initState() {
@@ -46,6 +49,7 @@ class _InputFormState extends State<InputForm> {
     }
     _emailFocusNode.addListener(_onOnFocusNodeEvent);
     _passwordFocusNode.addListener(_onOnFocusNodeEvent);
+    _confirmPasswordFocusNode.addListener(_onOnFocusNodeEvent);
   }
 
   _onOnFocusNodeEvent() {
@@ -101,8 +105,29 @@ class _InputFormState extends State<InputForm> {
     } else {
       setState(() {
         _validate = true;
+        if (widget.formType == FormType.DECRYPT) {
+          widget.formData.password = "";
+          widget.formData.lockCounter++;
+          _getWrongAttemptMessage();
+        }
       });
     }
+  }
+
+  void _getWrongAttemptMessage() {
+    setState(() {
+      if (widget.formData.lockCounter == 1) {
+        _passwordErrorText = 'Warning! This note will be locked after 2 more failed attempts.';
+        FocusScope.of(context).requestFocus(_passwordFocusNode);
+      }
+      if (widget.formData.lockCounter == 2) {
+        _passwordErrorText = 'Warning! This note will be locked after 1 more failed attempt.';
+        FocusScope.of(context).requestFocus(_passwordFocusNode);
+      } else {
+        _passwordErrorText = 'This note is now locked and can only be unlocked via TouchID or FaceID.';
+        FocusScope.of(context).requestFocus(_passwordFocusNode);
+      }
+    });
   }
 
   applyErrorCodeResponse(String code) {
@@ -180,13 +205,8 @@ class _InputFormState extends State<InputForm> {
                   textInputAction: TextInputAction.next,
                   onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                 )
-              : Container(),
-          SizedBox(
-            height: 10,
-          ),
-          // Password INPUT, not for FORGOT_PASSWORD or PASSWORD_RESET forms
-          widget.formType != FormType.FORGOT_PASSWORD && widget.formType != FormType.PASSWORD_RESET
-              ? TextFormField(
+              : TextFormField(
+                  enabled: widget.formType == FormType.DECRYPT ? widget.formData.lockCounter < 3 : true,
                   obscureText: true,
                   focusNode: _passwordFocusNode,
                   decoration: CustomInputDecoration.formStyle(
@@ -197,8 +217,39 @@ class _InputFormState extends State<InputForm> {
                         widget.formType == FormType.REGISTER ? 'Use 8 or more characters with a mix of letters, numbers & symbols.' : null,
                     floatingLabel: _passwordFocusNode.hasFocus ? FloatingLabelBehavior.auto : FloatingLabelBehavior.never,
                     errorTextStr: _passwordErrorText,
+                    noFocusBorderColor: Colors.white,
                   ),
                   validator: (val) => Validator.validatePassword(val, widget.formType),
+                  onSaved: (val) => _formData.password = val,
+                  onChanged: (val) => setState(() {
+                    _passwordErrorText = null;
+                  }),
+                  textInputAction: widget.formType != FormType.ENCRYPT ? TextInputAction.next : TextInputAction.done,
+                  onFieldSubmitted: (_) => widget.formType != FormType.ENCRYPT ? FocusScope.of(context).nextFocus() : validateCredentials(),
+                ),
+          SizedBox(
+            height: 10,
+          ),
+          // Password INPUT, not for FORGOT_PASSWORD or PASSWORD_RESET forms
+          widget.formType != FormType.FORGOT_PASSWORD && widget.formType != FormType.PASSWORD_RESET && widget.formType != FormType.DECRYPT
+              ? TextFormField(
+                  obscureText: true,
+                  focusNode: widget.formType == FormType.ENCRYPT ? _confirmPasswordFocusNode : _passwordFocusNode,
+                  decoration: CustomInputDecoration.formStyle(
+                    context: context,
+                    icon: Icon(Icons.lock),
+                    labelTextStr: widget.formType != FormType.ENCRYPT ? 'Password' : 'Confirm',
+                    helperTextStr:
+                        widget.formType == FormType.REGISTER ? 'Use 8 or more characters with a mix of letters, numbers & symbols.' : null,
+                    floatingLabel: _passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus
+                        ? FloatingLabelBehavior.auto
+                        : FloatingLabelBehavior.never,
+                    errorTextStr: _passwordErrorText,
+                    noFocusBorderColor: widget.formType == FormType.ENCRYPT ? Colors.white : null,
+                  ),
+                  validator: (val) => widget.formType != FormType.ENCRYPT
+                      ? Validator.validatePassword(val, widget.formType)
+                      : widget.formData.password == val,
                   onSaved: (val) => _formData.password = val,
                   onChanged: (val) => setState(() {
                     _passwordErrorText = null;
