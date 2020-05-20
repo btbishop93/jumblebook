@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:jumblebook/models/form.dart';
-import 'package:jumblebook/widgets/shared/input_form.dart';
+import 'package:jumblebook/models/input_form.dart';
+import 'package:jumblebook/widgets/shared/custom_input_form.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 
 class Register extends StatefulWidget {
@@ -15,7 +15,7 @@ class Register extends StatefulWidget {
 class _RegisterState extends State<Register> {
   bool loading = false;
 
-  void _updateFormData(CustomInputForm form) {
+  void _updateFormData(InputForm form) {
     setState(() {
       this.loading = form.loading;
     });
@@ -52,7 +52,7 @@ class _RegisterState extends State<Register> {
                     SizedBox(
                       height: 25,
                     ),
-                    InputForm(
+                    CustomInputForm(
                       formType: FormType.REGISTER,
                       emitFormDataFunction: _updateFormData,
                     ),

@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/models/note.dart';
-import 'package:jumblebook/widgets/shared/input_form.dart';
+import 'package:jumblebook/widgets/shared/custom_input_form.dart';
 
 class Prompt {
   String password = "";
@@ -32,7 +32,7 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
             }
           }
 
-          void _updateFormData(CustomInputForm form) {
+          void _updateFormData(InputForm form) {
             setState(() {
               result.password = form.password;
               if (isEncrypted) {
@@ -58,15 +58,15 @@ Future<Prompt> encryptPrompt(BuildContext context, String title, Note note) asyn
             )),
             title: Center(child: Text(title)),
             content: !isEncrypted
-                ? InputForm(
+                ? CustomInputForm(
                     formType: FormType.ENCRYPT,
                     emitFormDataFunction: _updateFormData,
                     triggerValidation: _controller.stream,
                   )
-                : InputForm(
+                : CustomInputForm(
                     formType: FormType.DECRYPT,
                     emitFormDataFunction: _updateFormData,
-                    formData: CustomInputForm(lockCounter: note.lockCounter, password: note.password),
+                    formData: InputForm(lockCounter: note.lockCounter, password: note.password),
                     triggerValidation: _controller.stream,
                   ),
             actions: <Widget>[

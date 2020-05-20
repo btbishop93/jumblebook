@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
-import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/services/auth_service.dart';
-import 'package:jumblebook/widgets/shared/input_form.dart';
+import 'package:jumblebook/widgets/shared/custom_input_form.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +20,7 @@ class SignIn extends StatefulWidget {
 class _SignInState extends State<SignIn> {
   bool loading = false;
 
-  void _updateFormData(CustomInputForm form) {
+  void _updateFormData(InputForm form) {
     setState(() {
       this.loading = form.loading;
     });
@@ -59,7 +59,7 @@ class _SignInState extends State<SignIn> {
                       SizedBox(
                         height: 25,
                       ),
-                      InputForm(
+                      CustomInputForm(
                         formType: FormType.LOGIN,
                         emitFormDataFunction: _updateFormData,
                       ),

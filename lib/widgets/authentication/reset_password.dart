@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/auth_service.dart';
-import 'package:jumblebook/widgets/shared/input_form.dart';
+import 'package:jumblebook/widgets/shared/custom_input_form.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +30,7 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
           }
         }
 
-        void _updateFormData(CustomInputForm form) {
+        void _updateFormData(InputForm form) {
           setState(() {
             _loading = form.loading;
           });
@@ -55,7 +55,7 @@ Future<String> resetPasswordPrompt(BuildContext context, User user) async {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 user == null
-                    ? InputForm(
+                    ? CustomInputForm(
                         formType: FormType.FORGOT_PASSWORD,
                         emitFormDataFunction: _updateFormData,
                         triggerValidation: _controller.stream,

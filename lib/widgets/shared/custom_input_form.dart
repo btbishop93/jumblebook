@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:jumblebook/models/auth_errors.dart';
-import 'package:jumblebook/models/form.dart';
+import 'package:jumblebook/constants/auth_error.dart';
+import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/services/auth_service.dart';
-import 'package:jumblebook/widgets/shared/validators_util.dart';
+import 'package:jumblebook/utils/validators_util.dart';
 import 'package:provider/provider.dart';
 
-import 'CustomTextFormField.dart';
+import '../../models/custom_input_decoration.dart';
 
 enum FormType { REGISTER, LOGIN, ENCRYPT, DECRYPT, PASSWORD_RESET, FORGOT_PASSWORD }
 
-class InputForm extends StatefulWidget {
+class CustomInputForm extends StatefulWidget {
   final FormType formType;
 
   // Create a function on parent to setState with updated formData to do xyz.
-  final ValueChanged<CustomInputForm> emitFormDataFunction;
-  final CustomInputForm formData;
-  Stream<bool> triggerValidation;
+  final ValueChanged<InputForm> emitFormDataFunction;
+  final InputForm formData;
+  final Stream<bool> triggerValidation;
 
-  InputForm({@required this.formType, this.emitFormDataFunction, this.formData, this.triggerValidation});
+  CustomInputForm({@required this.formType, this.emitFormDataFunction, this.formData, this.triggerValidation});
 
   @override
-  _InputFormState createState() => _InputFormState();
+  _CustomInputFormState createState() => _CustomInputFormState();
 }
 
-class _InputFormState extends State<InputForm> {
+class _CustomInputFormState extends State<CustomInputForm> {
   final _formKey = GlobalKey<FormState>();
-  CustomInputForm _formData;
+  InputForm _formData;
   bool _validate = false;
   String _emailErrorText;
   String _passwordErrorText;
@@ -37,7 +37,7 @@ class _InputFormState extends State<InputForm> {
   @override
   void initState() {
     super.initState();
-    _formData = widget.formData != null ? widget.formData : CustomInputForm();
+    _formData = widget.formData != null ? widget.formData : InputForm();
     if (widget.triggerValidation != null) {
       widget.triggerValidation.listen((bool) {
         if (bool == true) {

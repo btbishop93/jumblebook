@@ -8,16 +8,16 @@ import 'authentication/reset_password.dart';
 import 'note/note_list.dart';
 import 'note/note_view.dart';
 
-class MyHomePage extends StatefulWidget {
+class Home extends StatefulWidget {
   final User currentUser;
 
-  MyHomePage(this.currentUser);
+  Home(this.currentUser);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomeState createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomeState extends State<Home> {
   void _newNote(String uid) {
     Note newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
     Navigator.push(

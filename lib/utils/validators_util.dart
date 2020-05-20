@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:jumblebook/models/form.dart';
-import 'package:jumblebook/widgets/shared/input_form.dart';
+import 'package:jumblebook/models/input_form.dart';
+import 'package:jumblebook/widgets/shared/custom_input_form.dart';
 
 class Validator {
   static String validateEmail(String value) {
@@ -13,7 +13,7 @@ class Validator {
       return null;
   }
 
-  static String validatePassword({@required String value, FormType type, CustomInputForm formData}) {
+  static String validatePassword({@required String value, FormType type, InputForm formData}) {
     if (value.length == 0 && type != FormType.DECRYPT) {
       return 'Enter a password.';
     }
@@ -29,7 +29,7 @@ class Validator {
     return null;
   }
 
-  static decryptAttemptMessage(CustomInputForm formData) {
+  static decryptAttemptMessage(InputForm formData) {
     if (formData.lockCounter == 0) {
       return 'Warning! This note will be locked after 2 more failed attempts.';
     }
