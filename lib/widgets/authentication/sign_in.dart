@@ -130,11 +130,9 @@ class _SignInState extends State<SignIn> {
                                 this.loading = true;
                               });
                               dynamic result = await Provider.of<AuthService>(context, listen: false).signInAsGuest();
-                              if (result != null) {
-                                setState(() {
-                                  this.loading = false;
-                                });
-                              }
+                              setState(() {
+                                this.loading = false;
+                              });
                             },
                           ),
                         ),
@@ -157,11 +155,9 @@ class _SignInState extends State<SignIn> {
                                 this.loading = true;
                               });
                               dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithApple();
-                              if (result != null) {
-                                setState(() {
-                                  this.loading = false;
-                                });
-                              }
+                              setState(() {
+                                this.loading = false;
+                              });
                             },
                           ),
                         ),
@@ -177,11 +173,9 @@ class _SignInState extends State<SignIn> {
                                 this.loading = true;
                               });
                               dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
-                              if (result != null) {
-                                setState(() {
-                                  this.loading = false;
-                                });
-                              }
+                              setState(() {
+                                this.loading = false;
+                              });
                             },
                           ),
                         ),
