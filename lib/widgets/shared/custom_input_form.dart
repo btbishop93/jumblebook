@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:jumblebook/constants/auth_error.dart';
+import 'package:jumblebook/models/custom_input_decoration.dart';
 import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/utils/validators_util.dart';
 import 'package:provider/provider.dart';
-
-import '../../models/custom_input_decoration.dart';
 
 enum FormType { REGISTER, LOGIN, ENCRYPT, DECRYPT, PASSWORD_RESET, FORGOT_PASSWORD }
 

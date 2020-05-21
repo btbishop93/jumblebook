@@ -116,6 +116,31 @@ class _SignInState extends State<SignIn> {
                       ]),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          width: 220,
+                          child: RaisedButton(
+                            color: Theme.of(context).primaryColor,
+                            textColor: Colors.white,
+                            child: Text(
+                              'Sign in as Guest',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            onPressed: () async {
+                              setState(() {
+                                this.loading = true;
+                              });
+                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInAsGuest();
+                              if (result != null) {
+                                setState(() {
+                                  this.loading = false;
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
                           'Login using social media',
                           style: TextStyle(fontSize: 12),
@@ -124,7 +149,7 @@ class _SignInState extends State<SignIn> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SizedBox(
-                          height: 35,
+                          height: 36,
                           child: SignInButton(
                             Buttons.AppleDark,
                             onPressed: () async {
@@ -144,7 +169,7 @@ class _SignInState extends State<SignIn> {
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SizedBox(
-                          height: 35,
+                          height: 36,
                           child: SignInButton(
                             Buttons.GoogleDark,
                             onPressed: () async {

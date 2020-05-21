@@ -77,14 +77,16 @@ class _HomeState extends State<Home> {
                       await Provider.of<AuthService>(context, listen: false).signOut();
                     },
                   ),
-                  FlatButton.icon(
-                    icon: Icon(Icons.security), //`Icon` to display
-                    label: Text('Reset password'), //`Text` to display
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      await resetPasswordPrompt(context, widget.currentUser);
-                    },
-                  ),
+                  !widget.currentUser.isAnonymous
+                      ? FlatButton.icon(
+                          icon: Icon(Icons.security), //`Icon` to display
+                          label: Text('Reset password'), //`Text` to display
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            await resetPasswordPrompt(context, widget.currentUser);
+                          },
+                        )
+                      : Container(),
                 ],
               ),
             ),

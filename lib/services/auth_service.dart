@@ -11,7 +11,7 @@ class AuthService with ChangeNotifier {
 
   // convert firebase user to jumblebook user
   User _userFromFirebaseUser(FirebaseUser user) {
-    return user != null ? User(uid: user.uid, email: user.email) : null;
+    return user != null ? User(uid: user.uid, email: user.email, isAnonymous: user.isAnonymous) : null;
   }
 
   // auth change user stream
@@ -23,6 +23,21 @@ class AuthService with ChangeNotifier {
   Future signInWithEmailAndPassword(String email, String password) async {
     try {
       AuthResult result = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      FirebaseUser fbUser = result.user;
+      notifyListeners();
+      return _userFromFirebaseUser(fbUser);
+    } on PlatformException catch (err) {
+      return err.code;
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
+  // sign in as guest
+  Future signInAsGuest() async {
+    try {
+      AuthResult result = await _auth.signInAnonymously();
       FirebaseUser fbUser = result.user;
       notifyListeners();
       return _userFromFirebaseUser(fbUser);
