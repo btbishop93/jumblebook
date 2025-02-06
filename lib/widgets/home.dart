@@ -11,15 +11,15 @@ import 'note/note_view.dart';
 class Home extends StatefulWidget {
   final User currentUser;
 
-  Home(this.currentUser);
+  const Home(this.currentUser, {super.key});
 
   @override
-  _HomeState createState() => _HomeState();
+  State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
   void _newNote(String uid) {
-    Note newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
+    final newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -39,7 +39,7 @@ class _HomeState extends State<Home> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Color.fromRGBO(245, 148, 46, 1.0)),
+        iconTheme: const IconThemeData(color: Color.fromRGBO(245, 148, 46, 1.0)),
 //        leading: IconButton(
 //          icon: Icon(
 //            Icons.menu,
@@ -56,7 +56,7 @@ class _HomeState extends State<Home> {
           // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
           children: <Widget>[
-            Container(
+            const SizedBox(
               height: 100,
               child: DrawerHeader(
                 child: Text(
@@ -69,24 +69,23 @@ class _HomeState extends State<Home> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  FlatButton.icon(
-                    icon: Icon(Icons.exit_to_app), //`Icon` to display
-                    label: Text('Log out'), //`Text` to display
+                  TextButton.icon(
+                    icon: const Icon(Icons.exit_to_app), //`Icon` to display
+                    label: const Text('Log out'), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
                       await Provider.of<AuthService>(context, listen: false).signOut();
                     },
                   ),
-                  !widget.currentUser.isAnonymous
-                      ? FlatButton.icon(
-                          icon: Icon(Icons.security), //`Icon` to display
-                          label: Text('Reset password'), //`Text` to display
-                          onPressed: () async {
-                            Navigator.pop(context);
-                            await resetPasswordPrompt(context, widget.currentUser);
-                          },
-                        )
-                      : Container(),
+                  if (!widget.currentUser.isAnonymous)
+                    TextButton.icon(
+                      icon: const Icon(Icons.security), //`Icon` to display
+                      label: const Text('Reset password'), //`Text` to display
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await resetPasswordPrompt(context, widget.currentUser);
+                      },
+                    ),
                 ],
               ),
             ),
@@ -97,7 +96,7 @@ class _HomeState extends State<Home> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/background.png'),
             fit: BoxFit.fill,
@@ -107,7 +106,7 @@ class _HomeState extends State<Home> {
           child: Container(
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(width: 0.5, color: Colors.grey),
+                top: BorderSide(width: 0.5, color: Colors.grey.shade400),
               ),
             ),
             child: NoteList(widget.currentUser),
@@ -119,7 +118,7 @@ class _HomeState extends State<Home> {
         child: FloatingActionButton(
           onPressed: () => _newNote(widget.currentUser.uid),
           tooltip: 'New',
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );

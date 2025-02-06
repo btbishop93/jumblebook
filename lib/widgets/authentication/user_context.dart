@@ -7,21 +7,25 @@ import 'package:jumblebook/widgets/shared/loading_indicator.dart';
 import 'package:provider/provider.dart';
 
 class UserContext extends StatelessWidget {
+  const UserContext({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<User>(
+    return FutureBuilder<User?>(
       future: Provider.of<AuthService>(context).user,
-      builder: (context, AsyncSnapshot<User> snapshot) {
+      builder: (context, AsyncSnapshot<User?> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.error != null) {
-            print("error");
+            debugPrint("error: ${snapshot.error}");
             return Text(snapshot.error.toString());
           }
           // redirect to the proper page, pass the user into it
-          return snapshot.hasData ? Home(snapshot.data) : Authenticate();
+          return snapshot.hasData 
+              ? Home(snapshot.data!) 
+              : const Authenticate();
         } else {
           // show loading indicator
-          return LoadingCircle();
+          return const LoadingCircle();
         }
       },
     );

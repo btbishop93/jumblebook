@@ -1,113 +1,113 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/custom_input_form.dart';
-import 'package:loading_overlay/loading_overlay.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:provider/provider.dart';
 
-Future<String> resetPasswordPrompt(BuildContext context, User user) async {
-  String _title = user != null ? 'Are you sure?' : 'Forgot password?';
-  bool _loading = false;
+Future<String?> resetPasswordPrompt(BuildContext context, User? user) async {
+  final title = user != null ? 'Are you sure?' : 'Forgot password?';
+  bool loading = false;
 
   return showDialog<String>(
     context: context,
-    barrierDismissible: false, // dialog is dismissible with a tap on the barrier
+    barrierDismissible: false,
     builder: (BuildContext context) {
-      return StatefulBuilder(builder: (context, setState) {
-        StreamController<bool> _controller = StreamController<bool>();
+      return StatefulBuilder(
+        builder: (context, setState) {
+          final controller = StreamController<bool>();
 
-        void onConfirmReset() async {
-          if (user != null) {
-            await Provider.of<AuthService>(context, listen: false).resetPassword(user.email);
-            Navigator.of(context).pop('Okay');
-          } else {
-            _controller.add(true);
+          void onConfirmReset() async {
+            if (user != null && user.email != null) {
+              await Provider.of<AuthService>(context, listen: false).resetPassword(user.email!);
+              if (context.mounted) {
+                Navigator.of(context).pop('Okay');
+              }
+            } else {
+              controller.add(true);
+            }
           }
-        }
 
-        void _updateFormData(InputForm form) {
-          setState(() {
-            _loading = form.loading;
-          });
-          if (form.success == true) {
-            _loading = false;
-            _controller.close();
-            Navigator.of(context).pop('Okay');
+          void updateFormData(InputForm form) {
+            setState(() {
+              loading = form.loading;
+            });
+            if (form.success == true) {
+              loading = false;
+              controller.close();
+              Navigator.of(context).pop('Okay');
+            }
           }
-        }
 
-        return AlertDialog(
-          buttonPadding: EdgeInsets.all(0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-            Radius.circular(10.0),
-          )),
-          title: Center(child: Text(_title)),
-          content: LoadingOverlay(
-            isLoading: _loading,
-            color: Colors.grey,
-            child: new Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                user == null
-                    ? CustomInputForm(
-                        formType: FormType.FORGOT_PASSWORD,
-                        emitFormDataFunction: _updateFormData,
-                        triggerValidation: _controller.stream,
-                      )
-                    : Column(children: <Widget>[
-                        Text(
+          return AlertDialog(
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+            ),
+            title: Center(child: Text(title)),
+            content: Skeletonizer(
+              enabled: loading,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (user == null)
+                    CustomInputForm(
+                      formType: FormType.FORGOT_PASSWORD,
+                      emitFormDataFunction: updateFormData,
+                      triggerValidation: controller.stream,
+                    )
+                  else
+                    Column(
+                      children: <Widget>[
+                        const Text(
                           'An email with password reset instructions will be sent to',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                          ),
+                          style: TextStyle(fontSize: 14),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Text(
-                          '${user.email}',
+                          user.email ?? '',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ])
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            Container(
-              width: double.maxFinite,
-              height: Theme.of(context).buttonTheme.height * 1.5,
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  Expanded(
-                    child: OutlineButton(
-                      child: Text('Cancel'),
-                      onPressed: () {
-                        Navigator.of(context).pop('Cancel');
-                      },
+                      ],
                     ),
-                  ),
-                  Expanded(
-                    child: OutlineButton(
-                      child: Text('Ok'),
-                      onPressed: onConfirmReset,
-                    ),
-                  ),
                 ],
               ),
             ),
-          ],
-        );
-      });
+            actions: <Widget>[
+              SizedBox(
+                width: double.maxFinite,
+                height: Theme.of(context).buttonTheme.height * 1.5,
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: <Widget>[
+                    Expanded(
+                      child: OutlinedButton(
+                        child: const Text('Cancel'),
+                        onPressed: () {
+                          Navigator.of(context).pop('Cancel');
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: OutlinedButton(
+                        child: const Text('Ok'),
+                        onPressed: onConfirmReset,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      );
     },
   );
 }

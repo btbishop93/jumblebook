@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 
 class Note {
   final String id;
@@ -14,24 +13,24 @@ class Note {
   int lockCounter;
 
   Note({
-    @required this.id,
+    required this.id,
     this.title = "",
     this.content = "",
     this.decryptShift = 0,
     this.isEncrypted = false,
     this.lockCounter = 0,
     this.password = "",
-    @required this.date,
+    required this.date,
   });
 
   Note.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        title = json['title'],
-        content = json['content'],
-        decryptShift = json['decryptShift'],
-        isEncrypted = json['isEncrypted'],
-        lockCounter = json['lockCounter'],
-        password = json['password'],
+      : id = json['id'] as String,
+        title = json['title'] as String? ?? "",
+        content = json['content'] as String? ?? "",
+        decryptShift = json['decryptShift'] as int? ?? 0,
+        isEncrypted = json['isEncrypted'] as bool? ?? false,
+        lockCounter = json['lockCounter'] as int? ?? 0,
+        password = json['password'] as String? ?? "",
         date = (json['date'] as Timestamp).toDate();
 
   Map<String, dynamic> toJson() => {
@@ -45,34 +44,36 @@ class Note {
         'date': date,
       };
 
-  Note.fromSnapshot(DocumentSnapshot snapshot)
-      : id = snapshot.data['id'],
-        title = snapshot.data['title'],
-        content = snapshot.data['content'],
-        decryptShift = snapshot.data['decryptShift'],
-        isEncrypted = snapshot.data['isEncrypted'],
-        lockCounter = snapshot.data['lockCounter'],
-        password = snapshot.data['password'],
-        date = snapshot.data['date'] != null ? (snapshot.data['date'] as Timestamp).toDate() : null;
+  Note.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot)
+      : id = snapshot.data()?['id'] as String? ?? '',
+        title = snapshot.data()?['title'] as String? ?? '',
+        content = snapshot.data()?['content'] as String? ?? '',
+        decryptShift = snapshot.data()?['decryptShift'] as int? ?? 0,
+        isEncrypted = snapshot.data()?['isEncrypted'] as bool? ?? false,
+        lockCounter = snapshot.data()?['lockCounter'] as int? ?? 0,
+        password = snapshot.data()?['password'] as String? ?? '',
+        date = snapshot.data()?['date'] != null 
+            ? (snapshot.data()?['date'] as Timestamp).toDate() 
+            : DateTime.now();
 
   void encrypt() {
-    this.decryptShift = Random().nextInt(255);
-    StringBuffer encryptedStr = StringBuffer();
-    this.content.runes.forEach((int rune) {
-      var char = new String.fromCharCode(rune + this.decryptShift);
+    decryptShift = Random().nextInt(255);
+    final encryptedStr = StringBuffer();
+    content.runes.forEach((int rune) {
+      var char = String.fromCharCode(rune + decryptShift);
       encryptedStr.write(char);
     });
-    this.content = encryptedStr.toString();
-    this.isEncrypted = true;
+    content = encryptedStr.toString();
+    isEncrypted = true;
   }
 
   void decrypt() {
-    StringBuffer decryptedStr = StringBuffer();
-    this.content.runes.forEach((int rune) {
-      var char = new String.fromCharCode(rune - this.decryptShift);
+    final decryptedStr = StringBuffer();
+    content.runes.forEach((int rune) {
+      var char = String.fromCharCode(rune - decryptShift);
       decryptedStr.write(char);
     });
-    this.content = decryptedStr.toString();
-    this.isEncrypted = false;
+    content = decryptedStr.toString();
+    isEncrypted = false;
   }
 }

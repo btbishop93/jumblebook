@@ -10,10 +10,10 @@ class NoteView extends StatefulWidget {
   final Note note;
   final String uid;
 
-  NoteView(this.note, this.uid);
+  const NoteView(this.note, this.uid, {super.key});
 
   @override
-  _NoteViewState createState() => _NoteViewState();
+  State<NoteView> createState() => _NoteViewState();
 }
 
 class _NoteViewState extends State<NoteView> {
@@ -21,8 +21,8 @@ class _NoteViewState extends State<NoteView> {
   final noteContentController = TextEditingController();
   final LocalAuthentication _localAuthentication = LocalAuthentication();
 
-  FocusNode titleFocusNode;
-  FocusNode noteContentFocusNode;
+  late final FocusNode titleFocusNode;
+  late final FocusNode noteContentFocusNode;
   bool titleFocused = false;
   bool noteContentFocused = false;
 
@@ -36,9 +36,9 @@ class _NoteViewState extends State<NoteView> {
       setState(() {
         titleFocused = titleFocusNode.hasFocus;
         if (titleFocused == false) {
-          this._updateTitle();
+          _updateTitle();
         } else {
-          this._updateNoteContent();
+          _updateNoteContent();
         }
       });
     });
@@ -47,7 +47,7 @@ class _NoteViewState extends State<NoteView> {
       setState(() {
         noteContentFocused = noteContentFocusNode.hasFocus;
         if (noteContentFocused == false) {
-          this._updateNoteContent();
+          _updateNoteContent();
         }
       });
     });
@@ -55,7 +55,6 @@ class _NoteViewState extends State<NoteView> {
 
   @override
   void dispose() {
-    // Clean up the focus node and controllers when the note is disposed.
     DbService(widget.uid).updateNote(widget.note);
     noteContentFocusNode.dispose();
     titleController.dispose();
@@ -108,14 +107,12 @@ class _NoteViewState extends State<NoteView> {
     }
   }
 
-  // To check if any type of biometric authentication
-  // hardware is available.
   Future<bool> _isBiometricAvailable() async {
     bool isAvailable = false;
     try {
       isAvailable = await _localAuthentication.canCheckBiometrics;
     } on PlatformException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     if (!mounted) return isAvailable;
@@ -123,18 +120,18 @@ class _NoteViewState extends State<NoteView> {
     return isAvailable;
   }
 
-  // Process of authentication user using
-  // biometrics.
   Future<bool> _authenticateNote() async {
     bool isAuthenticated = false;
     try {
-      isAuthenticated = await _localAuthentication.authenticateWithBiometrics(
+      isAuthenticated = await _localAuthentication.authenticate(
         localizedReason: "Please authenticate to view your note",
-        useErrorDialogs: true,
-        stickyAuth: true,
+        options: const AuthenticationOptions(
+          useErrorDialogs: true,
+          stickyAuth: true,
+        ),
       );
     } on PlatformException catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
 
     if (!mounted) return false;
@@ -143,7 +140,7 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _encryptNotePrompt() async {
-    final Prompt result = await encryptPrompt(context, 'Set a password', widget.note);
+    final result = await encryptPrompt(context, 'Set a password', widget.note);
     if (result.password.isNotEmpty) {
       setState(() {
         widget.note.password = result.password;
@@ -155,7 +152,7 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _decryptNotePrompt() async {
-    Prompt result = new Prompt("", 0);
+    Prompt result = Prompt("", 0);
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote()) {
         setState(() {
@@ -180,7 +177,6 @@ class _NoteViewState extends State<NoteView> {
       });
     }
     DbService(widget.uid).updateNote(widget.note);
-// TODO: if biometrics and/or password fails, delete note (max 5 tries, 2 bio, 3 password attempts)
   }
 
   Widget _getAppBarTitle() {
@@ -202,7 +198,7 @@ class _NoteViewState extends State<NoteView> {
             autofocus: true,
             focusNode: titleFocusNode,
             controller: titleController,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               border: InputBorder.none,
               hintText: 'Title...',
               floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -215,18 +211,19 @@ class _NoteViewState extends State<NoteView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(
+        iconTheme: const IconThemeData(
           color: Color.fromRGBO(253, 129, 8, 1.0),
         ),
         title: _getAppBarTitle(),
         actions: <Widget>[
-          (titleFocused || (!noteContentFocused && widget.note.content.isEmpty))
-              ? Text("")
-              : FlatButton(
-                  textColor: Color.fromRGBO(253, 129, 8, 1.0),
-                  onPressed: () => _actionButtonPressed(noteContentFocused),
-                  child: Text(noteContentFocused ? "Done" : "${widget.note.isEncrypted ? "Unjumble" : "Jumble"}"),
-                ),
+          if (!(titleFocused || (!noteContentFocused && widget.note.content.isEmpty)))
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color.fromRGBO(253, 129, 8, 1.0),
+              ),
+              onPressed: () => _actionButtonPressed(noteContentFocused),
+              child: Text(noteContentFocused ? "Done" : "${widget.note.isEncrypted ? "Unjumble" : "Jumble"}"),
+            ),
         ],
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -235,22 +232,22 @@ class _NoteViewState extends State<NoteView> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/background.png'),
             fit: BoxFit.fill,
           ),
         ),
         child: SafeArea(
-          child: Container(
-            padding: EdgeInsets.only(left: 15.0, right: 15.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
             child: TextField(
               enabled: !widget.note.isEncrypted,
               controller: noteContentController,
               focusNode: noteContentFocusNode,
               keyboardType: TextInputType.multiline,
               maxLines: null,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 border: InputBorder.none,
               ),
             ),

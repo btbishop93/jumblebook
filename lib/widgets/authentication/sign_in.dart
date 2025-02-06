@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/custom_input_form.dart';
-import 'package:loading_overlay/loading_overlay.dart';
+import 'package:sign_in_button/sign_in_button.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:provider/provider.dart';
 
 import 'reset_password.dart';
 
 class SignIn extends StatefulWidget {
-  final Function toggleView;
+  final VoidCallback toggleView;
 
-  SignIn({this.toggleView});
+  const SignIn({required this.toggleView, super.key});
 
   @override
-  _SignInState createState() => _SignInState();
+  State<SignIn> createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
@@ -22,31 +22,29 @@ class _SignInState extends State<SignIn> {
 
   void _updateFormData(InputForm form) {
     setState(() {
-      this.loading = form.loading;
+      loading = form.loading;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-      },
-      child: LoadingOverlay(
-        color: Colors.grey,
-        isLoading: loading,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(width: 0.5, color: Colors.grey),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Skeletonizer(
+          enabled: loading,
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(width: 0.5, color: Colors.grey.shade400),
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.all(30),
-                child: Container(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(30),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.max,
@@ -56,89 +54,102 @@ class _SignInState extends State<SignIn> {
                         fit: BoxFit.contain,
                         height: 54,
                       ),
-                      SizedBox(
-                        height: 25,
-                      ),
+                      const SizedBox(height: 25),
                       CustomInputForm(
                         formType: FormType.LOGIN,
                         emitFormDataFunction: _updateFormData,
                       ),
-                      IntrinsicHeight(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            FlatButton(
-                              textColor: Theme.of(context).primaryColor,
-                              child: Text(
-                                'Forgot password?',
-                                style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: IntrinsicHeight(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Flexible(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Theme.of(context).primaryColor,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  ),
+                                  child: const Text(
+                                    'Forgot password?',
+                                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                                  ),
+                                  onPressed: () async {
+                                    await resetPasswordPrompt(context, null);
+                                  },
+                                ),
                               ),
-                              onPressed: () async {
-                                await resetPasswordPrompt(context, null);
-                              },
-                            ),
-                            SizedBox(
-                              height: 20,
-                              width: 5,
-                              child: VerticalDivider(color: Colors.black54),
-                            ),
-                            FlatButton(
-                              textColor: Theme.of(context).primaryColor,
-                              child: Text(
-                                'Create an account',
-                                style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                              SizedBox(
+                                height: 20,
+                                width: 5,
+                                child: VerticalDivider(color: Colors.grey.shade600),
                               ),
-                              onPressed: widget.toggleView,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Row(children: <Widget>[
-                        Expanded(
-                            child: Divider(
-                          color: Colors.black54,
-                        )),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            "OR",
-                            style: TextStyle(color: Colors.black54),
+                              Flexible(
+                                child: TextButton(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Theme.of(context).primaryColor,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  ),
+                                  child: const Text(
+                                    'Create an account',
+                                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
+                                  ),
+                                  onPressed: widget.toggleView,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Expanded(
-                            child: Divider(
-                          color: Colors.black54,
-                        )),
-                      ]),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Divider(color: Colors.grey.shade600),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              "OR",
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: SizedBox(
                           width: 220,
-                          child: RaisedButton(
-                            color: Theme.of(context).primaryColor,
-                            textColor: Colors.white,
-                            child: Text(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text(
                               'Sign in as Guest',
                               style: TextStyle(fontSize: 14),
                             ),
                             onPressed: () async {
                               setState(() {
-                                this.loading = true;
+                                loading = true;
                               });
-                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInAsGuest();
-                              setState(() {
-                                this.loading = false;
-                              });
+                              await Provider.of<AuthService>(context, listen: false).signInAsGuest();
+                              if (mounted) {
+                                setState(() {
+                                  loading = false;
+                                });
+                              }
                             },
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
                         child: Text(
                           'Login using social media',
                           style: TextStyle(fontSize: 12),
@@ -149,15 +160,17 @@ class _SignInState extends State<SignIn> {
                         child: SizedBox(
                           height: 36,
                           child: SignInButton(
-                            Buttons.AppleDark,
+                            Buttons.appleDark,
                             onPressed: () async {
                               setState(() {
-                                this.loading = true;
+                                loading = true;
                               });
-                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithApple();
-                              setState(() {
-                                this.loading = false;
-                              });
+                              await Provider.of<AuthService>(context, listen: false).signInWithApple();
+                              if (mounted) {
+                                setState(() {
+                                  loading = false;
+                                });
+                              }
                             },
                           ),
                         ),
@@ -167,15 +180,17 @@ class _SignInState extends State<SignIn> {
                         child: SizedBox(
                           height: 36,
                           child: SignInButton(
-                            Buttons.GoogleDark,
+                            Buttons.googleDark,
                             onPressed: () async {
                               setState(() {
-                                this.loading = true;
+                                loading = true;
                               });
-                              dynamic result = await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
-                              setState(() {
-                                this.loading = false;
-                              });
+                              await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
+                              if (mounted) {
+                                setState(() {
+                                  loading = false;
+                                });
+                              }
                             },
                           ),
                         ),
@@ -188,6 +203,6 @@ class _SignInState extends State<SignIn> {
           ),
         ),
       ),
-    ));
+    );
   }
 }

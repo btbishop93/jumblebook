@@ -1,32 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:jumblebook/widgets/authentication/user_context.dart';
 import 'package:provider/provider.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'services/auth_service.dart';
 
-void main() => runApp(
-      ChangeNotifierProvider<AuthService>(
-        child: MyApp(),
-        create: (BuildContext context) {
-          return AuthService();
-        },
-      ),
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    print('Flutter binding initialized');
+    
+    final app = await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
+    print('Firebase initialized successfully');
+    print('Firebase app name: ${app.name}');
+    print('Firebase options: ${app.options.projectId}');
+  } catch (e, stackTrace) {
+    print('Error initializing Firebase: $e');
+    print('Stack trace: $stackTrace');
+    rethrow;
+  }
+  
+  runApp(
+    ChangeNotifierProvider<AuthService>(
+      create: (BuildContext context) => AuthService(),
+      child: const MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Jumblebook',
       theme: ThemeData(
-        primaryColor: Color.fromRGBO(245, 148, 46, 1.0),
-        textTheme: TextTheme(
-          subtitle1: TextStyle(fontSize: 18.0),
-          button: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700),
+        primaryColor: const Color.fromRGBO(245, 148, 46, 1.0),
+        textTheme: const TextTheme(
+          titleMedium: TextStyle(fontSize: 18.0),
+          labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700),
         ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: Color.fromRGBO(245, 148, 46, 1.0), // Background color (orange in my case).
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color.fromRGBO(245, 148, 46, 1.0),
           elevation: 10,
         ),
         buttonBarTheme: ButtonBarThemeData(
@@ -34,8 +53,7 @@ class MyApp extends StatelessWidget {
           buttonHeight: Theme.of(context).buttonTheme.height * 1.5,
         ),
       ),
-//        home: UserContext(),
-      home: UserContext(),
+      home: const UserContext(),
     );
   }
 }
