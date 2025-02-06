@@ -56,22 +56,35 @@ class AuthService with ChangeNotifier {
   // sign in with Google
   Future<dynamic> signInWithGoogle() async {
     try {
+      debugPrint('Starting Google Sign In...');
       final GoogleSignInAccount? googleSignInAccount = await _googleSignIn.signIn();
-      if (googleSignInAccount == null) return null;
+      debugPrint('Google Sign In result: ${googleSignInAccount?.email}');
       
+      if (googleSignInAccount == null) {
+        debugPrint('User cancelled the sign in');
+        return null;
+      }
+      
+      debugPrint('Getting Google auth...');
       final GoogleSignInAuthentication googleAuth = await googleSignInAccount.authentication;
+      debugPrint('Got Google auth tokens');
+      
       final credential = firebase_auth.GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
         accessToken: googleAuth.accessToken,
       );
       
+      debugPrint('Signing in to Firebase...');
       final result = await _auth.signInWithCredential(credential);
+      debugPrint('Firebase sign in complete');
+      
       notifyListeners();
       return _userFromFirebaseUser(result.user);
     } on PlatformException catch (err) {
+      debugPrint('Platform Exception during Google Sign In: ${err.code}');
       return err.code;
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Error during Google Sign In: $e');
       return null;
     }
   }
