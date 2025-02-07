@@ -3,6 +3,8 @@ import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/models/user.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'authentication/reset_password.dart';
 import 'note/note_list.dart';
@@ -19,6 +21,18 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   bool _canResetPassword = false;
+
+  Future<void> _launchBuyMeACoffee() async {
+    final Uri url = Uri.parse('https://buymeacoffee.com/brendenbishop');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the link. Please try again later.'),
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -57,18 +71,8 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Color.fromRGBO(245, 148, 46, 1.0)),
-//        leading: IconButton(
-//          icon: Icon(
-//            Icons.menu,
-//            color: Color.fromRGBO(245, 148, 46, 1.0),
-//          ),
-//          onPressed: () {},
-//        ),
       ),
       drawer: Drawer(
-        // Add a ListView to the drawer. This ensures the user can scroll
-        // through the options in the drawer if there isn't enough vertical
-        // space to fit everything.
         width: MediaQuery.of(context).size.width * 0.8,
         backgroundColor: Colors.white,
         child: ListView(
@@ -129,6 +133,39 @@ class _HomeState extends State<Home> {
                         await resetPasswordPrompt(context, user: widget.currentUser);
                       },
                     ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
+                  ),
+                ),
+              ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Want to support me?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _launchBuyMeACoffee,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      child: SvgPicture.asset(
+                        'assets/images/social/bmc-button.svg',
+                        height: 56,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 36),
+                  Text('Note: All donations are optional and not required to use the app. ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),)
                 ],
               ),
             ),
