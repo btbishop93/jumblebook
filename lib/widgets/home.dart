@@ -52,16 +52,42 @@ class _HomeState extends State<Home> {
         // Add a ListView to the drawer. This ensures the user can scroll
         // through the options in the drawer if there isn't enough vertical
         // space to fit everything.
+        width: MediaQuery.of(context).size.width * 0.8,
+        backgroundColor: Colors.white,
         child: ListView(
-          // Important: Remove any padding from the ListView.
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const SizedBox(
-              height: 100,
-              child: DrawerHeader(
-                child: Text(
-                  'Settings',
-                  style: TextStyle(fontSize: 18),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Row(
+                  children: [
+                    Text(
+                      'Settings',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -70,8 +96,8 @@ class _HomeState extends State<Home> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   TextButton.icon(
-                    icon: const Icon(Icons.exit_to_app), //`Icon` to display
-                    label: const Text('Log out'), //`Text` to display
+                    icon: const Icon(Icons.exit_to_app, color: Color.fromRGBO(245, 148, 46, 1.0),), //`Icon` to display
+                    label: const Text('Log out', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),), //`Text` to display
                     onPressed: () async {
                       Navigator.pop(context);
                       await Provider.of<AuthService>(context, listen: false).signOut();
@@ -79,11 +105,11 @@ class _HomeState extends State<Home> {
                   ),
                   if (!widget.currentUser.isAnonymous)
                     TextButton.icon(
-                      icon: const Icon(Icons.security), //`Icon` to display
-                      label: const Text('Reset password'), //`Text` to display
+                      icon: const Icon(Icons.security, color: Color.fromRGBO(245, 148, 46, 1.0),), //`Icon` to display
+                      label: const Text('Reset password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),), //`Text` to display
                       onPressed: () async {
                         Navigator.pop(context);
-                        await resetPasswordPrompt(context, widget.currentUser);
+                        await resetPasswordPrompt(context, user: widget.currentUser);
                       },
                     ),
                 ],

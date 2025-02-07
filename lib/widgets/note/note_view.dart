@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/services/db_service.dart';
 import 'package:local_auth/local_auth.dart';
 
-import 'encrypt_prompt.dart';
+import 'jumble_prompt.dart';
 
 class NoteView extends StatefulWidget {
   final Note note;
@@ -120,14 +121,15 @@ class _NoteViewState extends State<NoteView> {
     return isAvailable;
   }
 
-  Future<bool> _authenticateNote() async {
+  Future<bool> _authenticateNote(bool useBiometric) async {
     bool isAuthenticated = false;
     try {
       isAuthenticated = await _localAuthentication.authenticate(
         localizedReason: "Please authenticate to view your note",
-        options: const AuthenticationOptions(
+        options: AuthenticationOptions(
           useErrorDialogs: true,
           stickyAuth: true,
+          biometricOnly: useBiometric,
         ),
       );
     } on PlatformException catch (e) {
@@ -140,7 +142,7 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _encryptNotePrompt() async {
-    final result = await encryptPrompt(context, 'Set a password', widget.note);
+    final result = await jumblePrompt(context, 'Jumble this note?', widget.note);
     if (result.password.isNotEmpty) {
       setState(() {
         widget.note.password = result.password;
@@ -154,17 +156,23 @@ class _NoteViewState extends State<NoteView> {
   void _decryptNotePrompt() async {
     Prompt result = Prompt("", 0);
     if (await _isBiometricAvailable()) {
-      if (await _authenticateNote()) {
+      if (await _authenticateNote(true)) {
+        setState(() {
+          widget.note.lockCounter = 0;
+          widget.note.decrypt();
+          noteContentController.text = widget.note.content;
+        });
+      }
+    } else {
+      if (await _authenticateNote(false)) {
         setState(() {
           widget.note.lockCounter = 0;
           widget.note.decrypt();
           noteContentController.text = widget.note.content;
         });
       } else {
-        result = await encryptPrompt(context, 'Enter password', widget.note);
+        result = await jumblePrompt(context, 'Enter your password', widget.note);
       }
-    } else {
-      result = await encryptPrompt(context, 'Enter password', widget.note);
     }
     setState(() {
       widget.note.lockCounter = result.lockCounter;
@@ -192,12 +200,15 @@ class _NoteViewState extends State<NoteView> {
             child: Text(
               widget.note.title,
               overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 18),
             ),
           )
         : TextField(
             autofocus: true,
             focusNode: titleFocusNode,
             controller: titleController,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
               border: InputBorder.none,
               hintText: 'Title...',
@@ -217,12 +228,15 @@ class _NoteViewState extends State<NoteView> {
         title: _getAppBarTitle(),
         actions: <Widget>[
           if (!(titleFocused || (!noteContentFocused && widget.note.content.isEmpty)))
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color.fromRGBO(253, 129, 8, 1.0),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color.fromRGBO(253, 129, 8, 1.0),
+                ),
+                onPressed: () => _actionButtonPressed(noteContentFocused),
+                child: Text(noteContentFocused ? "Done" : widget.note.isEncrypted ? "Unjumble" : "Jumble", style: const TextStyle(fontSize: 14),),
               ),
-              onPressed: () => _actionButtonPressed(noteContentFocused),
-              child: Text(noteContentFocused ? "Done" : "${widget.note.isEncrypted ? "Unjumble" : "Jumble"}"),
             ),
         ],
         backgroundColor: Colors.transparent,
@@ -247,8 +261,23 @@ class _NoteViewState extends State<NoteView> {
               focusNode: noteContentFocusNode,
               keyboardType: TextInputType.multiline,
               maxLines: null,
+              enableInteractiveSelection: true,
+              selectionControls: CupertinoTextSelectionControls(),
+              contextMenuBuilder: (context, editableTextState) {
+                return AdaptiveTextSelectionToolbar.editableText(
+                  editableTextState: editableTextState,
+                );
+              },
+              smartDashesType: SmartDashesType.enabled,
+              smartQuotesType: SmartQuotesType.enabled,
+              enableSuggestions: true,
               decoration: const InputDecoration(
                 border: InputBorder.none,
+                semanticCounterText: '',
+                alignLabelWithHint: true,
+              ),
+              style: const TextStyle(
+                height: 1.5,
               ),
             ),
           ),

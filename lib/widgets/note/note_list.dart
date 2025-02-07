@@ -48,6 +48,7 @@ class _NoteListState extends State<NoteList> {
                       padding: EdgeInsets.fromLTRB(0.0, 0.0, 20.0, 0.0),
                       child: Icon(
                         Icons.delete_sweep,
+                        size: 32,
                         color: Colors.white,
                       ),
                     ),

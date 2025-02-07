@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:jumblebook/widgets/authentication/user_context.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,6 +10,21 @@ Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     print('Flutter binding initialized');
+    
+    // Configure system UI overlay style
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light, // For iOS
+      ),
+    );
+
+    // Ensure the status bar remains visible and prevent system UI changes
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+    );
     
     final app = await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -40,6 +56,13 @@ class MyApp extends StatelessWidget {
       title: 'Jumblebook',
       theme: ThemeData(
         primaryColor: const Color.fromRGBO(245, 148, 46, 1.0),
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light, // For iOS
+          ),
+        ),
         textTheme: const TextTheme(
           titleMedium: TextStyle(fontSize: 18.0),
           labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700),

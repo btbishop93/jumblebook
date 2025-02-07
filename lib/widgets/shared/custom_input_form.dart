@@ -6,6 +6,8 @@ import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/utils/validators_util.dart';
 import 'package:provider/provider.dart';
 
+import '../authentication/reset_password.dart';
+
 class CustomInputForm extends StatefulWidget {
   final FormType formType;
 
@@ -52,8 +54,8 @@ class _CustomInputFormState extends State<CustomInputForm> {
     _passwordFocusNode.addListener(_onFocusNodeEvent);
     _confirmPasswordFocusNode.addListener(_onFocusNodeEvent);
     _passwordErrorText =
-        widget.formType == FormType.DECRYPT && _formData.lockCounter > 0 
-            ? Validator.decryptAttemptMessage(_formData) 
+        widget.formType == FormType.DECRYPT && _formData.lockCounter > 0
+            ? Validator.decryptAttemptMessage(_formData)
             : null;
   }
 
@@ -71,13 +73,14 @@ class _CustomInputFormState extends State<CustomInputForm> {
 
   Future<void> validateCredentials() async {
     if (!mounted) return;
-    
+
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState!.save();
       setState(() {
         _validate = true;
-        _formData.loading = widget.formType == FormType.REGISTER || widget.formType == FormType.LOGIN;
+        _formData.loading = widget.formType == FormType.REGISTER ||
+            widget.formType == FormType.LOGIN;
         _formData.success = widget.formType == FormType.DECRYPT;
         widget.emitFormDataFunction(_formData);
       });
@@ -86,7 +89,8 @@ class _CustomInputFormState extends State<CustomInputForm> {
       switch (widget.formType) {
         case FormType.REGISTER:
           result = await Provider.of<AuthService>(context, listen: false)
-              .registerWithEmailAndPassword(_formData.email, _formData.password);
+              .registerWithEmailAndPassword(
+                  _formData.email, _formData.password);
           break;
         case FormType.LOGIN:
           result = await Provider.of<AuthService>(context, listen: false)
@@ -143,21 +147,25 @@ class _CustomInputFormState extends State<CustomInputForm> {
           FocusScope.of(context).requestFocus(_emailFocusNode);
           break;
         case AuthError.ERROR_USER_NOT_FOUND:
-          _emailErrorText = 'We could not find an account for that email address.';
+          _emailErrorText =
+              'We could not find an account for that email address.';
           FocusScope.of(context).requestFocus(_emailFocusNode);
           break;
         default:
           switch (widget.formType) {
             case FormType.REGISTER:
-              _emailErrorText = 'We cannot create your account at this time. Try again later.';
+              _emailErrorText =
+                  'We cannot create your account at this time. Try again later.';
               FocusScope.of(context).requestFocus(_emailFocusNode);
               break;
             case FormType.LOGIN:
-              _passwordErrorText = 'The email or password you entered is incorrect.';
+              _passwordErrorText =
+                  'The email or password you entered is incorrect.';
               FocusScope.of(context).requestFocus(_passwordFocusNode);
               break;
             case FormType.FORGOT_PASSWORD:
-              _passwordErrorText = 'We cannot reset your password at this time. Try again later.';
+              _passwordErrorText =
+                  'We cannot reset your password at this time. Try again later.';
               FocusScope.of(context).requestFocus(_emailFocusNode);
               break;
             default:
@@ -170,27 +178,32 @@ class _CustomInputFormState extends State<CustomInputForm> {
 
   @override
   Widget build(BuildContext context) {
-    final submitButton = widget.formType == FormType.REGISTER ? 'Sign up' : 'Login';
-    
+    final submitButton =
+        widget.formType == FormType.REGISTER ? 'Sign up' : 'Sign in';
+
     return Form(
       key: _formKey,
-      autovalidateMode: _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
+      autovalidateMode:
+          _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: widget.formType != FormType.LOGIN && widget.formType != FormType.REGISTER 
-            ? MainAxisSize.min 
+        mainAxisSize: widget.formType != FormType.LOGIN &&
+                widget.formType != FormType.REGISTER
+            ? MainAxisSize.min
             : MainAxisSize.max,
         children: <Widget>[
-          if (widget.formType != FormType.ENCRYPT && widget.formType != FormType.DECRYPT)
+          if (widget.formType != FormType.ENCRYPT &&
+              widget.formType != FormType.DECRYPT)
             TextFormField(
               focusNode: _emailFocusNode,
+              autofillHints: [AutofillHints.email],
               keyboardType: TextInputType.emailAddress,
               decoration: CustomInputDecoration.formStyle(
                 context: context,
                 icon: const Icon(Icons.email),
                 labelTextStr: 'Email',
-                floatingLabel: _emailFocusNode.hasFocus 
-                    ? FloatingLabelBehavior.auto 
+                floatingLabel: _emailFocusNode.hasFocus
+                    ? FloatingLabelBehavior.auto
                     : FloatingLabelBehavior.never,
                 errorTextStr: _emailErrorText,
               ),
@@ -198,13 +211,14 @@ class _CustomInputFormState extends State<CustomInputForm> {
               onSaved: (val) => _formData.email = val ?? '',
               onChanged: (val) => setState(() {
                 _emailErrorText = null;
+                _formData.email = val;
               }),
-              textInputAction: widget.formType != FormType.FORGOT_PASSWORD && 
-                             widget.formType != FormType.PASSWORD_RESET
+              textInputAction: widget.formType != FormType.FORGOT_PASSWORD &&
+                      widget.formType != FormType.PASSWORD_RESET
                   ? TextInputAction.next
                   : TextInputAction.send,
               onFieldSubmitted: (_) {
-                if (widget.formType != FormType.FORGOT_PASSWORD && 
+                if (widget.formType != FormType.FORGOT_PASSWORD &&
                     widget.formType != FormType.PASSWORD_RESET) {
                   FocusScope.of(context).nextFocus();
                 } else {
@@ -214,32 +228,38 @@ class _CustomInputFormState extends State<CustomInputForm> {
             )
           else
             TextFormField(
-              enabled: widget.formType == FormType.DECRYPT ? _formData.lockCounter < 3 : true,
+              enabled: widget.formType == FormType.DECRYPT
+                  ? _formData.lockCounter < 3
+                  : true,
               obscureText: true,
+              autofillHints: [AutofillHints.password],
               focusNode: _passwordFocusNode,
               decoration: CustomInputDecoration.formStyle(
                 context: context,
                 icon: const Icon(Icons.lock),
                 labelTextStr: 'Password',
-                helperTextStr: widget.formType == FormType.REGISTER 
-                    ? 'Use 8 or more characters with a mix of letters, numbers & symbols.' 
+                helperTextStr: widget.formType == FormType.REGISTER
+                    ? 'Use 8 or more characters with a mix of letters, numbers & symbols.'
                     : null,
-                floatingLabel: _passwordFocusNode.hasFocus 
-                    ? FloatingLabelBehavior.auto 
+                floatingLabel: _passwordFocusNode.hasFocus
+                    ? FloatingLabelBehavior.auto
                     : FloatingLabelBehavior.never,
                 errorTextStr: _passwordErrorText,
                 noFocusBorderColor: Colors.white,
               ),
               validator: (val) => widget.formType == FormType.ENCRYPT
-                  ? Validator.validatePassword(value: val, type: FormType.ENCRYPT)
-                  : Validator.validatePassword(value: val, type: widget.formType, formData: _formData),
+                  ? Validator.validatePassword(
+                      value: val, type: FormType.ENCRYPT)
+                  : Validator.validatePassword(
+                      value: val, type: widget.formType, formData: _formData),
               onSaved: (val) => _formData.password = val ?? '',
               onChanged: (val) => setState(() {
-                if (widget.formType == FormType.ENCRYPT) _formData.password = val;
+                if (widget.formType == FormType.ENCRYPT)
+                  _formData.password = val;
                 _passwordErrorText = null;
               }),
-              textInputAction: widget.formType == FormType.ENCRYPT 
-                  ? TextInputAction.next 
+              textInputAction: widget.formType == FormType.ENCRYPT
+                  ? TextInputAction.next
                   : TextInputAction.done,
               onFieldSubmitted: (_) {
                 if (widget.formType == FormType.ENCRYPT) {
@@ -250,27 +270,31 @@ class _CustomInputFormState extends State<CustomInputForm> {
               },
             ),
           const SizedBox(height: 10),
-          if (widget.formType != FormType.FORGOT_PASSWORD && 
-              widget.formType != FormType.PASSWORD_RESET && 
+          if (widget.formType != FormType.FORGOT_PASSWORD &&
+              widget.formType != FormType.PASSWORD_RESET &&
               widget.formType != FormType.DECRYPT)
             TextFormField(
               obscureText: true,
-              focusNode: widget.formType == FormType.ENCRYPT 
-                  ? _confirmPasswordFocusNode 
+              autofillHints: [AutofillHints.password],
+              focusNode: widget.formType == FormType.ENCRYPT
+                  ? _confirmPasswordFocusNode
                   : _passwordFocusNode,
               decoration: CustomInputDecoration.formStyle(
                 context: context,
                 icon: const Icon(Icons.lock),
-                labelTextStr: widget.formType != FormType.ENCRYPT ? 'Password' : 'Confirm',
-                helperTextStr: widget.formType == FormType.REGISTER 
-                    ? 'Use 8 or more characters with a mix of letters, numbers & symbols.' 
+                labelTextStr: widget.formType != FormType.ENCRYPT
+                    ? 'Password'
+                    : 'Confirm',
+                helperTextStr: widget.formType == FormType.REGISTER
+                    ? 'Use 8 or more characters with a mix of letters, numbers & symbols.'
                     : null,
-                floatingLabel: _passwordFocusNode.hasFocus || _confirmPasswordFocusNode.hasFocus
+                floatingLabel: _passwordFocusNode.hasFocus ||
+                        _confirmPasswordFocusNode.hasFocus
                     ? FloatingLabelBehavior.auto
                     : FloatingLabelBehavior.never,
                 errorTextStr: _passwordErrorText,
-                noFocusBorderColor: widget.formType == FormType.ENCRYPT 
-                    ? Colors.white 
+                noFocusBorderColor: widget.formType == FormType.ENCRYPT
+                    ? Colors.white
                     : Colors.black26,
               ),
               validator: (val) => Validator.validatePassword(
@@ -285,6 +309,58 @@ class _CustomInputFormState extends State<CustomInputForm> {
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => validateCredentials(),
             ),
+          widget.formType == FormType.LOGIN &&
+              _formData.email != ''
+              ? Align(
+                  alignment: Alignment.topLeft,
+                  child: TextButton(
+                    onPressed: () {
+                      final emailError = Validator.validateEmail(_formData.email);
+                      if (emailError != null) {
+                        setState(() {
+                          _emailErrorText = emailError;
+                          FocusScope.of(context).requestFocus(_emailFocusNode);
+                        });
+                        return;
+                      }
+                      resetPasswordPrompt(context, email: _formData.email);
+                    },
+                    child: Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox(height: 0),
+          const SizedBox(height: 24),
+          widget.formType == FormType.LOGIN
+              ? SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: validateCredentials,
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      submitButton,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox(height: 0),
         ],
       ),
     );

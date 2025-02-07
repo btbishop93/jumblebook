@@ -31,9 +31,9 @@ class NoteInfo extends StatelessWidget {
         ),
         child: Center(
           child: ListTile(
-            title: Text(this.inputNote.title),
-            subtitle: Text(DateFormat.yMd().format(this.inputNote.date)),
-            trailing: Icon(Icons.chevron_right),
+            title: Text(inputNote.title),
+            subtitle: Text(DateFormat.yMd().format(inputNote.date)),
+            trailing: Icon(Icons.chevron_right, size: 32,),
           ),
         ),
       ),

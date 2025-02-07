@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:jumblebook/models/input_form.dart';
 import 'package:jumblebook/services/auth_service.dart';
 import 'package:jumblebook/widgets/shared/custom_input_form.dart';
-import 'package:sign_in_button/sign_in_button.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-import 'reset_password.dart';
+import '../shared/sign_in_button.dart';
 
 class SignIn extends StatefulWidget {
   final VoidCallback toggleView;
@@ -29,175 +30,110 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Skeletonizer(
           enabled: loading,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(width: 0.5, color: Colors.grey.shade400),
-              ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(30),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      Image.asset(
-                        'assets/images/title.png',
-                        fit: BoxFit.contain,
-                        height: 54,
-                      ),
-                      const SizedBox(height: 25),
-                      CustomInputForm(
-                        formType: FormType.LOGIN,
-                        emitFormDataFunction: _updateFormData,
-                      ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 40),
+                  // Logo
+                  Image.asset(
+                    'assets/images/title.png',
+                    height: 54,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 48),
+                  // Social Sign In Buttons
+                  SignInButton(
+                    text: 'Sign in with Google',
+                    icon: SvgPicture.asset(
+                      'assets/images/social/g_logo.svg',
+                      width: 20,
+                      height: 20,
+                    ),
+                    onPressed: () async {
+                      setState(() => loading = true);
+                      await Provider.of<AuthService>(context, listen: false)
+                          .signInWithGoogle();
+                      if (mounted) setState(() => loading = false);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SignInButton(
+                    text: 'Sign in with Apple',
+                    icon: Icon(
+                      FontAwesomeIcons.apple,
+                      size: 24,
+                      color: Colors.black87,
+                    ),
+                    onPressed: () async {
+                      setState(() => loading = true);
+                      await Provider.of<AuthService>(context, listen: false)
+                          .signInWithApple();
+                      if (mounted) setState(() => loading = false);
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                  // Divider
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: IntrinsicHeight(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Flexible(
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Theme.of(context).primaryColor,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  ),
-                                  child: const Text(
-                                    'Forgot password?',
-                                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
-                                  ),
-                                  onPressed: () async {
-                                    await resetPasswordPrompt(context, null);
-                                  },
-                                ),
-                              ),
-                              SizedBox(
-                                height: 20,
-                                width: 5,
-                                child: VerticalDivider(color: Colors.grey.shade600),
-                              ),
-                              Flexible(
-                                child: TextButton(
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Theme.of(context).primaryColor,
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  ),
-                                  child: const Text(
-                                    'Create an account',
-                                    style: TextStyle(fontWeight: FontWeight.normal, fontSize: 14),
-                                  ),
-                                  onPressed: widget.toggleView,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Divider(color: Colors.grey.shade600),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              "OR",
-                              style: TextStyle(color: Colors.grey.shade600),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          width: 220,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text(
-                              'Sign in as Guest',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            onPressed: () async {
-                              setState(() {
-                                loading = true;
-                              });
-                              await Provider.of<AuthService>(context, listen: false).signInAsGuest();
-                              if (mounted) {
-                                setState(() {
-                                  loading = false;
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'Login using social media',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 36,
-                          child: SignInButton(
-                            Buttons.appleDark,
-                            onPressed: () async {
-                              setState(() {
-                                loading = true;
-                              });
-                              await Provider.of<AuthService>(context, listen: false).signInWithApple();
-                              if (mounted) {
-                                setState(() {
-                                  loading = false;
-                                });
-                              }
-                            },
+                          'or',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SizedBox(
-                          height: 36,
-                          child: SignInButton(
-                            Buttons.googleDark,
-                            onPressed: () async {
-                              setState(() {
-                                loading = true;
-                              });
-                              await Provider.of<AuthService>(context, listen: false).signInWithGoogle();
-                              if (mounted) {
-                                setState(() {
-                                  loading = false;
-                                });
-                              }
-                            },
+                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  // Email Sign In Form
+                  CustomInputForm(
+                    formType: FormType.LOGIN,
+                    emitFormDataFunction: _updateFormData,
+                  ),
+                  const SizedBox(height: 32),
+                  // No Account Text
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'No account? ',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: widget.toggleView,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Sign up',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
           ),

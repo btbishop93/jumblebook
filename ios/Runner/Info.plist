@@ -60,5 +60,7 @@
 	<string>Microphone access is needed to convert your speech to text for note taking.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Speech recognition is used to convert your voice into text notes.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This is used to authenticate and unjumble your notes.</string>
 </dict>
 </plist>
