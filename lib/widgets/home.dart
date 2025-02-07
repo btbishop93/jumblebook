@@ -18,6 +18,23 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  bool _canResetPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkResetPasswordAvailability();
+  }
+
+  void _checkResetPasswordAvailability() {
+    if (!mounted) return;
+    
+    final authService = Provider.of<AuthService>(context, listen: false);
+    setState(() {
+      _canResetPassword = !widget.currentUser.isAnonymous && authService.isEmailProvider;
+    });
+  }
+
   void _newNote(String uid) {
     final newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
     Navigator.push(
@@ -103,7 +120,7 @@ class _HomeState extends State<Home> {
                       await Provider.of<AuthService>(context, listen: false).signOut();
                     },
                   ),
-                  if (!widget.currentUser.isAnonymous)
+                  if (_canResetPassword)
                     TextButton.icon(
                       icon: const Icon(Icons.security, color: Color.fromRGBO(245, 148, 46, 1.0),), //`Icon` to display
                       label: const Text('Reset password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),), //`Text` to display

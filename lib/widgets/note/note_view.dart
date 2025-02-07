@@ -111,7 +111,7 @@ class _NoteViewState extends State<NoteView> {
   Future<bool> _isBiometricAvailable() async {
     bool isAvailable = false;
     try {
-      isAvailable = await _localAuthentication.canCheckBiometrics;
+      isAvailable = await _localAuthentication.isDeviceSupported();
     } on PlatformException catch (e) {
       debugPrint(e.toString());
     }
@@ -133,7 +133,23 @@ class _NoteViewState extends State<NoteView> {
         ),
       );
     } on PlatformException catch (e) {
-      debugPrint(e.toString());
+      if (e.code == "NotAvailable") {
+        try {
+          isAuthenticated = await _localAuthentication.authenticate(
+            localizedReason: "Please authenticate to view your note",
+            options: AuthenticationOptions(
+            useErrorDialogs: true,
+            stickyAuth: true,
+            ),
+          );
+        } catch (e) {
+          debugPrint(e.toString());
+          return false;
+        }
+      } else {
+        debugPrint(e.toString());
+        return false;
+      }
     }
 
     if (!mounted) return false;
@@ -162,6 +178,8 @@ class _NoteViewState extends State<NoteView> {
           widget.note.decrypt();
           noteContentController.text = widget.note.content;
         });
+      } else {
+        result = await jumblePrompt(context, 'Enter your password', widget.note);
       }
     } else {
       if (await _authenticateNote(false)) {

@@ -143,6 +143,15 @@ class AuthService with ChangeNotifier {
     }
   }
 
+  bool get isEmailProvider {
+    final user = _auth.currentUser;
+    if (user == null) return true; // Default to true to show option before sign-in
+    
+    // Check if user has email/password provider
+    return user.providerData
+        .any((userInfo) => userInfo.providerId == 'password');
+  }
+
   //sign out
   Future<void> signOut() async {
     try {
