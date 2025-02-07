@@ -165,7 +165,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   const SizedBox(height: 36),
-                  Text('Note: All donations are optional and not required to use the app. ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),)
+                  Text('Note: All donations are optional and not required to use the app.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),)
                 ],
               ),
             ),
