@@ -28,6 +28,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<User> signInWithGoogle() {
+    return _dataSource.signInWithGoogle();
+  }
+
+  @override
+  Future<User> signInWithApple() {
+    return _dataSource.signInWithApple();
+  }
+
+  @override
+  Future<User> signInAnonymously() {
+    return _dataSource.signInAnonymously();
+  }
+
+  @override
   Stream<User?> get authStateChanges => _dataSource.authStateChanges;
 
   @override
