@@ -1,22 +1,13 @@
 import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
-
-class SignInWithEmailParams {
-  final String email;
-  final String password;
-
-  const SignInWithEmailParams({
-    required this.email,
-    required this.password,
-  });
-}
+import 'auth_params.dart';
 
 class SignInWithEmail {
   final AuthRepository repository;
 
   const SignInWithEmail(this.repository);
 
-  Future<User> call(SignInWithEmailParams params) async {
+  Future<User> call(EmailAuthParams params) async {
     if (params.email.isEmpty) {
       throw ArgumentError('Email cannot be empty');
     }

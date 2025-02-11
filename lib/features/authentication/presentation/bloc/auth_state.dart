@@ -60,8 +60,8 @@ final class AuthError extends AuthState {
 }
 
 // State when password reset email is sent
-final class EmailVerificationSent extends AuthState {
-  EmailVerificationSent(AuthData data) : super(
+final class PasswordResetEmailSent extends AuthState {
+  PasswordResetEmailSent(AuthData data) : super(
     data.copyWith(
       isLoading: false,
       errorMessage: null,

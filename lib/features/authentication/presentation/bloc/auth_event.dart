@@ -1,18 +1,17 @@
 import 'package:equatable/equatable.dart';
 
-// Base class for all authentication events
-abstract class AuthEvent extends Equatable {
+sealed class AuthEvent extends Equatable {
   const AuthEvent();
 
   @override
   List<Object?> get props => [];
 }
 
-// Event triggered when checking initial auth state
-class CheckAuthStatus extends AuthEvent {}
+// Check current auth state
+final class CheckAuthStatus extends AuthEvent {}
 
-// Event for email/password sign in
-class SignInWithEmailRequested extends AuthEvent {
+// Email & Password Authentication
+final class SignInWithEmailRequested extends AuthEvent {
   final String email;
   final String password;
 
@@ -25,8 +24,7 @@ class SignInWithEmailRequested extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
-// Event for email/password sign up
-class SignUpWithEmailRequested extends AuthEvent {
+final class SignUpWithEmailRequested extends AuthEvent {
   final String email;
   final String password;
 
@@ -39,11 +37,19 @@ class SignUpWithEmailRequested extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
-// Event for signing out
-class SignOutRequested extends AuthEvent {}
+// Social Authentication
+final class SignInWithGoogleRequested extends AuthEvent {}
 
-// Event for password reset
-class ResetPasswordRequested extends AuthEvent {
+final class SignInWithAppleRequested extends AuthEvent {}
+
+// Anonymous Authentication
+final class SignInAnonymouslyRequested extends AuthEvent {}
+
+// Sign Out
+final class SignOutRequested extends AuthEvent {}
+
+// Password Reset
+final class ResetPasswordRequested extends AuthEvent {
   final String email;
 
   const ResetPasswordRequested({required this.email});
