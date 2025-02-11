@@ -24,9 +24,10 @@ class Validator {
 
     switch (type) {
       case FormType.REGISTER:
-        return value.length < 8 ? 'Use 8 characters or more for your password.' : null;
-      case FormType.ENCRYPT:
+        if (value.length < 8) return 'Use 8 characters or more for your password.';
         return value != formData?.password ? 'Passwords do not match.' : null;
+      case FormType.ENCRYPT:
+        return value.length < 8 ? 'Use 8 characters or more for your password.' : null;
       case FormType.DECRYPT:
         if (formData == null) return 'Invalid form data';
         return value != formData.password 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:jumblebook/models/note.dart';
 import 'package:jumblebook/services/db_service.dart';
 import 'package:local_auth/local_auth.dart';
@@ -279,9 +280,13 @@ class _NoteViewState extends State<NoteView> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
+            image: AssetImage(
+              theme.brightness == Brightness.light
+                ? 'assets/images/background.png'
+                : 'assets/images/background-dark.png',
+            ),
             fit: BoxFit.fill,
           ),
         ),

@@ -68,6 +68,7 @@ flutter:
   assets:
     - assets/images/title.png
     - assets/images/background.png
+    - assets/images/background-dark.png
     - assets/images/social/g_logo.svg
     - assets/images/social/bmc-button.svg
 

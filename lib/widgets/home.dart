@@ -62,6 +62,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
@@ -71,11 +72,11 @@ class _HomeState extends State<Home> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color.fromRGBO(245, 148, 46, 1.0)),
+        iconTheme: IconThemeData(color: theme.primaryColor),
       ),
       drawer: Drawer(
         width: MediaQuery.of(context).size.width * 0.8,
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         child: ListView(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
@@ -84,10 +85,10 @@ class _HomeState extends State<Home> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.scaffoldBackgroundColor,
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade200,
+                    color: theme.dividerColor,
                     width: 1,
                   ),
                 ),
@@ -98,15 +99,11 @@ class _HomeState extends State<Home> {
                   children: [
                     Text(
                       'Settings',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
+                      style: theme.textTheme.titleMedium,
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close, color: theme.iconTheme.color),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -118,8 +115,8 @@ class _HomeState extends State<Home> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   TextButton.icon(
-                    icon: const Icon(Icons.exit_to_app, color: Color.fromRGBO(245, 148, 46, 1.0),), //`Icon` to display
-                    label: const Text('Log out', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),), //`Text` to display
+                    icon: Icon(Icons.exit_to_app, color: theme.primaryColor),
+                    label: Text('Log out', style: theme.textTheme.labelLarge),
                     onPressed: () async {
                       Navigator.pop(context);
                       await Provider.of<AuthService>(context, listen: false).signOut();
@@ -127,35 +124,40 @@ class _HomeState extends State<Home> {
                   ),
                   if (_canResetPassword)
                     TextButton.icon(
-                      icon: const Icon(Icons.security, color: Color.fromRGBO(245, 148, 46, 1.0),), //`Icon` to display
-                      label: const Text('Reset password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),), //`Text` to display
+                      icon: Icon(Icons.security, color: theme.primaryColor),
+                      label: Text('Reset password', style: theme.textTheme.labelLarge),
                       onPressed: () async {
                         Navigator.pop(context);
                         await resetPasswordPrompt(context, user: widget.currentUser);
                       },
                     ),
                   const SizedBox(height: 16),
+                  const ThemeSwitcher(),
                   Container(
                     decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.grey.shade200,
-                    width: 1,
+                      color: theme.scaffoldBackgroundColor,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.dividerColor,
+                          width: 1,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Want to support me?',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  ThemeSwitcher(),
-                  const SizedBox(height: 16),
-                  Text('Want to support me?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 56,
                     child: ElevatedButton(
                       onPressed: _launchBuyMeACoffee,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: theme.scaffoldBackgroundColor,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                       ),
@@ -167,7 +169,12 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   const SizedBox(height: 36),
-                  Text('Note: All donations are optional and not required to use the app.', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),)
+                  Text(
+                    'Note: All donations are optional and not required to use the app.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -178,9 +185,13 @@ class _HomeState extends State<Home> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
+            image: AssetImage(
+              theme.brightness == Brightness.light
+                ? 'assets/images/background.png'
+                : 'assets/images/background-dark.png',
+            ),
             fit: BoxFit.fill,
           ),
         ),
@@ -188,7 +199,10 @@ class _HomeState extends State<Home> {
           child: Container(
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(width: 0.5, color: Colors.grey.shade400),
+                top: BorderSide(
+                  width: 0.5,
+                  color: theme.dividerColor,
+                ),
               ),
             ),
             child: NoteList(widget.currentUser),
@@ -202,7 +216,7 @@ class _HomeState extends State<Home> {
           tooltip: 'New',
           child: const Icon(Icons.add),
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }

@@ -258,44 +258,33 @@ class _CustomInputFormState extends State<CustomInputForm> {
                   _formData.password = val;
                 _passwordErrorText = null;
               }),
-              textInputAction: widget.formType == FormType.ENCRYPT
+              textInputAction: widget.formType == FormType.REGISTER
                   ? TextInputAction.next
                   : TextInputAction.done,
               onFieldSubmitted: (_) {
-                if (widget.formType == FormType.ENCRYPT) {
-                  FocusScope.of(context).nextFocus();
+                if (widget.formType == FormType.REGISTER) {
+                  FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
                 } else {
                   validateCredentials();
                 }
               },
             ),
           const SizedBox(height: 10),
-          if (widget.formType != FormType.FORGOT_PASSWORD &&
-              widget.formType != FormType.PASSWORD_RESET &&
-              widget.formType != FormType.DECRYPT)
+          if (widget.formType == FormType.REGISTER)
             TextFormField(
               obscureText: true,
               autofillHints: [AutofillHints.password],
-              focusNode: widget.formType == FormType.ENCRYPT
-                  ? _confirmPasswordFocusNode
-                  : _passwordFocusNode,
+              focusNode: _confirmPasswordFocusNode,
               decoration: CustomInputDecoration.formStyle(
                 context: context,
                 icon: const Icon(Icons.lock),
-                labelTextStr: widget.formType != FormType.ENCRYPT
-                    ? 'Password'
-                    : 'Confirm',
-                helperTextStr: widget.formType == FormType.REGISTER
-                    ? 'Use 8 or more characters with a mix of letters, numbers & symbols.'
-                    : null,
-                floatingLabel: _passwordFocusNode.hasFocus ||
-                        _confirmPasswordFocusNode.hasFocus
+                labelTextStr: 'Confirm Password',
+                helperTextStr: 'Use 8 or more characters with a mix of letters, numbers & symbols.',
+                floatingLabel: _confirmPasswordFocusNode.hasFocus
                     ? FloatingLabelBehavior.auto
                     : FloatingLabelBehavior.never,
                 errorTextStr: _passwordErrorText,
-                noFocusBorderColor: widget.formType == FormType.ENCRYPT
-                    ? Colors.white
-                    : Colors.black26,
+                noFocusBorderColor: Colors.black26,
               ),
               validator: (val) => Validator.validatePassword(
                 value: val,

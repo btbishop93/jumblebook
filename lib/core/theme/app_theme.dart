@@ -97,10 +97,10 @@ class AppTheme {
         ),
       ),
       textTheme: const TextTheme(
-        titleMedium: TextStyle(fontSize: 18.0, color: Colors.white70),
-        labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white70),
-        bodyMedium: TextStyle(color: Colors.white70),
-        bodySmall: TextStyle(color: Colors.white54),
+        titleMedium: TextStyle(fontSize: 18.0, color: Colors.white),
+        labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white),
+        bodySmall: TextStyle(color: Colors.white),
       ),
       iconTheme: const IconThemeData(
         color: primaryColor,
@@ -108,8 +108,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceColor,
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: const TextStyle(color: Colors.white38),
+        labelStyle: const TextStyle(color: Colors.white),
+        hintStyle: const TextStyle(color: Colors.white),
         prefixIconColor: Colors.white70,
         suffixIconColor: Colors.white70,
         enabledBorder: OutlineInputBorder(

@@ -53,7 +53,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
           }
 
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(10.0)),
             ),
@@ -65,7 +65,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
                 children: [
                   !isEncrypted
                       ? const Text(
-                    'To jumble this note, enter a password. To unjumble it, you will need your password or biometric authentication.',
+                    'Create a password. You will need your password or biometric authentication to Unjumble this note.',
                     style: TextStyle(fontSize: 12),
                   )
                   : const Text(
