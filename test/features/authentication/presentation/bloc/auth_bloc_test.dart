@@ -10,7 +10,20 @@ import 'package:jumblebook/features/authentication/presentation/bloc/auth_state.
 import 'mocks/mock_auth_repository.dart';
 import 'mocks/mock_use_cases.dart';
 
-// Register fallback values for Mocktail
+/// This test file verifies the behavior of the AuthBloc, which manages authentication state
+/// and handles various authentication operations like sign in, sign up, and password reset.
+///
+/// The tests are organized into groups based on different authentication events:
+/// - Initial state verification
+/// - Auth state changes monitoring
+/// - Authentication status checking
+/// - Email/password authentication (sign in and sign up)
+/// - Social authentication (Google and Apple)
+/// - Anonymous authentication
+/// - Sign out
+/// - Password reset
+
+// Register fallback values for Mocktail to handle auth parameter objects
 class FakeEmailAuthParams extends Fake implements EmailAuthParams {}
 class FakeEmailOnlyParams extends Fake implements EmailOnlyParams {}
 class FakeNoParams extends Fake implements NoParams {}
@@ -18,6 +31,7 @@ class FakeNoParams extends Fake implements NoParams {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  // Declare test-wide variables
   late AuthBloc authBloc;
   late MockAuthRepository authRepository;
   late MockSignInWithEmail signInWithEmail;
@@ -28,7 +42,7 @@ void main() {
   late MockSignOut signOut;
   late MockResetPassword resetPassword;
 
-  // Test user for reuse
+  // Test user fixture for reuse across tests
   final testUser = User(
     id: 'test-id',
     email: 'test@example.com',
@@ -36,15 +50,17 @@ void main() {
   );
 
   setUpAll(() {
+    // Register fallback values for Mocktail to handle parameter matching
     registerFallbackValue(FakeEmailAuthParams());
     registerFallbackValue(FakeEmailOnlyParams());
     registerFallbackValue(FakeNoParams());
   });
 
   setUp(() {
-    // Reset mock state before each test
+    // Reset mock state and initialize fresh mocks before each test
     resetMocktailState();
 
+    // Initialize all required mocks
     authRepository = MockAuthRepository();
     signInWithEmail = MockSignInWithEmail();
     signUpWithEmail = MockSignUpWithEmail();
@@ -54,10 +70,11 @@ void main() {
     signOut = MockSignOut();
     resetPassword = MockResetPassword();
 
-    // Set up basic stubs
+    // Set up default stub behavior
     when(() => authRepository.authStateChanges).thenAnswer((_) => Stream.empty());
     when(() => authRepository.currentUser).thenReturn(null);
 
+    // Create a fresh AuthBloc instance for each test
     authBloc = AuthBloc(
       authRepository: authRepository,
       signInWithEmail: signInWithEmail,
@@ -71,14 +88,17 @@ void main() {
   });
 
   tearDown(() {
+    // Clean up resources after each test
     authBloc.close();
     resetMocktailState();
   });
 
+  // Verify initial state when AuthBloc is created
   test('initial state is AuthInitial', () {
     expect(authBloc.state, isA<AuthInitial>());
   });
 
+  // Test authentication state change subscription
   group('Auth State Changes', () {
     late StreamController<User?> controller;
 
@@ -96,7 +116,7 @@ void main() {
         when(() => authRepository.authStateChanges).thenAnswer((_) => controller.stream);
         when(() => authRepository.currentUser).thenReturn(testUser);
         
-        // Add the user to stream after a delay
+        // Simulate delayed auth state change
         Future.delayed(const Duration(milliseconds: 50), () {
           controller.add(testUser);
         });
@@ -114,6 +134,7 @@ void main() {
     );
   });
 
+  // Test authentication status check functionality
   group('CheckAuthStatus', () {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Authenticated] when user is logged in',
@@ -142,6 +163,7 @@ void main() {
     );
   });
 
+  // Test email/password sign in functionality
   group('SignInWithEmailRequested', () {
     const email = 'test@example.com';
     const password = 'password123';
@@ -187,6 +209,7 @@ void main() {
     );
   });
 
+  // Test email/password sign up functionality
   group('SignUpWithEmailRequested', () {
     const email = 'new@example.com';
     const password = 'password123';
@@ -233,6 +256,7 @@ void main() {
     );
   });
 
+  // Test Google sign in functionality
   group('SignInWithGoogleRequested', () {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Authenticated] when Google sign in is successful',
@@ -266,6 +290,7 @@ void main() {
     );
   });
 
+  // Test Apple sign in functionality
   group('SignInWithAppleRequested', () {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Authenticated] when Apple sign in is successful',
@@ -299,6 +324,7 @@ void main() {
     );
   });
 
+  // Test anonymous sign in functionality
   group('SignInAnonymouslyRequested', () {
     final anonymousUser = User(
       id: 'anon-id',
@@ -338,6 +364,7 @@ void main() {
     );
   });
 
+  // Test sign out functionality
   group('SignOutRequested', () {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Unauthenticated] when sign out is successful',
@@ -370,6 +397,7 @@ void main() {
     );
   });
 
+  // Test password reset functionality
   group('ResetPasswordRequested', () {
     const email = 'test@example.com';
 
