@@ -28,8 +28,9 @@ class _SignUpState extends State<SignUp> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -39,7 +40,7 @@ class _SignUpState extends State<SignUp> {
           child: Container(
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(width: 0.5, color: Colors.grey.shade400),
+                top: BorderSide(width: 0.5, color: theme.dividerColor),
               ),
             ),
             child: SafeArea(
@@ -50,79 +51,73 @@ class _SignUpState extends State<SignUp> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       const SizedBox(height: 40),
-                  // Logo
-                  Image.asset(
-                    'assets/images/title.png',
-                    height: 54,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 48),
+                      // Logo
+                      Image.asset(
+                        'assets/images/title.png',
+                        height: 54,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 48),
                       CustomInputForm(
                         formType: FormType.REGISTER,
                         emitFormDataFunction: _updateFormData,
                       ),
                       const SizedBox(height: 32),
                       Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Have an account? ',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: widget.toggleView,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Sign in',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Have an account? ',
+                            style: theme.textTheme.bodySmall?.copyWith(fontSize: 14),
                           ),
-                        ),
-                      ),
-                    ],
+                          TextButton(
+                            onPressed: widget.toggleView,
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Sign in',
+                              style: TextStyle(
+                                color: theme.primaryColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 32),
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'or',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
+                      // Divider
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: theme.dividerColor)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'or',
+                              style: theme.textTheme.bodySmall?.copyWith(fontSize: 14),
+                            ),
                           ),
-                        ),
+                          Expanded(child: Divider(color: theme.dividerColor)),
+                        ],
                       ),
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SignInButton(
-                    text: 'Sign in as Guest',
-                    icon: Icon(
-                      FontAwesomeIcons.userSecret,
-                      size: 20,
-                      color: Colors.black87,
-                    ),
-                    onPressed: () async {
-                      setState(() => loading = true);
-                      await Provider.of<AuthService>(context, listen: false)
-                          .signInWithApple();
-                      if (mounted) setState(() => loading = false);
-                    },
-                  ),
+                      const SizedBox(height: 24),
+                      SignInButton(
+                        text: 'Sign in as Guest',
+                        icon: Icon(
+                          FontAwesomeIcons.userSecret,
+                          size: 20,
+                          color: theme.textTheme.bodyMedium?.color,
+                        ),
+                        onPressed: () async {
+                          setState(() => loading = true);
+                          await Provider.of<AuthService>(context, listen: false)
+                              .signInAsGuest();
+                          if (mounted) setState(() => loading = false);
+                        },
+                      ),
                     ],
                   ),
                 ),

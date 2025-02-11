@@ -8,30 +8,27 @@ class CustomInputDecoration {
     String hintTextStr = "",
     String? errorTextStr,
     String? helperTextStr,
-    Color noFocusBorderColor = Colors.black26,
+    Color? noFocusBorderColor,
     FloatingLabelBehavior floatingLabel = FloatingLabelBehavior.auto,
   }) {
+    final theme = Theme.of(context);
+    final inputTheme = theme.inputDecorationTheme;
+    
     return InputDecoration(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       floatingLabelBehavior: floatingLabel,
       labelText: labelTextStr,
-      labelStyle: TextStyle(
-        color: Colors.grey.shade600,
-        fontSize: 14,
-      ),
+      labelStyle: inputTheme.labelStyle,
       hintText: hintTextStr,
       helperText: helperTextStr,
       helperMaxLines: 3,
-      helperStyle: TextStyle(
-        color: Colors.grey.shade600,
-        fontSize: 10,
-      ),
+      helperStyle: theme.textTheme.bodySmall?.copyWith(fontSize: 10),
       prefixIcon: icon != null 
           ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: IconTheme(
                 data: IconThemeData(
-                  color: Colors.grey.shade600,
+                  color: inputTheme.prefixIconColor,
                   size: 20,
                 ),
                 child: icon,
@@ -42,30 +39,18 @@ class CustomInputDecoration {
         minWidth: 48,
         minHeight: 48,
       ),
-      fillColor: Colors.grey.shade50,
+      fillColor: inputTheme.fillColor,
       errorMaxLines: 3,
-      focusedErrorBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.red, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      errorStyle: const TextStyle(
-        color: Colors.red,
+      focusedErrorBorder: inputTheme.focusedErrorBorder,
+      errorStyle: TextStyle(
+        color: theme.colorScheme.error,
         fontSize: 12,
       ),
       errorText: errorTextStr,
-      filled: true,
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.red.shade200),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      filled: inputTheme.filled,
+      enabledBorder: inputTheme.enabledBorder,
+      focusedBorder: inputTheme.focusedBorder,
+      errorBorder: inputTheme.errorBorder,
     );
   }
 }

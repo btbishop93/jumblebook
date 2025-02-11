@@ -3,8 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:jumblebook/widgets/authentication/user_context.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
 import 'services/auth_service.dart';
+import 'core/theme/app_theme.dart';
+import 'core/theme/bloc/theme_bloc.dart';
+import 'core/theme/bloc/theme_state.dart';
 
 Future<void> main() async {
   try {
@@ -16,7 +20,7 @@ Future<void> main() async {
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.light, // For iOS
+        statusBarBrightness: Brightness.light,
       ),
     );
 
@@ -39,9 +43,18 @@ Future<void> main() async {
   }
   
   runApp(
-    ChangeNotifierProvider<AuthService>(
-      create: (BuildContext context) => AuthService(),
-      child: const MyApp(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => ThemeBloc()),
+      ],
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AuthService>(
+            create: (BuildContext context) => AuthService(),
+          ),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -52,31 +65,16 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Jumblebook',
-      theme: ThemeData(
-        primaryColor: const Color.fromRGBO(245, 148, 46, 1.0),
-        appBarTheme: const AppBarTheme(
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light, // For iOS
-          ),
-        ),
-        textTheme: const TextTheme(
-          titleMedium: TextStyle(fontSize: 18.0),
-          labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color.fromRGBO(245, 148, 46, 1.0),
-          elevation: 10,
-        ),
-        buttonBarTheme: ButtonBarThemeData(
-          alignment: MainAxisAlignment.center,
-          buttonHeight: Theme.of(context).buttonTheme.height * 1.5,
-        ),
-      ),
-      home: const UserContext(),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        return MaterialApp(
+          title: 'Jumblebook',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeState.themeMode,
+          home: const UserContext(),
+        );
+      },
     );
   }
 }

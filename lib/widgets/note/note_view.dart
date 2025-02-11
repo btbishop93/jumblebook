@@ -206,6 +206,7 @@ class _NoteViewState extends State<NoteView> {
   }
 
   Widget _getAppBarTitle() {
+    final theme = Theme.of(context);
     return widget.note.title.isNotEmpty && !titleFocused
         ? GestureDetector(
             onTap: () {
@@ -218,7 +219,7 @@ class _NoteViewState extends State<NoteView> {
             child: Text(
               widget.note.title,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 18),
+              style: theme.textTheme.titleMedium,
             ),
           )
         : TextField(
@@ -229,8 +230,14 @@ class _NoteViewState extends State<NoteView> {
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
               border: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              errorBorder: InputBorder.none,
+              disabledBorder: InputBorder.none,
               hintText: 'Title...',
               floatingLabelBehavior: FloatingLabelBehavior.never,
+              filled: false,
+              fillColor: Colors.transparent,
             ),
             onSubmitted: (_) => _updateTitle(),
           );
@@ -238,10 +245,12 @@ class _NoteViewState extends State<NoteView> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        iconTheme: const IconThemeData(
-          color: Color.fromRGBO(253, 129, 8, 1.0),
+        iconTheme: IconThemeData(
+          color: theme.primaryColor,
         ),
         title: _getAppBarTitle(),
         actions: <Widget>[
@@ -250,10 +259,16 @@ class _NoteViewState extends State<NoteView> {
               padding: const EdgeInsets.all(4.0),
               child: TextButton(
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color.fromRGBO(253, 129, 8, 1.0),
+                  foregroundColor: theme.primaryColor,
                 ),
                 onPressed: () => _actionButtonPressed(noteContentFocused),
-                child: Text(noteContentFocused ? "Done" : widget.note.isEncrypted ? "Unjumble" : "Jumble", style: const TextStyle(fontSize: 14),),
+                child: Text(
+                  noteContentFocused ? "Done" : widget.note.isEncrypted ? "Unjumble" : "Jumble",
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.primaryColor,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ),
         ],
@@ -289,13 +304,17 @@ class _NoteViewState extends State<NoteView> {
               smartDashesType: SmartDashesType.enabled,
               smartQuotesType: SmartQuotesType.enabled,
               enableSuggestions: true,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                height: 1.5,
+              ),
               decoration: const InputDecoration(
                 border: InputBorder.none,
-                semanticCounterText: '',
-                alignLabelWithHint: true,
-              ),
-              style: const TextStyle(
-                height: 1.5,
+                focusedBorder: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                filled: false,
+                fillColor: Colors.transparent,
               ),
             ),
           ),

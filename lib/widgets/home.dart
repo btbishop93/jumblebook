@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/theme/widgets/theme_switcher.dart';
 import 'authentication/reset_password.dart';
 import 'note/note_list.dart';
 import 'note/note_view.dart';
@@ -145,6 +146,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
                   ),
+                  ThemeSwitcher(),
                   const SizedBox(height: 16),
                   Text('Want to support me?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),),
                   const SizedBox(height: 16),

@@ -29,8 +29,9 @@ class _SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Skeletonizer(
@@ -70,7 +71,7 @@ class _SignInState extends State<SignIn> {
                     icon: Icon(
                       FontAwesomeIcons.apple,
                       size: 24,
-                      color: Colors.black87,
+                      color: theme.textTheme.bodyMedium?.color,
                     ),
                     onPressed: () async {
                       setState(() => loading = true);
@@ -83,18 +84,15 @@ class _SignInState extends State<SignIn> {
                   // Divider
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      Expanded(child: Divider(color: theme.dividerColor)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'or',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
+                      Expanded(child: Divider(color: theme.dividerColor)),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -110,10 +108,7 @@ class _SignInState extends State<SignIn> {
                     children: [
                       Text(
                         'No account? ',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
+                        style: theme.textTheme.bodySmall,
                       ),
                       TextButton(
                         onPressed: widget.toggleView,
@@ -125,7 +120,7 @@ class _SignInState extends State<SignIn> {
                         child: Text(
                           'Sign up',
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor,
+                            color: theme.primaryColor,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
