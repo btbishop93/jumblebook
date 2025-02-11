@@ -254,8 +254,9 @@ class _CustomInputFormState extends State<CustomInputForm> {
                       value: val, type: widget.formType, formData: _formData),
               onSaved: (val) => _formData.password = val ?? '',
               onChanged: (val) => setState(() {
-                if (widget.formType == FormType.ENCRYPT)
+                if (widget.formType == FormType.ENCRYPT) {
                   _formData.password = val;
+                }
                 _passwordErrorText = null;
               }),
               textInputAction: widget.formType == FormType.REGISTER

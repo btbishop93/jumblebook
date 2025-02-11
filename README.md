@@ -10,6 +10,63 @@ A Flutter note-taking app with encryption capabilities.
 - Biometric authentication support
 - Cloud sync with Firebase
 
+## Architecture
+
+This project follows Clean Architecture principles to create a scalable, maintainable, and testable codebase. The app is organized into feature-based modules, each containing three main layers:
+
+### Domain Layer
+The core business logic and rules of the application:
+- Pure Dart code with no external dependencies
+- Defines entities and use cases
+- Contains repository interfaces
+- Handles business rule validation
+
+### Data Layer
+Implements the interfaces defined in the domain layer:
+- Handles external data sources (Firebase, local storage)
+- Manages data caching and offline support
+- Implements repository interfaces
+- Handles data mapping between layers
+
+### Presentation Layer
+The UI implementation and state management:
+- Implements UI using Flutter widgets
+- Uses BLoC pattern for state management
+- Handles user interaction
+- Manages UI state and navigation
+
+## Technical Highlights
+
+### State Management
+- BLoC (Business Logic Component) pattern
+- Reactive programming with Streams
+- Clear separation of UI and business logic
+- Predictable state changes
+
+### Error Handling
+- Custom error types for each layer
+- Proper error propagation
+- User-friendly error messages
+- Comprehensive error logging
+
+### Testing
+- Unit tests for business logic
+- Integration tests for repositories
+- Widget tests for UI components
+- BLoC tests for state management
+
+### Security
+- Secure note encryption
+- Biometric authentication
+- Secure key storage
+- Firebase security rules
+
+### Code Quality
+- Strict static analysis
+- Comprehensive documentation
+- Consistent code style
+- Regular dependency updates
+
 ## Prerequisites
 
 - Flutter SDK (>=3.0.0)
