@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:jumblebook/widgets/authentication/user_context.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'firebase_options.dart';
-import 'services/auth_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/bloc/theme_bloc.dart';
 import 'core/theme/bloc/theme_state.dart';
+import 'features/authentication/data/datasources/firebase_auth_datasource.dart';
+import 'features/authentication/data/repositories/auth_repository_impl.dart';
+import 'features/authentication/domain/usecases/usecases.dart';
+import 'features/authentication/presentation/bloc/auth_bloc.dart';
+import 'features/authentication/presentation/bloc/auth_event.dart';
+import 'features/authentication/presentation/pages/authenticate_page.dart';
 
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    print('Flutter binding initialized');
     
     // Configure system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(
@@ -24,45 +26,49 @@ Future<void> main() async {
       ),
     );
 
-    // Ensure the status bar remains visible and prevent system UI changes
     await SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
     );
     
-    final app = await Firebase.initializeApp(
+    await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('Firebase initialized successfully');
-    print('Firebase app name: ${app.name}');
-    print('Firebase options: ${app.options.projectId}');
-  } catch (e, stackTrace) {
-    print('Error initializing Firebase: $e');
-    print('Stack trace: $stackTrace');
-    rethrow;
-  }
-  
-  runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => ThemeBloc()),
-      ],
-      child: MultiProvider(
+
+    // Initialize auth dependencies
+    final authDataSource = FirebaseAuthDataSource();
+    final authRepository = AuthRepositoryImpl(authDataSource);
+
+    runApp(
+      MultiBlocProvider(
         providers: [
-          ChangeNotifierProvider<AuthService>(
-            create: (BuildContext context) => AuthService(),
+          BlocProvider(create: (context) => ThemeBloc()),
+          BlocProvider(
+            create: (context) => AuthBloc(
+              authRepository: authRepository,
+              signInWithEmail: SignInWithEmail(authRepository),
+              signUpWithEmail: SignUpWithEmail(authRepository),
+              signInWithGoogle: SignInWithGoogle(authRepository),
+              signInWithApple: SignInWithApple(authRepository),
+              signInAnonymously: SignInAnonymously(authRepository),
+              signOut: SignOut(authRepository),
+              resetPassword: ResetPassword(authRepository),
+            )..add(CheckAuthStatus()), // Check auth status when app starts
           ),
         ],
         child: const MyApp(),
       ),
-    ),
-  );
+    );
+  } catch (e, stackTrace) {
+    print('Error initializing app: $e');
+    print('Stack trace: $stackTrace');
+    rethrow;
+  }
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeBloc, ThemeState>(
@@ -72,7 +78,7 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeState.themeMode,
-          home: const UserContext(),
+          home: const AuthenticatePage(),
         );
       },
     );
