@@ -28,6 +28,7 @@ class NotesPage extends StatefulWidget {
 
 class _NotesPageState extends State<NotesPage> {
   bool _canResetPassword = false;
+  late final NotesBloc _notesBloc;
 
   Future<void> _launchBuyMeACoffee() async {
     final Uri url = Uri.parse('https://buymeacoffee.com/brendenbishop');
@@ -45,14 +46,15 @@ class _NotesPageState extends State<NotesPage> {
   void initState() {
     super.initState();
     _checkResetPasswordAvailability();
-    // Start listening to notes changes
-    context.read<NotesBloc>().add(StartListeningToNotes(widget.currentUser.id));
+    // Get BLoC reference and start listening to notes changes
+    _notesBloc = context.read<NotesBloc>();
+    _notesBloc.add(StartListeningToNotes(widget.currentUser.id));
   }
 
   @override
   void dispose() {
-    // Stop listening to notes changes
-    context.read<NotesBloc>().add(StopListeningToNotes());
+    // Stop listening to notes changes using stored BLoC reference
+    _notesBloc.add(StopListeningToNotes());
     super.dispose();
   }
 

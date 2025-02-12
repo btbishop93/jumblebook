@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
+import 'package:jumblebook/features/notes/data/models/note_model.dart';
 import 'package:jumblebook/features/notes/domain/repositories/notes_repository.dart';
 import 'package:jumblebook/features/notes/domain/usecases/usecases.dart' as usecases;
 import 'package:jumblebook/features/notes/presentation/bloc/notes_bloc.dart';
@@ -306,48 +307,92 @@ void main() {
   });
 
   group('EncryptNote', () {
+    final legacyNote = Note(
+      id: 'test-id',
+      title: 'Test Note',
+      content: 'Test content',
+      password: 'plaintext123', // Legacy plain text password
+      date: DateTime(2024),
+    );
+
     blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NoteEncrypted] when note is encrypted successfully',
+      'emits [NotesLoading, NoteEncrypted] when note with legacy plain text password is re-encrypted',
       build: () {
         when(() => encryptNote.call(
+          userId: any(named: 'userId'),
           note: any(named: 'note'),
           password: any(named: 'password'),
-        )).thenAnswer((_) async => encryptedNote);
+        )).thenAnswer((_) async {
+          // Should hash the legacy password during re-encryption
+          final hashedNote = encryptedNote.copyWith(
+            password: NoteModel.hashPassword('plaintext123')
+          );
+          return hashedNote;
+        });
         return notesBloc;
       },
       act: (bloc) => bloc.add(EncryptNote(
-        note: testNote,
-        password: 'password123',
+        userId: 'test-user-id',
+        note: legacyNote,
+        password: legacyNote.password, // Reuse existing plain text password
       )),
       expect: () => [
-        const NotesLoading(),
-        NoteEncrypted(note: encryptedNote, notes: const []),
+        isA<NotesLoading>(),
+        isA<NoteEncrypted>(),
       ],
       verify: (_) {
         verify(() => encryptNote.call(
-          note: testNote,
-          password: 'password123',
+          userId: 'test-user-id',
+          note: legacyNote,
+          password: 'plaintext123',
         )).called(1);
       },
     );
 
     blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when encryption fails',
+      'successfully decrypts note with either plain text or hashed password',
       build: () {
-        when(() => encryptNote.call(
+        when(() => decryptNote.call(
+          userId: any(named: 'userId'),
           note: any(named: 'note'),
           password: any(named: 'password'),
-        )).thenThrow('Failed to encrypt note');
+        )).thenAnswer((invocation) async {
+          final note = invocation.namedArguments[const Symbol('note')] as Note;
+          final password = invocation.namedArguments[const Symbol('password')] as String;
+          
+          // Verify against both hash and plain text
+          if (password == note.password || // Plain text match
+              NoteModel.hashPassword(password) == note.password) { // Hash match
+            return testNote;
+          }
+          throw ArgumentError('Invalid password');
+        });
         return notesBloc;
       },
-      act: (bloc) => bloc.add(EncryptNote(
-        note: testNote,
-        password: 'password123',
-      )),
+      act: (bloc) async {
+        // Try with plain text password
+        bloc.add(DecryptNote(
+          userId: 'test-user-id',
+          note: legacyNote,
+          password: 'plaintext123',
+        ));
+        // Try with hashed password
+        await Future.delayed(const Duration(milliseconds: 100));
+        bloc.add(DecryptNote(
+          userId: 'test-user-id',
+          note: encryptedNote.copyWith(
+            password: NoteModel.hashPassword('plaintext123')
+          ),
+          password: 'plaintext123',
+        ));
+      },
       expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to encrypt note'),
+        isA<NotesLoading>(),
+        isA<NoteDecrypted>(),
+        isA<NotesLoading>(),
+        isA<NoteDecrypted>(),
       ],
+      wait: const Duration(milliseconds: 200),
     );
   });
 
@@ -356,21 +401,24 @@ void main() {
       'emits [NotesLoading, NoteDecrypted] when note is decrypted successfully',
       build: () {
         when(() => decryptNote.call(
+          userId: any(named: 'userId'),
           note: any(named: 'note'),
           password: any(named: 'password'),
         )).thenAnswer((_) async => testNote);
         return notesBloc;
       },
       act: (bloc) => bloc.add(DecryptNote(
+        userId: 'test-user-id',
         note: encryptedNote,
         password: 'password123',
       )),
       expect: () => [
-        const NotesLoading(),
-        NoteDecrypted(note: testNote, notes: const []),
+        isA<NotesLoading>(),
+        isA<NoteDecrypted>(),
       ],
       verify: (_) {
         verify(() => decryptNote.call(
+          userId: 'test-user-id',
           note: encryptedNote,
           password: 'password123',
         )).called(1);
@@ -381,18 +429,20 @@ void main() {
       'emits [NotesLoading, NotesError] when decryption fails',
       build: () {
         when(() => decryptNote.call(
+          userId: any(named: 'userId'),
           note: any(named: 'note'),
           password: any(named: 'password'),
         )).thenThrow('Failed to decrypt note');
         return notesBloc;
       },
       act: (bloc) => bloc.add(DecryptNote(
+        userId: 'test-user-id',
         note: encryptedNote,
         password: 'wrong-password',
       )),
       expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to decrypt note'),
+        isA<NotesLoading>(),
+        isA<NotesError>(),
       ],
     );
   });

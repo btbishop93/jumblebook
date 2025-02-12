@@ -29,6 +29,7 @@ class _NoteViewState extends State<NoteView> {
   final noteContentController = TextEditingController();
   final LocalAuthentication _localAuthentication = LocalAuthentication();
   late Note _note;
+  late final NotesBloc _notesBloc;
 
   late final FocusNode titleFocusNode;
   late final FocusNode noteContentFocusNode;
@@ -39,14 +40,16 @@ class _NoteViewState extends State<NoteView> {
   void initState() {
     super.initState();
     _note = widget.note;
+    _notesBloc = context.read<NotesBloc>();
+    
     if (widget.isNewNote) {
-      context.read<NotesBloc>().add(CreateNote(
+      _notesBloc.add(CreateNote(
         userId: widget.userId,
         note: _note,
       ));
     } else {
       // Load the latest note state from the repository
-      context.read<NotesBloc>().add(LoadNote(
+      _notesBloc.add(LoadNote(
         userId: widget.userId,
         noteId: _note.id,
       ));
@@ -88,7 +91,7 @@ class _NoteViewState extends State<NoteView> {
       title: inputTitle.isEmpty ? 'New Note' : inputTitle,
       date: DateTime.now(),
     );
-    context.read<NotesBloc>().add(UpdateNote(
+    _notesBloc.add(UpdateNote(
       userId: widget.userId,
       note: updatedNote,
     ));
@@ -103,7 +106,7 @@ class _NoteViewState extends State<NoteView> {
       content: inputContent,
       date: DateTime.now(),
     );
-    context.read<NotesBloc>().add(UpdateNote(
+    _notesBloc.add(UpdateNote(
       userId: widget.userId,
       note: updatedNote,
     ));
@@ -116,7 +119,7 @@ class _NoteViewState extends State<NoteView> {
       if (!_note.isEncrypted) {
         // If the note has a password, reuse it
         if (_note.password.isNotEmpty) {
-          context.read<NotesBloc>().add(EncryptNote(
+          _notesBloc.add(EncryptNote(
             userId: widget.userId,
             note: _note.copyWith(password: ''), // Clear hashed password before re-encrypting
             password: _note.password, // Pass the stored password for re-encryption
@@ -187,7 +190,7 @@ class _NoteViewState extends State<NoteView> {
     );
     if (result.password.isNotEmpty) {
       if (!mounted) return;
-      context.read<NotesBloc>().add(EncryptNote(
+      _notesBloc.add(EncryptNote(
         userId: widget.userId,
         note: _note,
         password: result.password,
@@ -200,7 +203,7 @@ class _NoteViewState extends State<NoteView> {
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote(true)) {
         if (!mounted) return;
-        context.read<NotesBloc>().add(DecryptNote(
+        _notesBloc.add(DecryptNote(
           userId: widget.userId,
           note: _note,
           password: _note.password, // Empty password triggers biometric decryption
@@ -216,7 +219,7 @@ class _NoteViewState extends State<NoteView> {
     } else {
       if (await _authenticateNote(false)) {
         if (!mounted) return;
-        context.read<NotesBloc>().add(DecryptNote(
+        _notesBloc.add(DecryptNote(
           userId: widget.userId,
           note: _note,
           password: '', // Empty password triggers biometric decryption
@@ -234,13 +237,13 @@ class _NoteViewState extends State<NoteView> {
     if (!mounted) return;
     
     if (result.password.isNotEmpty) {
-      context.read<NotesBloc>().add(DecryptNote(
+      _notesBloc.add(DecryptNote(
         userId: widget.userId,
         note: _note,
         password: result.password,
       ));
     } else if (result.lockCounter > _note.lockCounter) {
-      context.read<NotesBloc>().add(UpdateLockCounter(
+      _notesBloc.add(UpdateLockCounter(
         userId: widget.userId,
         noteId: _note.id,
         lockCounter: result.lockCounter,
