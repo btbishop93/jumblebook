@@ -6,7 +6,14 @@ class DecryptNote {
 
   const DecryptNote(this.repository);
 
-  Future<Note> call({required Note note, required String password}) async {
+  Future<Note> call({
+    required String userId,
+    required Note note,
+    required String password,
+  }) async {
+    if (userId.isEmpty) {
+      throw ArgumentError('User ID cannot be empty');
+    }
     if (note.id.isEmpty) {
       throw ArgumentError('Note ID cannot be empty');
     }
@@ -16,6 +23,6 @@ class DecryptNote {
     if (!note.isEncrypted) {
       throw StateError('Note is not encrypted');
     }
-    return repository.decryptNote(note, password);
+    return repository.decryptNote(userId, note, password);
   }
 } 

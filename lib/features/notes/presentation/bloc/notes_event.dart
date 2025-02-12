@@ -70,29 +70,33 @@ final class DeleteNote extends NotesEvent {
 }
 
 final class EncryptNote extends NotesEvent {
+  final String userId;
   final Note note;
   final String password;
 
   const EncryptNote({
+    required this.userId,
     required this.note,
     required this.password,
   });
 
   @override
-  List<Object> get props => [note, password];
+  List<Object> get props => [userId, note, password];
 }
 
 final class DecryptNote extends NotesEvent {
+  final String userId;
   final Note note;
   final String password;
 
   const DecryptNote({
+    required this.userId,
     required this.note,
     required this.password,
   });
 
   @override
-  List<Object> get props => [note, password];
+  List<Object> get props => [userId, note, password];
 }
 
 final class UpdateLockCounter extends NotesEvent {

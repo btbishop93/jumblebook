@@ -118,6 +118,7 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     emit(NotesLoading(notes: state.notes));
     try {
       final encryptedNote = await _encryptNote(
+        userId: event.userId,
         note: event.note,
         password: event.password,
       );
@@ -134,6 +135,7 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     emit(NotesLoading(notes: state.notes));
     try {
       final decryptedNote = await _decryptNote(
+        userId: event.userId,
         note: event.note,
         password: event.password,
       );

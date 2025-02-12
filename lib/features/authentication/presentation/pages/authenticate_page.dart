@@ -4,7 +4,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import 'sign_in_page.dart';
 import 'sign_up_page.dart';
-import '../../../../features/home/presentation/pages/home_page.dart';
+import '../../../notes/presentation/pages/notes_page.dart';
 
 class AuthenticatePage extends StatefulWidget {
   const AuthenticatePage({super.key});
@@ -27,7 +27,7 @@ class _AuthenticatePageState extends State<AuthenticatePage> {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         if (state is Authenticated && state.data.user != null) {
-          return HomePage(user: state.data.user!);
+          return NotesPage(currentUser: state.data.user!);
         }
         
         return showSignIn

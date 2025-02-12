@@ -92,7 +92,6 @@ class NoteModel extends Note {
     return copyWith(
       content: decryptedStr.toString(),
       isEncrypted: false,
-      password: '',
     ) as NoteModel;
   }
 

@@ -12,6 +12,7 @@ class UserProfile extends User {
     required super.email,
     super.displayName,
     super.photoUrl,
+    super.isAnonymous,
     this.bio,
     this.lastSeen,
     this.notesCount = 0,
@@ -19,11 +20,13 @@ class UserProfile extends User {
     this.settings = const {},
   });
 
+  @override
   UserProfile copyWith({
     String? id,
     String? email,
     String? displayName,
     String? photoUrl,
+    bool? isAnonymous,
     String? bio,
     DateTime? lastSeen,
     int? notesCount,
@@ -35,6 +38,7 @@ class UserProfile extends User {
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
+      isAnonymous: isAnonymous ?? this.isAnonymous,
       bio: bio ?? this.bio,
       lastSeen: lastSeen ?? this.lastSeen,
       notesCount: notesCount ?? this.notesCount,

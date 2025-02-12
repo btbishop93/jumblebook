@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:jumblebook/models/note.dart';
-import 'package:jumblebook/models/user.dart';
-import 'package:jumblebook/services/auth_service.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../authentication/domain/entities/user.dart';
+import '../../../authentication/presentation/bloc/auth_bloc.dart';
+import '../../../authentication/presentation/bloc/auth_event.dart';
+import '../../../authentication/presentation/pages/reset_password_page.dart';
+import '../../domain/entities/note.dart';
+import '../bloc/notes_bloc.dart';
+import '../bloc/notes_event.dart';
+import '../bloc/notes_state.dart';
+import '../widgets/notes_list.dart';
+import '../widgets/note_view.dart';
+import '../../../../core/theme/widgets/theme_switcher.dart';
 
-import '../core/theme/widgets/theme_switcher.dart';
-import 'authentication/reset_password.dart';
-import 'note/note_list.dart';
-import 'note/note_view.dart';
-
-class Home extends StatefulWidget {
+class NotesPage extends StatefulWidget {
   final User currentUser;
 
-  const Home(this.currentUser, {super.key});
+  const NotesPage({
+    super.key,
+    required this.currentUser,
+  });
 
   @override
-  State<Home> createState() => _HomeState();
+  State<NotesPage> createState() => _NotesPageState();
 }
 
-class _HomeState extends State<Home> {
+class _NotesPageState extends State<NotesPage> {
   bool _canResetPassword = false;
 
   Future<void> _launchBuyMeACoffee() async {
@@ -39,23 +45,40 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _checkResetPasswordAvailability();
+    // Start listening to notes changes
+    context.read<NotesBloc>().add(StartListeningToNotes(widget.currentUser.id));
+  }
+
+  @override
+  void dispose() {
+    // Stop listening to notes changes
+    context.read<NotesBloc>().add(StopListeningToNotes());
+    super.dispose();
   }
 
   void _checkResetPasswordAvailability() {
     if (!mounted) return;
-    
-    final authService = Provider.of<AuthService>(context, listen: false);
     setState(() {
-      _canResetPassword = !widget.currentUser.isAnonymous && authService.isEmailProvider;
+      _canResetPassword = !widget.currentUser.isAnonymous;
     });
   }
 
-  void _newNote(String uid) {
-    final newNote = Note(id: UniqueKey().toString(), date: DateTime.now());
+  void _createNewNote() {
+    final newNote = Note(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: '',
+      content: '',
+      date: DateTime.now(),
+    );
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NoteView(newNote, uid),
+        builder: (context) => NoteView(
+          userId: widget.currentUser.id,
+          note: newNote,
+          isNewNote: true,
+        ),
       ),
     );
   }
@@ -117,18 +140,25 @@ class _HomeState extends State<Home> {
                   TextButton.icon(
                     icon: Icon(Icons.exit_to_app, color: theme.primaryColor),
                     label: Text('Log out', style: theme.textTheme.labelLarge),
-                    onPressed: () async {
+                    onPressed: () {
                       Navigator.pop(context);
-                      await Provider.of<AuthService>(context, listen: false).signOut();
+                      context.read<AuthBloc>().add(SignOutRequested());
                     },
                   ),
                   if (_canResetPassword)
                     TextButton.icon(
                       icon: Icon(Icons.security, color: theme.primaryColor),
                       label: Text('Reset password', style: theme.textTheme.labelLarge),
-                      onPressed: () async {
+                      onPressed: () {
                         Navigator.pop(context);
-                        await resetPasswordPrompt(context, user: widget.currentUser);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ResetPasswordPage(
+                              email: widget.currentUser.email,
+                            ),
+                          ),
+                        );
                       },
                     ),
                   const SizedBox(height: 16),
@@ -205,18 +235,18 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
-            child: NoteList(widget.currentUser),
+            child: NotesList(userId: widget.currentUser.id),
           ),
         ),
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 32.0),
         child: FloatingActionButton(
-          onPressed: () => _newNote(widget.currentUser.uid),
+          onPressed: _createNewNote,
           tooltip: 'New',
           child: const Icon(Icons.add),
         ),
       ),
     );
   }
-}
+} 

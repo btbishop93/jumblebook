@@ -35,16 +35,19 @@ class NotesRepositoryImpl implements NotesRepository {
   }
 
   @override
-  Future<Note> encryptNote(Note note, String password) async {
-    final noteModel = NoteModel.fromNote(note).encrypt(password);
-    await _remoteDataSource.saveNote(note.id, noteModel);
-    return noteModel;
+  Future<Note> encryptNote(String userId, Note note, String password) async {
+    // First set the password on the note
+    final noteWithPassword = NoteModel.fromNote(note).copyWith(password: password);
+    // Then encrypt it
+    final encryptedNote = noteWithPassword.encrypt(password);
+    await _remoteDataSource.saveNote(userId, encryptedNote);
+    return encryptedNote;
   }
 
   @override
-  Future<Note> decryptNote(Note note, String password) async {
+  Future<Note> decryptNote(String userId, Note note, String password) async {
     final noteModel = NoteModel.fromNote(note).decrypt(password);
-    await _remoteDataSource.saveNote(note.id, noteModel);
+    await _remoteDataSource.saveNote(userId, noteModel);
     return noteModel;
   }
 
