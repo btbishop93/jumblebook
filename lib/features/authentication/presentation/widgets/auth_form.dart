@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/form_data.dart';
 import '../../domain/validators/auth_validator.dart';
+import '../pages/reset_password_page.dart';
 import 'custom_input_decoration.dart';
 
 class AuthForm extends StatefulWidget {
@@ -146,6 +147,39 @@ class _AuthFormState extends State<AuthForm> {
               }
             },
           ),
+          if (widget.formType == FormType.LOGIN) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // Save the current email
+                  _formKey.currentState?.save();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ResetPasswordPage(
+                        email: _formData.email,
+                      ),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    color: theme.primaryColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (widget.formType == FormType.REGISTER) ...[
             const SizedBox(height: 16),
             TextFormField(
