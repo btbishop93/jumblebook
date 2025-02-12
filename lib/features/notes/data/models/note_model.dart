@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import '../../domain/entities/note.dart';
 
 class NoteModel extends Note {
@@ -13,6 +15,19 @@ class NoteModel extends Note {
     super.password = "",
     required super.date,
   });
+
+  // Hash a password using SHA-256
+  static String hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  // Verify if a password matches the stored hash or plain text (for backward compatibility)
+  bool verifyPassword(String password) {
+    final hashedInput = hashPassword(password);
+    return hashedInput == this.password || password == this.password; // Check both hashed and plain text
+  }
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
@@ -55,43 +70,68 @@ class NoteModel extends Note {
     );
   }
 
-  NoteModel encrypt(String password) {
+  NoteModel encrypt(String plainPassword) {
     if (isEncrypted) {
       throw StateError('Note is already encrypted');
     }
 
-    final shift = Random().nextInt(255);
+    // If we already have a password (from previous encryption), use it
+    final passwordToUse = password.isNotEmpty ? password : hashPassword(plainPassword);
+    final shiftToUse = decryptShift > 0 ? decryptShift : Random().nextInt(255);
+
     final encryptedStr = StringBuffer();
     content.runes.forEach((int rune) {
-      var char = String.fromCharCode(rune + shift);
+      var char = String.fromCharCode(rune + shiftToUse);
       encryptedStr.write(char);
     });
 
     return copyWith(
       content: encryptedStr.toString(),
-      decryptShift: shift,
+      decryptShift: shiftToUse,
       isEncrypted: true,
-      password: password,
+      password: passwordToUse,
     ) as NoteModel;
   }
 
-  NoteModel decrypt(String password) {
+  NoteModel decrypt(String plainPassword) {
     if (!isEncrypted) {
       throw StateError('Note is not encrypted');
     }
-    if (password != this.password) {
+    
+    // Verify against both hashed and plain text passwords
+    if (!verifyPassword(plainPassword)) {
       throw ArgumentError('Invalid password');
     }
 
+    return _performDecryption();
+  }
+
+  // Method for biometric decryption that bypasses password verification
+  NoteModel biometricDecrypt() {
+    if (!isEncrypted) {
+      throw StateError('Note is not encrypted');
+    }
+
+    return _performDecryption();
+  }
+
+  // Internal method to perform the actual decryption
+  NoteModel _performDecryption() {
     final decryptedStr = StringBuffer();
     content.runes.forEach((int rune) {
       var char = String.fromCharCode(rune - decryptShift);
       decryptedStr.write(char);
     });
 
+    // Keep the password and decryptShift for reuse
+    final originalPassword = password;
+    final originalShift = decryptShift;
+
     return copyWith(
       content: decryptedStr.toString(),
       isEncrypted: false,
+      password: originalPassword,  // Keep the original password
+      decryptShift: originalShift, // Keep the original shift
     ) as NoteModel;
   }
 

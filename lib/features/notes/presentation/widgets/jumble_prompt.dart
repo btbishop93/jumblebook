@@ -240,21 +240,19 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
       return null;
     } else {
       if (widget.formData == null) return 'Invalid form data';
-      if (value != widget.formData!.password) {
-        switch (_formData.lockCounter) {
-          case 0:
-            _formData.lockCounter = 1;
-            return 'Warning! This note will be locked after 2 more failed attempts.';
-          case 1:
-            _formData.lockCounter = 2;
-            return 'Warning! This note will be locked after 1 more failed attempt.';
-          default:
-            _formData.lockCounter = 3;
-            return 'This note is now locked and can only be unlocked via TouchID or FaceID.';
-        }
+      
+      // For decryption, update lock counter and show appropriate message
+      switch (_formData.lockCounter) {
+        case 0:
+          _formData.lockCounter = 1;
+          return 'Warning! This note will be locked after 2 more failed attempts.';
+        case 1:
+          _formData.lockCounter = 2;
+          return 'Warning! This note will be locked after 1 more failed attempt.';
+        default:
+          _formData.lockCounter = 3;
+          return 'This note is now locked and can only be unlocked via TouchID or FaceID.';
       }
-      _formData.success = true;
-      return null;
     }
   }
 

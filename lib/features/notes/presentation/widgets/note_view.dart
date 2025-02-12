@@ -114,12 +114,12 @@ class _NoteViewState extends State<NoteView> {
       _updateNoteContent();
     } else {
       if (!_note.isEncrypted) {
-        // If the note already has a password, use it directly
+        // If the note has a password, reuse it
         if (_note.password.isNotEmpty) {
           context.read<NotesBloc>().add(EncryptNote(
             userId: widget.userId,
-            note: _note,
-            password: _note.password,
+            note: _note.copyWith(password: ''), // Clear hashed password before re-encrypting
+            password: _note.password, // Pass the stored password for re-encryption
           ));
         } else {
           _encryptNotePrompt();
@@ -196,14 +196,14 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _decryptNotePrompt() async {
-    Prompt result = Prompt("", 0);
+    Prompt result = Prompt("", _note.lockCounter);
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote(true)) {
         if (!mounted) return;
         context.read<NotesBloc>().add(DecryptNote(
           userId: widget.userId,
           note: _note,
-          password: _note.password,
+          password: _note.password, // Empty password triggers biometric decryption
         ));
         return;
       } else {
@@ -219,7 +219,7 @@ class _NoteViewState extends State<NoteView> {
         context.read<NotesBloc>().add(DecryptNote(
           userId: widget.userId,
           note: _note,
-          password: _note.password,
+          password: '', // Empty password triggers biometric decryption
         ));
         return;
       } else {
@@ -233,13 +233,13 @@ class _NoteViewState extends State<NoteView> {
 
     if (!mounted) return;
     
-    if (result.password == _note.password) {
+    if (result.password.isNotEmpty) {
       context.read<NotesBloc>().add(DecryptNote(
         userId: widget.userId,
         note: _note,
         password: result.password,
       ));
-    } else {
+    } else if (result.lockCounter > _note.lockCounter) {
       context.read<NotesBloc>().add(UpdateLockCounter(
         userId: widget.userId,
         noteId: _note.id,

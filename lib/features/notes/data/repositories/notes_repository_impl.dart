@@ -36,19 +36,44 @@ class NotesRepositoryImpl implements NotesRepository {
 
   @override
   Future<Note> encryptNote(String userId, Note note, String password) async {
-    // First set the password on the note
-    final noteWithPassword = NoteModel.fromNote(note).copyWith(password: password);
-    // Then encrypt it
-    final encryptedNote = noteWithPassword.encrypt(password);
+    final noteModel = NoteModel.fromNote(note);
+    // Use the provided password or reuse existing one
+    final encryptedNote = noteModel.encrypt(password);
     await _remoteDataSource.saveNote(userId, encryptedNote);
     return encryptedNote;
   }
 
   @override
   Future<Note> decryptNote(String userId, Note note, String password) async {
-    final noteModel = NoteModel.fromNote(note).decrypt(password);
-    await _remoteDataSource.saveNote(userId, noteModel);
-    return noteModel;
+    final noteModel = NoteModel.fromNote(note);
+    try {
+      final decryptedNote = password.isEmpty 
+          ? noteModel.biometricDecrypt()  // Use biometric decryption if no password provided
+          : noteModel.decrypt(password);   // Use password-based decryption otherwise
+      
+      // Always save the decrypted note to persist password and shift
+      await _remoteDataSource.saveNote(userId, decryptedNote);
+      return decryptedNote;
+    } catch (e) {
+      if (e is ArgumentError && e.message == 'Invalid password') {
+        // Update lock counter on failed password attempt
+        final newLockCounter = note.lockCounter + 1;
+        await updateLockCounter(userId, note.id, newLockCounter);
+        throw ArgumentError('Incorrect password. ${_getLockMessage(newLockCounter)}');
+      }
+      rethrow;
+    }
+  }
+
+  String _getLockMessage(int lockCounter) {
+    switch (lockCounter) {
+      case 1:
+        return 'Warning! This note will be locked after 2 more failed attempts.';
+      case 2:
+        return 'Warning! This note will be locked after 1 more failed attempt.';
+      default:
+        return 'This note is now locked and can only be unlocked via TouchID or FaceID.';
+    }
   }
 
   @override
