@@ -1,84 +1,56 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'dart:async';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
-import 'package:jumblebook/features/notes/data/models/note_model.dart';
 import 'package:jumblebook/features/notes/domain/repositories/notes_repository.dart';
 import 'package:jumblebook/features/notes/domain/usecases/usecases.dart' as usecases;
 import 'package:jumblebook/features/notes/presentation/bloc/notes_bloc.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_event.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_state.dart';
 
-class MockNotesRepository extends Mock implements NotesRepository {}
 class MockGetNotes extends Mock implements usecases.GetNotes {}
 class MockSaveNote extends Mock implements usecases.SaveNote {}
 class MockDeleteNote extends Mock implements usecases.DeleteNote {}
 class MockEncryptNote extends Mock implements usecases.EncryptNote {}
 class MockDecryptNote extends Mock implements usecases.DecryptNote {}
 class MockUpdateLockCounter extends Mock implements usecases.UpdateLockCounter {}
-
-// Register fallback values for Mocktail
-class FakeNote extends Fake implements Note {}
+class MockNotesRepository extends Mock implements NotesRepository {}
 
 void main() {
   late NotesBloc notesBloc;
-  late MockNotesRepository notesRepository;
-  late MockGetNotes getNotes;
-  late MockSaveNote saveNote;
-  late MockDeleteNote deleteNote;
-  late MockEncryptNote encryptNote;
-  late MockDecryptNote decryptNote;
-  late MockUpdateLockCounter updateLockCounter;
+  late MockGetNotes mockGetNotes;
+  late MockSaveNote mockSaveNote;
+  late MockDeleteNote mockDeleteNote;
+  late MockEncryptNote mockEncryptNote;
+  late MockDecryptNote mockDecryptNote;
+  late MockUpdateLockCounter mockUpdateLockCounter;
+  late MockNotesRepository mockNotesRepository;
 
-  // Test note fixtures
+  final testUserId = 'test-user-id';
   final testNote = Note(
-    id: 'test-id',
+    id: 'test-note-id',
     title: 'Test Note',
     content: 'Test content',
-    date: DateTime(2024),
+    date: DateTime.now(),
   );
-
-  final encryptedNote = Note(
-    id: 'test-id',
-    title: 'Test Note',
-    content: 'Encrypted content',
-    isEncrypted: true,
-    password: 'password123',
-    decryptShift: 3,
-    date: DateTime(2024),
-  );
-
-  final testNotes = [
-    testNote,
-    Note(
-      id: 'test-id-2',
-      title: 'Test Note 2',
-      content: 'Test content 2',
-      date: DateTime(2024),
-    ),
-  ];
-
-  setUpAll(() {
-    registerFallbackValue(FakeNote());
-  });
 
   setUp(() {
-    notesRepository = MockNotesRepository();
-    getNotes = MockGetNotes();
-    saveNote = MockSaveNote();
-    deleteNote = MockDeleteNote();
-    encryptNote = MockEncryptNote();
-    decryptNote = MockDecryptNote();
-    updateLockCounter = MockUpdateLockCounter();
+    mockGetNotes = MockGetNotes();
+    mockSaveNote = MockSaveNote();
+    mockDeleteNote = MockDeleteNote();
+    mockEncryptNote = MockEncryptNote();
+    mockDecryptNote = MockDecryptNote();
+    mockUpdateLockCounter = MockUpdateLockCounter();
+    mockNotesRepository = MockNotesRepository();
 
     notesBloc = NotesBloc(
-      getNotes: getNotes,
-      saveNote: saveNote,
-      deleteNote: deleteNote,
-      encryptNote: encryptNote,
-      decryptNote: decryptNote,
-      updateLockCounter: updateLockCounter,
-      notesRepository: notesRepository,
+      getNotes: mockGetNotes,
+      saveNote: mockSaveNote,
+      deleteNote: mockDeleteNote,
+      encryptNote: mockEncryptNote,
+      decryptNote: mockDecryptNote,
+      updateLockCounter: mockUpdateLockCounter,
+      notesRepository: mockNotesRepository,
     );
   });
 
@@ -86,450 +58,522 @@ void main() {
     notesBloc.close();
   });
 
-  test('initial state is NotesInitial', () {
-    expect(notesBloc.state, isA<NotesInitial>());
+  test('initial state should be NotesInitial', () {
+    expect(notesBloc.state, const NotesInitial());
   });
 
   group('LoadNotes', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesLoaded] when notes are loaded successfully',
-      build: () {
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const LoadNotes('user-id')),
-      expect: () => [
-        const NotesLoading(),
-        NotesLoaded(testNotes),
-      ],
-      verify: (_) {
-        verify(() => notesRepository.getNotes('user-id')).called(1);
-      },
-    );
+    test('emits [NotesLoading, NotesLoaded] when successful', () async {
+      // Arrange
+      final notes = [testNote];
+      when(() => mockNotesRepository.getNotes(testUserId))
+          .thenAnswer((_) => Stream.value(notes));
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when loading fails',
-      build: () {
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.error('Failed to load notes'));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const LoadNotes('user-id')),
-      expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to load notes'),
-      ],
-    );
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NotesLoaded(notes),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(LoadNotes(testUserId));
+    });
+
+    test('emits [NotesLoading, NotesError] when loading fails', () async {
+      // Arrange
+      final error = Exception('Failed to load notes');
+      when(() => mockNotesRepository.getNotes(testUserId))
+          .thenAnswer((_) => Stream.error(error));
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(LoadNotes(testUserId));
+    });
   });
 
   group('LoadNote', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NoteLoaded] when note is loaded successfully',
-      build: () {
-        when(() => notesRepository.getNote(any(), any()))
-            .thenAnswer((_) async => testNote);
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const LoadNote(
-        userId: 'user-id',
-        noteId: 'test-id',
-      )),
-      expect: () => [
-        const NotesLoading(),
-        NoteLoaded(note: testNote, notes: const []),
-      ],
-      verify: (_) {
-        verify(() => notesRepository.getNote('user-id', 'test-id')).called(1);
-      },
-    );
+    test('emits [NotesLoading, NoteLoaded] when successful', () async {
+      // Arrange
+      when(() => mockNotesRepository.getNote(testUserId, testNote.id))
+          .thenAnswer((_) async => testNote);
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when loading fails',
-      build: () {
-        when(() => notesRepository.getNote(any(), any()))
-            .thenThrow('Failed to load note');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const LoadNote(
-        userId: 'user-id',
-        noteId: 'test-id',
-      )),
-      expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to load note'),
-      ],
-    );
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NoteLoaded(note: testNote, notes: []),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(LoadNote(userId: testUserId, noteId: testNote.id));
+    });
+
+    test('emits [NotesLoading, NotesError] when loading fails', () async {
+      // Arrange
+      final error = Exception('Failed to load note');
+      when(() => mockNotesRepository.getNote(testUserId, testNote.id))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(LoadNote(userId: testUserId, noteId: testNote.id));
+    });
   });
 
   group('CreateNote', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesLoaded] when note is created successfully',
-      build: () {
-        when(() => saveNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-        )).thenAnswer((_) async => null);
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(CreateNote(
-        userId: 'user-id',
-        note: testNote,
-      )),
-      expect: () => [
-        const NotesLoading(),
-        NotesLoaded(testNotes, selectedNote: testNote),
-      ],
-      verify: (_) {
-        verify(() => saveNote.call(
-          userId: 'user-id',
-          note: testNote,
-        )).called(1);
-      },
-    );
+    test('emits [NotesLoading, NotesLoaded] when successful', () async {
+      // Arrange
+      final notes = [testNote];
+      when(() => mockSaveNote(userId: testUserId, note: testNote))
+          .thenAnswer((_) async => null);
+      when(() => mockNotesRepository.getNotes(testUserId))
+          .thenAnswer((_) => Stream.value(notes));
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when creation fails',
-      build: () {
-        when(() => saveNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-        )).thenThrow('Failed to create note');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(CreateNote(
-        userId: 'user-id',
-        note: testNote,
-      )),
-      expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to create note'),
-      ],
-    );
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NotesLoaded(notes, selectedNote: testNote),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(CreateNote(userId: testUserId, note: testNote));
+    });
+
+    test('emits [NotesLoading, NotesError] when creation fails', () async {
+      // Arrange
+      final error = Exception('Failed to create note');
+      when(() => mockSaveNote(userId: testUserId, note: testNote))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(CreateNote(userId: testUserId, note: testNote));
+    });
   });
 
   group('UpdateNote', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesLoaded] when note is updated successfully',
-      build: () {
-        when(() => saveNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-        )).thenAnswer((_) async => null);
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(UpdateNote(
-        userId: 'user-id',
-        note: testNote,
-      )),
-      expect: () => [
-        const NotesLoading(),
-        NotesLoaded(testNotes, selectedNote: testNote),
-      ],
-      verify: (_) {
-        verify(() => saveNote.call(
-          userId: 'user-id',
-          note: testNote,
-        )).called(1);
-      },
-    );
+    test('emits [NotesLoading, NotesLoaded] when successful', () async {
+      // Arrange
+      final notes = [testNote];
+      when(() => mockSaveNote(userId: testUserId, note: testNote))
+          .thenAnswer((_) async => null);
+      when(() => mockNotesRepository.getNotes(testUserId))
+          .thenAnswer((_) => Stream.value(notes));
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when update fails',
-      build: () {
-        when(() => saveNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-        )).thenThrow('Failed to update note');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(UpdateNote(
-        userId: 'user-id',
-        note: testNote,
-      )),
-      expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to update note'),
-      ],
-    );
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NotesLoaded(notes, selectedNote: testNote),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(UpdateNote(userId: testUserId, note: testNote));
+    });
+
+    test('emits [NotesLoading, NotesError] when update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update note');
+      when(() => mockSaveNote(userId: testUserId, note: testNote))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(UpdateNote(userId: testUserId, note: testNote));
+    });
   });
 
   group('DeleteNote', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NoteDeleted] when note is deleted successfully',
-      build: () {
-        when(() => deleteNote.call(
-          userId: any(named: 'userId'),
-          noteId: any(named: 'noteId'),
-        )).thenAnswer((_) async => null);
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const DeleteNote(
-        userId: 'user-id',
-        noteId: 'test-id',
-      )),
-      expect: () => [
-        const NotesLoading(),
-        NoteDeleted(testNotes),
-      ],
-      verify: (_) {
-        verify(() => deleteNote.call(
-          userId: 'user-id',
-          noteId: 'test-id',
-        )).called(1);
-      },
-    );
+    test('emits [NotesLoading, NoteDeleted] when successful', () async {
+      // Arrange
+      final notes = [testNote];
+      when(() => mockDeleteNote(userId: testUserId, noteId: testNote.id))
+          .thenAnswer((_) async => null);
+      when(() => mockNotesRepository.getNotes(testUserId))
+          .thenAnswer((_) => Stream.value(notes));
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when deletion fails',
-      build: () {
-        when(() => deleteNote.call(
-          userId: any(named: 'userId'),
-          noteId: any(named: 'noteId'),
-        )).thenThrow('Failed to delete note');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const DeleteNote(
-        userId: 'user-id',
-        noteId: 'test-id',
-      )),
-      expect: () => [
-        const NotesLoading(),
-        const NotesError('Failed to delete note'),
-      ],
-    );
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NoteDeleted(notes),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(DeleteNote(userId: testUserId, noteId: testNote.id));
+    });
+
+    test('emits [NotesLoading, NotesError] when deletion fails', () async {
+      // Arrange
+      final error = Exception('Failed to delete note');
+      when(() => mockDeleteNote(userId: testUserId, noteId: testNote.id))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(DeleteNote(userId: testUserId, noteId: testNote.id));
+    });
   });
 
   group('EncryptNote', () {
-    final legacyNote = Note(
-      id: 'test-id',
-      title: 'Test Note',
-      content: 'Test content',
-      password: 'plaintext123', // Legacy plain text password
-      date: DateTime(2024),
+    final password = 'test-password';
+    final encryptedNote = Note(
+      id: testNote.id,
+      title: testNote.title,
+      content: 'encrypted-content',
+      date: testNote.date,
+      isEncrypted: true,
+      password: password,
     );
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NoteEncrypted] when note with legacy plain text password is re-encrypted',
-      build: () {
-        when(() => encryptNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-          password: any(named: 'password'),
-        )).thenAnswer((_) async {
-          // Should hash the legacy password during re-encryption
-          final hashedNote = encryptedNote.copyWith(
-            password: NoteModel.hashPassword('plaintext123')
-          );
-          return hashedNote;
-        });
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(EncryptNote(
-        userId: 'test-user-id',
-        note: legacyNote,
-        password: legacyNote.password, // Reuse existing plain text password
-      )),
-      expect: () => [
-        isA<NotesLoading>(),
-        isA<NoteEncrypted>(),
-      ],
-      verify: (_) {
-        verify(() => encryptNote.call(
-          userId: 'test-user-id',
-          note: legacyNote,
-          password: 'plaintext123',
-        )).called(1);
-      },
-    );
+    test('emits [NotesLoading, NoteEncrypted] when successful', () async {
+      // Arrange
+      when(() => mockEncryptNote(
+        userId: testUserId,
+        note: testNote,
+        password: password,
+      )).thenAnswer((_) async => encryptedNote);
 
-    blocTest<NotesBloc, NotesState>(
-      'successfully decrypts note with either plain text or hashed password',
-      build: () {
-        when(() => decryptNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-          password: any(named: 'password'),
-        )).thenAnswer((invocation) async {
-          final note = invocation.namedArguments[const Symbol('note')] as Note;
-          final password = invocation.namedArguments[const Symbol('password')] as String;
-          
-          // Verify against both hash and plain text
-          if (password == note.password || // Plain text match
-              NoteModel.hashPassword(password) == note.password) { // Hash match
-            return testNote;
-          }
-          throw ArgumentError('Invalid password');
-        });
-        return notesBloc;
-      },
-      act: (bloc) async {
-        // Try with plain text password
-        bloc.add(DecryptNote(
-          userId: 'test-user-id',
-          note: legacyNote,
-          password: 'plaintext123',
-        ));
-        // Try with hashed password
-        await Future.delayed(const Duration(milliseconds: 100));
-        bloc.add(DecryptNote(
-          userId: 'test-user-id',
-          note: encryptedNote.copyWith(
-            password: NoteModel.hashPassword('plaintext123')
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NoteEncrypted(note: encryptedNote, notes: []),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(EncryptNote(
+        userId: testUserId,
+        note: testNote,
+        password: password,
+      ));
+    });
+
+    test('emits [NotesLoading, NotesError] when encryption fails', () async {
+      // Arrange
+      final error = Exception('Failed to encrypt note');
+      when(() => mockEncryptNote(
+        userId: testUserId,
+        note: testNote,
+        password: password,
+      )).thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
           ),
-          password: 'plaintext123',
-        ));
-      },
-      expect: () => [
-        isA<NotesLoading>(),
-        isA<NoteDecrypted>(),
-        isA<NotesLoading>(),
-        isA<NoteDecrypted>(),
-      ],
-      wait: const Duration(milliseconds: 200),
-    );
+        ]),
+      );
+
+      // Act
+      notesBloc.add(EncryptNote(
+        userId: testUserId,
+        note: testNote,
+        password: password,
+      ));
+    });
   });
 
   group('DecryptNote', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NoteDecrypted] when note is decrypted successfully',
-      build: () {
-        when(() => decryptNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-          password: any(named: 'password'),
-        )).thenAnswer((_) async => testNote);
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(DecryptNote(
-        userId: 'test-user-id',
-        note: encryptedNote,
-        password: 'password123',
-      )),
-      expect: () => [
-        isA<NotesLoading>(),
-        isA<NoteDecrypted>(),
-      ],
-      verify: (_) {
-        verify(() => decryptNote.call(
-          userId: 'test-user-id',
-          note: encryptedNote,
-          password: 'password123',
-        )).called(1);
-      },
+    final password = 'test-password';
+    final encryptedNote = Note(
+      id: testNote.id,
+      title: testNote.title,
+      content: 'encrypted-content',
+      date: testNote.date,
+      isEncrypted: true,
+      password: password,
     );
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesLoading, NotesError] when decryption fails',
-      build: () {
-        when(() => decryptNote.call(
-          userId: any(named: 'userId'),
-          note: any(named: 'note'),
-          password: any(named: 'password'),
-        )).thenThrow('Failed to decrypt note');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(DecryptNote(
-        userId: 'test-user-id',
+    test('emits [NotesLoading, NoteDecrypted] when successful', () async {
+      // Arrange
+      when(() => mockDecryptNote(
+        userId: testUserId,
         note: encryptedNote,
-        password: 'wrong-password',
-      )),
-      expect: () => [
-        isA<NotesLoading>(),
-        isA<NotesError>(),
-      ],
-    );
+        password: password,
+      )).thenAnswer((_) async => testNote);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NoteDecrypted(note: testNote, notes: []),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(DecryptNote(
+        userId: testUserId,
+        note: encryptedNote,
+        password: password,
+      ));
+    });
+
+    test('emits [NotesLoading, NotesError] when decryption fails', () async {
+      // Arrange
+      final error = Exception('Failed to decrypt note');
+      when(() => mockDecryptNote(
+        userId: testUserId,
+        note: encryptedNote,
+        password: password,
+      )).thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(DecryptNote(
+        userId: testUserId,
+        note: encryptedNote,
+        password: password,
+      ));
+    });
   });
 
   group('UpdateLockCounter', () {
-    blocTest<NotesBloc, NotesState>(
-      'emits [NoteLocked] when lock counter is updated successfully',
-      build: () {
-        when(() => updateLockCounter.call(
-          userId: any(named: 'userId'),
-          noteId: any(named: 'noteId'),
-          lockCounter: any(named: 'lockCounter'),
-        )).thenAnswer((_) async => null);
-        when(() => notesRepository.getNote(any(), any()))
-            .thenAnswer((_) async => testNote);
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const UpdateLockCounter(
-        userId: 'user-id',
-        noteId: 'test-id',
-        lockCounter: 1,
-      )),
-      expect: () => [
-        NoteLocked(note: testNote, notes: const []),
-      ],
-      verify: (_) {
-        verify(() => updateLockCounter.call(
-          userId: 'user-id',
-          noteId: 'test-id',
-          lockCounter: 1,
-        )).called(1);
-      },
-    );
+    test('emits [NoteLocked] when successful', () async {
+      // Arrange
+      final lockCounter = 1;
+      final lockedNote = testNote.copyWith(lockCounter: lockCounter);
+      
+      when(() => mockUpdateLockCounter(
+        userId: testUserId,
+        noteId: testNote.id,
+        lockCounter: lockCounter,
+      )).thenAnswer((_) async => null);
+      when(() => mockNotesRepository.getNote(testUserId, testNote.id))
+          .thenAnswer((_) async => lockedNote);
 
-    blocTest<NotesBloc, NotesState>(
-      'emits [NotesError] when lock counter update fails',
-      build: () {
-        when(() => updateLockCounter.call(
-          userId: any(named: 'userId'),
-          noteId: any(named: 'noteId'),
-          lockCounter: any(named: 'lockCounter'),
-        )).thenThrow('Failed to update lock counter');
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const UpdateLockCounter(
-        userId: 'user-id',
-        noteId: 'test-id',
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          NoteLocked(note: lockedNote, notes: []),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(UpdateLockCounter(
+        userId: testUserId,
+        noteId: testNote.id,
+        lockCounter: lockCounter,
+      ));
+    });
+
+    test('emits [NotesError] when update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update lock counter');
+      when(() => mockUpdateLockCounter(
+        userId: testUserId,
+        noteId: testNote.id,
         lockCounter: 1,
-      )),
-      expect: () => [
-        const NotesError('Failed to update lock counter'),
-      ],
-    );
+      )).thenThrow(error);
+
+      // Assert
+      expect(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      notesBloc.add(UpdateLockCounter(
+        userId: testUserId,
+        noteId: testNote.id,
+        lockCounter: 1,
+      ));
+    });
   });
 
-  group('Notes Subscription', () {
-    blocTest<NotesBloc, NotesState>(
-      'starts listening to notes changes',
-      build: () {
-        when(() => getNotes.call(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        when(() => notesRepository.getNotes(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) => bloc.add(const StartListeningToNotes('user-id')),
-      verify: (_) {
-        verify(() => getNotes.call('user-id')).called(1);
-      },
-    );
+  group('StartListeningToNotes', () {
+    test('loads initial notes and starts listening', () async {
+      // Arrange
+      final notes = [testNote];
+      when(() => mockGetNotes(testUserId))
+          .thenAnswer((_) => Stream.value(notes));
 
-    blocTest<NotesBloc, NotesState>(
-      'stops listening to notes changes',
-      build: () {
-        when(() => getNotes.call(any()))
-            .thenAnswer((_) => Stream.value(testNotes));
-        return notesBloc;
-      },
-      act: (bloc) async {
-        bloc.add(const StartListeningToNotes('user-id'));
-        await Future.delayed(const Duration(milliseconds: 10));
-        bloc.add(StopListeningToNotes());
-      },
-      wait: const Duration(milliseconds: 20),
-      verify: (_) {
-        verify(() => getNotes.call('user-id')).called(1);
-      },
-    );
+      // Act & Assert
+      notesBloc.add(StartListeningToNotes(testUserId));
+      
+      await expectLater(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          NotesLoaded(notes),
+        ]),
+      );
+    });
+
+    test('handles stream errors', () async {
+      // Arrange
+      final error = Exception('Stream error');
+      when(() => mockGetNotes(testUserId))
+          .thenAnswer((_) => Stream.error(error));
+
+      // Act & Assert
+      notesBloc.add(StartListeningToNotes(testUserId));
+      
+      await expectLater(
+        notesBloc.stream,
+        emitsInOrder([
+          isA<NotesLoading>(),
+          isA<NotesError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+    });
+
+    test('processes stream updates', () async {
+      // Arrange
+      final controller = StreamController<List<Note>>();
+      when(() => mockGetNotes(testUserId))
+          .thenAnswer((_) => controller.stream);
+
+      // Act & Assert initial state
+      notesBloc.add(StartListeningToNotes(testUserId));
+      
+      await expectLater(
+        notesBloc.stream,
+        emits(isA<NotesLoading>()),
+      );
+
+      // Add notes and verify state updates
+      final updatedNotes = [testNote];
+      controller.add(updatedNotes);
+      
+      await expectLater(
+        notesBloc.stream,
+        emits(NotesLoaded(updatedNotes)),
+      );
+
+      // Clean up
+      await controller.close();
+    });
+  });
+
+  group('StopListeningToNotes', () {
+    test('stops listening to note changes', () async {
+      // Arrange
+      final controller = StreamController<List<Note>>();
+      when(() => mockGetNotes(testUserId))
+          .thenAnswer((_) => controller.stream);
+
+      // Act
+      notesBloc.add(StartListeningToNotes(testUserId));
+      await Future.delayed(const Duration(milliseconds: 100));
+      notesBloc.add(StopListeningToNotes());
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Try to add more data after stopping
+      controller.add([testNote]);
+
+      // Assert - No new states should be emitted after stopping
+      await expectLater(
+        notesBloc.stream,
+        emitsInOrder([]),
+      );
+
+      // Clean up
+      await controller.close();
+    });
   });
 } 

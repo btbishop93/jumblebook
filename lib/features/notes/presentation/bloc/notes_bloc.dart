@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/notes_repository.dart';
 import '../../domain/usecases/usecases.dart' as usecases;
+import '../../domain/entities/note.dart';
 import 'notes_event.dart';
 import 'notes_state.dart';
 
@@ -167,9 +168,16 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     Emitter<NotesState> emit,
   ) async {
     await _notesSubscription?.cancel();
-    _notesSubscription = _getNotes(event.userId).listen(
-      (notes) => add(LoadNotes(event.userId)),
-      onError: (error) => emit(NotesError(error.toString(), notes: state.notes)),
+    
+    emit(NotesLoading(notes: state.notes));
+    
+    await emit.forEach<List<dynamic>>(
+      _getNotes(event.userId),
+      onData: (notes) => NotesLoaded(notes.cast<Note>()),
+      onError: (error, stackTrace) {
+        emit(NotesError(error.toString(), notes: state.notes));
+        return state;
+      },
     );
   }
 
