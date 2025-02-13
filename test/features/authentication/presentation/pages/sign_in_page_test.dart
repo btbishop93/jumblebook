@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'dart:async';
-import 'package:jumblebook/features/authentication/domain/entities/user.dart';
 import 'package:jumblebook/features/authentication/presentation/bloc/auth_bloc.dart';
 import 'package:jumblebook/features/authentication/presentation/bloc/auth_event.dart';
 import 'package:jumblebook/features/authentication/presentation/bloc/auth_state.dart';
