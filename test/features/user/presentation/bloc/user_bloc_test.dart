@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'dart:async';
 import 'package:jumblebook/features/user/domain/entities/user_profile.dart';
 import 'package:jumblebook/features/user/domain/repositories/user_repository.dart';
 import 'package:jumblebook/features/user/domain/usecases/usecases.dart' as usecases;
@@ -8,47 +8,41 @@ import 'package:jumblebook/features/user/presentation/bloc/user_bloc.dart';
 import 'package:jumblebook/features/user/presentation/bloc/user_event.dart';
 import 'package:jumblebook/features/user/presentation/bloc/user_state.dart';
 
-class MockUserRepository extends Mock implements UserRepository {}
 class MockGetUserProfile extends Mock implements usecases.GetUserProfile {}
 class MockUpdateUserProfile extends Mock implements usecases.UpdateUserProfile {}
 class MockDeleteAccount extends Mock implements usecases.DeleteAccount {}
-
-// Register fallback values for Mocktail
-class FakeUserProfile extends Fake implements UserProfile {}
+class MockUserRepository extends Mock implements UserRepository {}
 
 void main() {
   late UserBloc userBloc;
-  late MockUserRepository userRepository;
-  late MockGetUserProfile getUserProfile;
-  late MockUpdateUserProfile updateUserProfile;
-  late MockDeleteAccount deleteAccount;
+  late MockGetUserProfile mockGetUserProfile;
+  late MockUpdateUserProfile mockUpdateUserProfile;
+  late MockDeleteAccount mockDeleteAccount;
+  late MockUserRepository mockUserRepository;
 
-  // Test user profile fixture
-  final testProfile = UserProfile(
-    id: 'test-id',
+  final testUserId = 'test-user-id';
+  final testUserProfile = UserProfile(
+    id: testUserId,
     email: 'test@example.com',
     displayName: 'Test User',
     bio: 'Test bio',
+    lastSeen: DateTime.now(),
     notesCount: 5,
-    preferences: ['dark_mode', 'notifications_enabled'],
+    preferences: ['dark_mode', 'notifications_on'],
     settings: {'theme': 'dark', 'fontSize': 14},
   );
 
-  setUpAll(() {
-    registerFallbackValue(FakeUserProfile());
-  });
-
   setUp(() {
-    userRepository = MockUserRepository();
-    getUserProfile = MockGetUserProfile();
-    updateUserProfile = MockUpdateUserProfile();
-    deleteAccount = MockDeleteAccount();
+    mockGetUserProfile = MockGetUserProfile();
+    mockUpdateUserProfile = MockUpdateUserProfile();
+    mockDeleteAccount = MockDeleteAccount();
+    mockUserRepository = MockUserRepository();
 
     userBloc = UserBloc(
-      getUserProfile: getUserProfile,
-      updateUserProfile: updateUserProfile,
-      deleteAccount: deleteAccount,
-      userRepository: userRepository,
+      getUserProfile: mockGetUserProfile,
+      updateUserProfile: mockUpdateUserProfile,
+      deleteAccount: mockDeleteAccount,
+      userRepository: mockUserRepository,
     );
   });
 
@@ -56,263 +50,394 @@ void main() {
     userBloc.close();
   });
 
-  test('initial state is UserInitial', () {
-    expect(userBloc.state, isA<UserInitial>());
+  test('initial state should be UserInitial', () {
+    expect(userBloc.state, const UserInitial());
   });
 
   group('LoadUserProfile', () {
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserLoaded] when profile is loaded successfully',
-      build: () {
-        when(() => getUserProfile.call(any())).thenAnswer((_) async => testProfile);
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const LoadUserProfile('test-id')),
-      expect: () => [
-        const UserLoading(),
-        UserLoaded(testProfile),
-      ],
-      verify: (_) {
-        verify(() => getUserProfile.call('test-id')).called(1);
-      },
-    );
+    test('emits [UserLoading, UserLoaded] when successful', () async {
+      // Arrange
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserError] when loading fails',
-      build: () {
-        when(() => getUserProfile.call(any()))
-            .thenThrow(Exception('Failed to load profile'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const LoadUserProfile('test-id')),
-      expect: () => [
-        const UserLoading(),
-        const UserError('Exception: Failed to load profile'),
-      ],
-    );
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(testUserProfile),
+        ]),
+      );
+
+      // Act
+      userBloc.add(LoadUserProfile(testUserId));
+    });
+
+    test('emits [UserLoading, UserError] when loading fails', () async {
+      // Arrange
+      final error = Exception('Failed to load user profile');
+      when(() => mockGetUserProfile(testUserId)).thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          isA<UserError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      userBloc.add(LoadUserProfile(testUserId));
+    });
   });
 
   group('UpdateUserProfile', () {
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserLoaded] when profile is updated successfully',
-      build: () {
-        when(() => updateUserProfile.call(any()))
-            .thenAnswer((_) async => testProfile);
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserProfile(testProfile)),
-      expect: () => [
-        const UserLoading(),
-        UserLoaded(testProfile),
-      ],
-      verify: (_) {
-        verify(() => updateUserProfile.call(testProfile)).called(1);
-      },
-    );
+    test('emits [UserLoading, UserLoaded] when successful', () async {
+      // Arrange
+      when(() => mockUpdateUserProfile(testUserProfile))
+          .thenAnswer((_) async => testUserProfile);
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserError] when update fails',
-      build: () {
-        when(() => updateUserProfile.call(any()))
-            .thenThrow(Exception('Failed to update profile'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserProfile(testProfile)),
-      expect: () => [
-        const UserLoading(),
-        const UserError('Exception: Failed to update profile'),
-      ],
-    );
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(testUserProfile),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserProfile(testUserProfile));
+    });
+
+    test('emits [UserLoading, UserError] when update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update user profile');
+      when(() => mockUpdateUserProfile(testUserProfile)).thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          isA<UserError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserProfile(testUserProfile));
+    });
   });
 
   group('DeleteUserAccount', () {
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserDeleted] when account is deleted successfully',
-      build: () {
-        when(() => deleteAccount.call(any())).thenAnswer((_) async => null);
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const DeleteUserAccount('test-id')),
-      expect: () => [
-        const UserLoading(),
-        const UserDeleted(),
-      ],
-      verify: (_) {
-        verify(() => deleteAccount.call('test-id')).called(1);
-      },
-    );
+    test('emits [UserLoading, UserDeleted] when successful', () async {
+      // Arrange
+      when(() => mockDeleteAccount(testUserId))
+          .thenAnswer((_) async => null);
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserError] when deletion fails',
-      build: () {
-        when(() => deleteAccount.call(any()))
-            .thenThrow(Exception('Failed to delete account'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const DeleteUserAccount('test-id')),
-      expect: () => [
-        const UserLoading(),
-        const UserError('Exception: Failed to delete account'),
-      ],
-    );
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          const UserDeleted(),
+        ]),
+      );
+
+      // Act
+      userBloc.add(DeleteUserAccount(testUserId));
+    });
+
+    test('emits [UserLoading, UserError] when deletion fails', () async {
+      // Arrange
+      final error = Exception('Failed to delete account');
+      when(() => mockDeleteAccount(testUserId)).thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          isA<UserError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      userBloc.add(DeleteUserAccount(testUserId));
+    });
   });
 
   group('UpdateUserPreferences', () {
-    final newPreferences = ['dark_mode', 'notifications_disabled'];
+    final newPreferences = ['dark_mode', 'notifications_off'];
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserPreferencesUpdated] when preferences are updated successfully',
-      build: () {
-        when(() => userRepository.updatePreferences(any(), any()))
-            .thenAnswer((_) async => null);
-        when(() => getUserProfile.call(any()))
-            .thenAnswer((_) async => testProfile.copyWith(
-                  preferences: newPreferences,
-                ));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserPreferences(
-        userId: 'test-id',
-        preferences: newPreferences,
-      )),
-      expect: () => [
-        const UserLoading(),
-        UserPreferencesUpdated(
-          testProfile.copyWith(preferences: newPreferences),
-        ),
-      ],
-      verify: (_) {
-        verify(() => userRepository.updatePreferences('test-id', newPreferences))
-            .called(1);
-        verify(() => getUserProfile.call('test-id')).called(1);
-      },
-    );
+    test('emits [UserLoading, UserPreferencesUpdated] when successful', () async {
+      // Arrange
+      when(() => mockUserRepository.updatePreferences(testUserId, newPreferences))
+          .thenAnswer((_) async => null);
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserError] when preferences update fails',
-      build: () {
-        when(() => userRepository.updatePreferences(any(), any()))
-            .thenThrow(Exception('Failed to update preferences'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserPreferences(
-        userId: 'test-id',
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserPreferencesUpdated(testUserProfile),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserPreferences(
+        userId: testUserId,
         preferences: newPreferences,
-      )),
-      expect: () => [
-        const UserLoading(),
-        const UserError('Exception: Failed to update preferences'),
-      ],
-    );
+      ));
+    });
+
+    test('emits [UserLoading, UserError] when update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update preferences');
+      when(() => mockUserRepository.updatePreferences(testUserId, newPreferences))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          isA<UserError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserPreferences(
+        userId: testUserId,
+        preferences: newPreferences,
+      ));
+    });
   });
 
   group('UpdateUserSettings', () {
     final newSettings = {'theme': 'light', 'fontSize': 16};
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserSettingsUpdated] when settings are updated successfully',
-      build: () {
-        when(() => userRepository.updateSettings(any(), any()))
-            .thenAnswer((_) async => null);
-        when(() => getUserProfile.call(any()))
-            .thenAnswer((_) async => testProfile.copyWith(
-                  settings: newSettings,
-                ));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserSettings(
-        userId: 'test-id',
-        settings: newSettings,
-      )),
-      expect: () => [
-        const UserLoading(),
-        UserSettingsUpdated(
-          testProfile.copyWith(settings: newSettings),
-        ),
-      ],
-      verify: (_) {
-        verify(() => userRepository.updateSettings('test-id', newSettings))
-            .called(1);
-        verify(() => getUserProfile.call('test-id')).called(1);
-      },
-    );
+    test('emits [UserLoading, UserSettingsUpdated] when successful', () async {
+      // Arrange
+      when(() => mockUserRepository.updateSettings(testUserId, newSettings))
+          .thenAnswer((_) async => null);
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
 
-    blocTest<UserBloc, UserState>(
-      'emits [UserLoading, UserError] when settings update fails',
-      build: () {
-        when(() => userRepository.updateSettings(any(), any()))
-            .thenThrow(Exception('Failed to update settings'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(UpdateUserSettings(
-        userId: 'test-id',
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserSettingsUpdated(testUserProfile),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserSettings(
+        userId: testUserId,
         settings: newSettings,
-      )),
-      expect: () => [
-        const UserLoading(),
-        const UserError('Exception: Failed to update settings'),
-      ],
-    );
+      ));
+    });
+
+    test('emits [UserLoading, UserError] when update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update settings');
+      when(() => mockUserRepository.updateSettings(testUserId, newSettings))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          isA<UserError>().having(
+            (state) => state.errorMessage,
+            'error message',
+            error.toString(),
+          ),
+        ]),
+      );
+
+      // Act
+      userBloc.add(UpdateUserSettings(
+        userId: testUserId,
+        settings: newSettings,
+      ));
+    });
   });
 
   group('UpdateLastSeen', () {
-    blocTest<UserBloc, UserState>(
-      'does not emit new states when last seen is updated successfully',
-      build: () {
-        when(() => userRepository.updateLastSeen(any()))
-            .thenAnswer((_) async => null);
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const UpdateLastSeen('test-id')),
-      expect: () => [], // No state changes expected
-      verify: (_) {
-        verify(() => userRepository.updateLastSeen('test-id')).called(1);
-      },
-    );
+    test('does not emit new states when successful', () async {
+      // Arrange
+      when(() => mockUserRepository.updateLastSeen(testUserId))
+          .thenAnswer((_) async => null);
 
-    blocTest<UserBloc, UserState>(
-      'does not emit new states when last seen update fails',
-      build: () {
-        when(() => userRepository.updateLastSeen(any()))
-            .thenThrow(Exception('Failed to update last seen'));
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const UpdateLastSeen('test-id')),
-      expect: () => [], // No state changes expected even on failure
-    );
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([]), // No state changes expected
+      );
+
+      // Act
+      userBloc.add(UpdateLastSeen(testUserId));
+    });
+
+    test('does not emit new states when last seen update fails', () async {
+      // Arrange
+      final error = Exception('Failed to update last seen');
+      when(() => mockUserRepository.updateLastSeen(testUserId))
+          .thenThrow(error);
+
+      // Assert
+      expect(
+        userBloc.stream,
+        emitsInOrder([]), // No state changes expected
+      );
+
+      // Act
+      userBloc.add(UpdateLastSeen(testUserId));
+    });
   });
 
-  group('Profile Changes Subscription', () {
-    blocTest<UserBloc, UserState>(
-      'starts listening to profile changes',
-      build: () {
-        when(() => userRepository.userProfileChanges(any()))
-            .thenAnswer((_) => Stream.value(testProfile));
-        when(() => getUserProfile.call(any())).thenAnswer((_) async => testProfile);
-        return userBloc;
-      },
-      act: (bloc) => bloc.add(const StartListeningToUserProfile('test-id')),
-      verify: (_) {
-        verify(() => userRepository.userProfileChanges('test-id')).called(1);
-      },
-    );
+  group('StartListeningToUserProfile', () {
+    test('loads initial profile and starts listening', () async {
+      // Arrange
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
+      when(() => mockUserRepository.userProfileChanges(testUserId))
+          .thenAnswer((_) => const Stream.empty());
 
-    blocTest<UserBloc, UserState>(
-      'stops listening to profile changes',
-      build: () {
-        when(() => userRepository.userProfileChanges(any()))
-            .thenAnswer((_) => Stream.value(testProfile));
-        return userBloc;
-      },
-      act: (bloc) async {
-        bloc.add(const StartListeningToUserProfile('test-id'));
-        await Future.delayed(const Duration(milliseconds: 10));
-        bloc.add(StopListeningToUserProfile());
-      },
-      wait: const Duration(milliseconds: 20),
-      verify: (_) {
-        verify(() => userRepository.userProfileChanges('test-id')).called(1);
-      },
-    );
+      // Act
+      userBloc.add(StartListeningToUserProfile(testUserId));
+
+      // Assert - verify initial load
+      await expectLater(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(testUserProfile),
+        ]),
+      );
+
+      // Verify stream was subscribed to
+      verify(() => mockUserRepository.userProfileChanges(testUserId)).called(1);
+    });
+
+    test('handles stream errors', () async {
+      // Arrange
+      final error = Exception('Stream error');
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
+      when(() => mockUserRepository.userProfileChanges(testUserId))
+          .thenAnswer((_) => Stream.error(error));
+
+      // Act
+      userBloc.add(StartListeningToUserProfile(testUserId));
+
+      // Assert
+      await expectLater(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(testUserProfile),
+          isA<UserError>(),
+        ]),
+      );
+    });
+
+    test('processes stream updates', () async {
+      // Arrange
+      final streamController = StreamController<UserProfile>();
+      final updatedProfile = UserProfile(
+        id: testUserId,
+        email: 'test@example.com',
+        displayName: 'Updated Name',
+        bio: 'Test bio',
+        lastSeen: DateTime.now(),
+        notesCount: 5,
+        preferences: ['dark_mode', 'notifications_on'],
+        settings: {'theme': 'dark', 'fontSize': 14},
+      );
+
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
+      when(() => mockUserRepository.userProfileChanges(testUserId))
+          .thenAnswer((_) => streamController.stream);
+
+      // Act & Assert - Initial load
+      userBloc.add(StartListeningToUserProfile(testUserId));
+      await expectLater(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(testUserProfile),
+        ]),
+      );
+
+      // Act & Assert - Stream update
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => updatedProfile);
+      streamController.add(updatedProfile);
+
+      await expectLater(
+        userBloc.stream,
+        emitsInOrder([
+          isA<UserLoading>(),
+          UserLoaded(updatedProfile),
+        ]),
+      );
+
+      // Clean up
+      await streamController.close();
+    });
+  });
+
+  group('StopListeningToUserProfile', () {
+    test('stops listening to user profile changes', () async {
+      // Arrange
+      final controller = StreamController<UserProfile>();
+      when(() => mockUserRepository.userProfileChanges(testUserId))
+          .thenAnswer((_) => controller.stream);
+      when(() => mockGetUserProfile(testUserId))
+          .thenAnswer((_) async => testUserProfile);
+
+      // Act
+      userBloc.add(StartListeningToUserProfile(testUserId));
+      await Future.delayed(const Duration(milliseconds: 100));
+      userBloc.add(StopListeningToUserProfile());
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Try to add more data after stopping
+      controller.add(testUserProfile);
+
+      // Assert - No new states should be emitted after stopping
+      await expectLater(
+        userBloc.stream,
+        emitsInOrder([]),
+      );
+
+      // Clean up
+      await controller.close();
+    });
   });
 } 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../../domain/usecases/usecases.dart' as usecases;
+import '../../domain/entities/user_profile.dart';
 import 'user_event.dart';
 import 'user_state.dart';
 
@@ -122,12 +123,28 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     Emitter<UserState> emit,
   ) async {
     await _userProfileSubscription?.cancel();
-    _userProfileSubscription = _userRepository
-        .userProfileChanges(event.userId)
-        .listen(
-          (profile) => add(LoadUserProfile(event.userId)),
-          onError: (error) => emit(UserError(error.toString(), profile: state.profile)),
-        );
+    
+    try {
+      // Initial load
+      emit(UserLoading(profile: state.profile));
+      final initialProfile = await _getUserProfile(event.userId);
+      emit(UserLoaded(initialProfile));
+      
+      // Start listening to changes
+      await emit.forEach<UserProfile>(
+        _userRepository.userProfileChanges(event.userId),
+        onData: (profile) {
+          add(LoadUserProfile(event.userId));
+          return state;
+        },
+        onError: (error, stackTrace) {
+          emit(UserError(error.toString(), profile: state.profile));
+          return state;
+        },
+      );
+    } catch (e) {
+      emit(UserError(e.toString(), profile: state.profile));
+    }
   }
 
   Future<void> _onStopListeningToUserProfile(
