@@ -48,8 +48,8 @@ class NotesRepositoryImpl implements NotesRepository {
     final noteModel = NoteModel.fromNote(note);
     try {
       final unjumbledNote = password.isEmpty 
-          ? noteModel.biometricUnjumble()  // Use biometric decryption if no password provided
-          : noteModel.unjumble(password);   // Use password-based decryption otherwise
+          ? noteModel.biometricUnjumble()  // Use biometric unjumbling if no password provided
+          : noteModel.unjumble(password);   // Use password-based unjumbling otherwise
       
       // Always save the unjumbled note to persist password and shift
       await _remoteDataSource.saveNote(userId, unjumbledNote);

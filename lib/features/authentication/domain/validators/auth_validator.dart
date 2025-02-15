@@ -18,7 +18,7 @@ class AuthValidator {
     required FormType type,
     FormData? formData,
   }) {
-    if (value == null || (value.isEmpty && type != FormType.DECRYPT)) {
+    if (value == null || (value.isEmpty && type != FormType.UNJUMBLE)) {
       return 'Enter a password.';
     }
 
@@ -26,19 +26,19 @@ class AuthValidator {
       case FormType.REGISTER:
         if (value.length < 8) return 'Use 8 characters or more for your password.';
         return value != formData?.password ? 'Passwords do not match.' : null;
-      case FormType.ENCRYPT:
+      case FormType.JUMBLE:
         return value.length < 8 ? 'Use 8 characters or more for your password.' : null;
-      case FormType.DECRYPT:
+      case FormType.UNJUMBLE:
         if (formData == null) return 'Invalid form data';
         return value != formData.password 
-            ? 'Incorrect password. ${decryptAttemptMessage(formData)}'
+            ? 'Incorrect password. ${unjumbleAttemptMessage(formData)}'
             : null;
       default:
         return null;
     }
   }
 
-  static String decryptAttemptMessage(FormData formData) {
+  static String unjumbleAttemptMessage(FormData formData) {
     switch (formData.lockCounter) {
       case 0:
         return 'Warning! This note will be locked after 2 more failed attempts.';

@@ -24,7 +24,7 @@ class PasswordForm {
 
 Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async {
   final controller = StreamController<bool>();
-  final isEncrypted = note.isEncrypted;
+  final isJumbled = note.isEncrypted;
   
   final result = await showDialog<Prompt>(
     context: context,
@@ -45,7 +45,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
           void updateFormData(PasswordForm form) {
             setState(() {
               result.password = form.password;
-              if (isEncrypted) {
+              if (isJumbled) {
                 if (form.success == true) {
                   controller.close();
                   Navigator.of(context).pop(result);
@@ -76,7 +76,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  !isEncrypted
+                  !isJumbled
                       ? const Text(
                           'Create a password. You will need your password or biometric authentication to Unjumble this note.',
                           style: TextStyle(fontSize: 12),
@@ -86,15 +86,15 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
                           style: TextStyle(fontSize: 12),
                         ),
                   const SizedBox(height: 24),
-                  !isEncrypted
+                  !isJumbled
                       ? PasswordInputForm(
-                          isEncrypting: true,
+                          isJumbling: true,
                           onFormUpdate: updateFormData,
                           triggerValidation: controller.stream,
                           note: note,
                         )
                       : PasswordInputForm(
-                          isEncrypting: false,
+                          isJumbling: false,
                           onFormUpdate: updateFormData,
                           formData: PasswordForm(
                             lockCounter: note.lockCounter,
@@ -170,7 +170,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
 }
 
 class PasswordInputForm extends StatefulWidget {
-  final bool isEncrypting;
+  final bool isJumbling;
   final Function(PasswordForm) onFormUpdate;
   final Stream<bool> triggerValidation;
   final PasswordForm? formData;
@@ -178,7 +178,7 @@ class PasswordInputForm extends StatefulWidget {
 
   const PasswordInputForm({
     super.key,
-    required this.isEncrypting,
+    required this.isJumbling,
     required this.onFormUpdate,
     required this.triggerValidation,
     required this.note,
@@ -226,7 +226,7 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState!.save();
       
-      if (!widget.isEncrypting) {
+      if (!widget.isJumbling) {
         // For unjumbling, check if password matches using proper hash verification
         final noteModel = NoteModel.fromNote(widget.note);
         if (noteModel.verifyPassword(_formData.password)) {
@@ -265,7 +265,7 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
       return 'Enter a password.';
     }
 
-    if (widget.isEncrypting) {
+    if (widget.isJumbling) {
       if (value.length < 8) {
         return 'Use 8 characters or more for your password.';
       }
@@ -292,7 +292,7 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.lock),
               labelText: 'Password',
-              helperText: widget.isEncrypting
+              helperText: widget.isJumbling
                   ? 'Use 8 or more characters with a mix of letters, numbers & symbols.'
                   : null,
               helperMaxLines: 2,

@@ -3,8 +3,8 @@ enum FormType {
   REGISTER,
   FORGOT_PASSWORD,
   PASSWORD_RESET,
-  ENCRYPT,
-  DECRYPT,
+  JUMBLE,
+  UNJUMBLE,
 }
 
 class FormData {

@@ -23,19 +23,19 @@ void main() {
     date: DateTime(2024),
   );
 
-  final encryptedNote = Note(
+  final jumbledNote = Note(
     id: 'test-note-id',
     title: 'Test Note',
-    content: 'Encrypted content',
+    content: 'Jumbled content',
     date: DateTime(2024),
     isEncrypted: true,
     password: testPassword,
   );
 
-  test('should encrypt note using the repository', () async {
+  test('should jumble note using the repository', () async {
     // Arrange
     when(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
-        .thenAnswer((_) async => encryptedNote);
+        .thenAnswer((_) async => jumbledNote);
 
     // Act
     final result = await useCase(
@@ -45,7 +45,7 @@ void main() {
     );
 
     // Assert
-    expect(result, equals(encryptedNote));
+    expect(result, equals(jumbledNote));
     verify(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .called(1);
   });

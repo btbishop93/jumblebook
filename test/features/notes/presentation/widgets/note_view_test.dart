@@ -22,10 +22,10 @@ void main() {
     content: 'Test content',
     date: DateTime.now(),
   );
-  final encryptedNote = Note(
+  final jumbledNote = Note(
     id: 'test-note-id',
     title: 'Test Note',
-    content: 'Encrypted content',
+    content: 'Jumbled content',
     isEncrypted: true,
     lockCounter: 0,
     date: DateTime.now(),
@@ -160,7 +160,7 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<UpdateNote>()))).called(1);
     });
 
-    testWidgets('should encrypt note when lock button is tapped', (WidgetTester tester) async {
+    testWidgets('should jumble note when lock button is tapped', (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
@@ -181,17 +181,17 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<JumbleNote>()))).called(1);
     });
 
-    testWidgets('should decrypt note when lock button is tapped', (WidgetTester tester) async {
+    testWidgets('should unjumble note when lock button is tapped', (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
       // Arrange
       when(() => mockNotesBloc.add(any(that: isA<LoadNote>()))).thenAnswer((_) async {
-        streamController.add(NoteLoaded(note: encryptedNote, notes: [encryptedNote]));
+        streamController.add(NoteLoaded(note: jumbledNote, notes: [jumbledNote]));
       });
 
       // Act
-      await pumpAndWaitForLoadNote(tester, streamController, encryptedNote);
+      await pumpAndWaitForLoadNote(tester, streamController, jumbledNote);
       
       // Find and tap the lock button
       final lockButton = find.byKey(const Key('lock_button'));

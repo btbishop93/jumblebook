@@ -128,14 +128,14 @@ class _NoteViewState extends State<NoteView> {
         if (_note.password.isNotEmpty) {
           _notesBloc.add(JumbleNote(
             userId: widget.userId,
-            note: _note.copyWith(password: ''), // Clear hashed password before re-encrypting
-            password: _note.password, // Pass the stored password for re-encryption
+            note: _note.copyWith(password: ''), // Clear hashed password before re-jumbling
+            password: _note.password, // Pass the stored password for re-jumbling
           ));
         } else {
-          _encryptNotePrompt();
+          _jumbleNotePrompt();
         }
       } else {
-        _decryptNotePrompt();
+        _unjumbleNotePrompt();
       }
     }
   }
@@ -189,7 +189,7 @@ class _NoteViewState extends State<NoteView> {
     return isAuthenticated;
   }
 
-  void _encryptNotePrompt() async {
+  void _jumbleNotePrompt() async {
     final result = await jumblePrompt(
       context,
       'Jumble this note?',
@@ -205,7 +205,7 @@ class _NoteViewState extends State<NoteView> {
     }
   }
 
-  void _decryptNotePrompt() async {
+  void _unjumbleNotePrompt() async {
     Prompt result = Prompt("", _note.lockCounter);
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote(true)) {

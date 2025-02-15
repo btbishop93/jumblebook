@@ -1,12 +1,12 @@
 # Jumblebook
 
-A Flutter note-taking app with encryption capabilities.
+A Flutter note-taking app with fun privacy features.
 
 ## Features
 
 - User authentication (Email/Password, Google Sign-In, Apple Sign-In)
 - Note creation and management
-- Note encryption with password protection
+- Note jumbling with password protection
 - Biometric authentication support
 - Cloud sync with Firebase
 
@@ -56,7 +56,6 @@ The UI implementation and state management:
 - BLoC tests for state management
 
 ### Security
-- Secure note encryption
 - Biometric authentication
 - Secure key storage
 - Firebase security rules

@@ -95,7 +95,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('should show encryption message for new note', (WidgetTester tester) async {
+    testWidgets('should show jumbled message for new note', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -110,7 +110,7 @@ void main() {
       );
     });
 
-    testWidgets('should show decryption message for encrypted note', (WidgetTester tester) async {
+    testWidgets('should show unjumbling message for jumbled note', (WidgetTester tester) async {
       // Arrange
       testNote = testNote.copyWith(isEncrypted: true);
       await tester.pumpWidget(createWidgetUnderTest());
@@ -126,7 +126,7 @@ void main() {
       );
     });
 
-    testWidgets('should show helper text when encrypting', (WidgetTester tester) async {
+    testWidgets('should show helper text when jumbling', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 

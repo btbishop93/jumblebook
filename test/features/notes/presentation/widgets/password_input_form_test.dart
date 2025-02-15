@@ -1,10 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jumblebook/features/notes/domain/entities/note.dart';
+import 'package:jumblebook/features/notes/data/models/note_model.dart';
 import 'package:jumblebook/features/notes/presentation/widgets/jumble_prompt.dart';
 
 void main() {
   late StreamController<bool> validationController;
+  final testNote = Note(
+    id: '1',
+    title: 'Test Note',
+    content: 'Test Content',
+    date: DateTime.now(),
+    password: NoteModel.hashPassword('correctpass'), // Store hashed password
+    isEncrypted: true,
+  );
 
   setUp(() {
     validationController = StreamController<bool>.broadcast();
@@ -15,7 +25,7 @@ void main() {
   });
 
   Widget createWidgetUnderTest({
-    bool isEncrypting = true,
+    bool isJumbling = true,
     PasswordForm? formData,
     required Function(PasswordForm) onFormUpdate,
   }) {
@@ -25,10 +35,11 @@ void main() {
           key: GlobalKey<FormState>(),
           autovalidateMode: AutovalidateMode.always,
           child: PasswordInputForm(
-            isEncrypting: isEncrypting,
+            isJumbling: isJumbling,
             onFormUpdate: onFormUpdate,
             triggerValidation: validationController.stream,
             formData: formData,
+            note: testNote,
           ),
         ),
       ),
@@ -62,10 +73,10 @@ void main() {
       expect(find.text('Enter a password.'), findsOneWidget);
     });
 
-    testWidgets('should validate password length when encrypting', (WidgetTester tester) async {
+    testWidgets('should validate password length when jumbling', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: true,
+        isJumbling: true,
         onFormUpdate: (_) {},
       ));
 
@@ -81,11 +92,11 @@ void main() {
       expect(find.text('Use 8 characters or more for your password.'), findsOneWidget);
     });
 
-    testWidgets('should call onFormUpdate with valid password when encrypting', (WidgetTester tester) async {
+    testWidgets('should call onFormUpdate with valid password when jumbling', (WidgetTester tester) async {
       // Arrange
       PasswordForm? updatedForm;
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: true,
+        isJumbling: true,
         onFormUpdate: (form) => updatedForm = form,
       ));
 
@@ -102,12 +113,37 @@ void main() {
       expect(updatedForm?.password, equals('password123'));
     });
 
-    testWidgets('should show warning on first failed attempt when decrypting', (WidgetTester tester) async {
+    testWidgets('should accept correct password when unjumbling', (WidgetTester tester) async {
+      // Arrange
+      PasswordForm? updatedForm;
+      await tester.pumpWidget(createWidgetUnderTest(
+        isJumbling: false,
+        formData: PasswordForm(
+          password: testNote.password,
+          lockCounter: 0,
+        ),
+        onFormUpdate: (form) => updatedForm = form,
+      ));
+
+      // Act
+      await tester.enterText(
+        find.byType(TextFormField),
+        'correctpass',  // Enter the original unhashed password
+      );
+      validationController.add(true);
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(updatedForm, isNotNull);
+      expect(updatedForm?.success, isTrue);
+    });
+
+    testWidgets('should show first warning on incorrect password', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: false,
+        isJumbling: false,
         formData: PasswordForm(
-          password: 'correctpass',
+          password: testNote.password,
           lockCounter: 0,
         ),
         onFormUpdate: (_) {},
@@ -118,21 +154,22 @@ void main() {
         find.byType(TextFormField),
         'wrongpass',
       );
-      await tester.pump();
+      validationController.add(true);
+      await tester.pumpAndSettle();
 
       // Assert
-      final textFormField = tester.widget<TextFormField>(find.byType(TextFormField));
-      final validator = textFormField.validator;
-      final error = validator?.call('wrongpass');
-      expect(error, equals('Warning! This note will be locked after 2 more failed attempts.'));
+      expect(
+        find.text('Warning! This note will be locked after 2 more failed attempts.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('should show final warning on second failed attempt', (WidgetTester tester) async {
+    testWidgets('should show second warning on second failed attempt', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: false,
+        isJumbling: false,
         formData: PasswordForm(
-          password: 'correctpass',
+          password: testNote.password,
           lockCounter: 1,
         ),
         onFormUpdate: (_) {},
@@ -143,21 +180,22 @@ void main() {
         find.byType(TextFormField),
         'wrongpass',
       );
-      await tester.pump();
+      validationController.add(true);
+      await tester.pumpAndSettle();
 
       // Assert
-      final textFormField = tester.widget<TextFormField>(find.byType(TextFormField));
-      final validator = textFormField.validator;
-      final error = validator?.call('wrongpass');
-      expect(error, equals('Warning! This note will be locked after 1 more failed attempt.'));
+      expect(
+        find.text('Warning! This note will be locked after 1 more failed attempt.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('should lock note after third failed attempt', (WidgetTester tester) async {
+    testWidgets('should show locked message on third failed attempt', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: false,
+        isJumbling: false,
         formData: PasswordForm(
-          password: 'correctpass',
+          password: testNote.password,
           lockCounter: 2,
         ),
         onFormUpdate: (_) {},
@@ -168,19 +206,20 @@ void main() {
         find.byType(TextFormField),
         'wrongpass',
       );
-      await tester.pump();
+      validationController.add(true);
+      await tester.pumpAndSettle();
 
       // Assert
-      final textFormField = tester.widget<TextFormField>(find.byType(TextFormField));
-      final validator = textFormField.validator;
-      final error = validator?.call('wrongpass');
-      expect(error, equals('This note is now locked and can only be unlocked via TouchID or FaceID.'));
+      expect(
+        find.text('This note is now locked and can only be unlocked via TouchID or FaceID.'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('should show helper text when encrypting', (WidgetTester tester) async {
+    testWidgets('should show helper text when jumbling', (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        isEncrypting: true,
+        isJumbling: true,
         onFormUpdate: (_) {},
       ));
 

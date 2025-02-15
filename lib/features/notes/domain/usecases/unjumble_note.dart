@@ -18,7 +18,7 @@ class UnjumbleNote {
       throw ArgumentError('Note ID cannot be empty');
     }
     if (!note.isEncrypted) {
-      throw StateError('Note is not encrypted');
+      throw StateError('Note is not jumbled');
     }
     return repository.unjumbleNote(userId, note, password);
   }

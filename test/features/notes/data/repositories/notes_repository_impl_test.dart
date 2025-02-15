@@ -32,12 +32,12 @@ void main() {
     date: testDate,
   );
 
-  final encryptedNoteModel = testNoteModel.copyWith(
+  final jumbledNoteModel = testNoteModel.copyWith(
     isEncrypted: true,
     password: 'password123',
   ) as NoteModel;
 
-  final encryptedNote = testNote.copyWith(
+  final jumbledNote = testNote.copyWith(
     isEncrypted: true,
     password: 'password123',
   );
@@ -229,7 +229,7 @@ void main() {
           .thenAnswer((_) async => null);
 
       // Act
-      await repository.unjumbleNote(testUserId, encryptedNote, 'password123');
+      await repository.unjumbleNote(testUserId, jumbledNote, 'password123');
 
       // Assert
       verify(() => mockRemoteDataSource.saveNote(
@@ -247,7 +247,7 @@ void main() {
 
       // Act & Assert
       expect(
-        () => repository.unjumbleNote(testUserId, encryptedNote, 'wrong_password'),
+        () => repository.unjumbleNote(testUserId, jumbledNote, 'wrong_password'),
         throwsA(isArgumentError),
       );
       verify(() => mockRemoteDataSource.updateLockCounter(
