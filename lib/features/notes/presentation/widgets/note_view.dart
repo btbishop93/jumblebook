@@ -29,7 +29,7 @@ class _NoteViewState extends State<NoteView> {
   final noteContentController = TextEditingController();
   final LocalAuthentication _localAuthentication = LocalAuthentication();
   late Note _note;
-  late final NotesBloc _notesBloc;
+  late NotesBloc _notesBloc;
 
   late final FocusNode titleFocusNode;
   late final FocusNode noteContentFocusNode;
@@ -40,21 +40,6 @@ class _NoteViewState extends State<NoteView> {
   void initState() {
     super.initState();
     _note = widget.note;
-    _notesBloc = context.read<NotesBloc>();
-    
-    if (widget.isNewNote) {
-      _notesBloc.add(CreateNote(
-        userId: widget.userId,
-        note: _note,
-      ));
-    } else {
-      // Load the latest note state from the repository
-      _notesBloc.add(LoadNote(
-        userId: widget.userId,
-        noteId: _note.id,
-      ));
-    }
-    noteContentController.text = _note.content;
     titleFocusNode = FocusNode();
     titleFocusNode.addListener(() {
       setState(() {
@@ -75,6 +60,27 @@ class _NoteViewState extends State<NoteView> {
         }
       });
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _notesBloc = context.read<NotesBloc>();
+    
+    if (widget.isNewNote) {
+      _notesBloc.add(CreateNote(
+        userId: widget.userId,
+        note: _note,
+      ));
+    } else {
+      // Load the latest note state from the repository
+      _notesBloc.add(LoadNote(
+        userId: widget.userId,
+        noteId: _note.id,
+      ));
+    }
+    titleController.text = _note.title;
+    noteContentController.text = _note.content;
   }
 
   @override
@@ -294,11 +300,24 @@ class _NoteViewState extends State<NoteView> {
     final theme = Theme.of(context);
     return BlocConsumer<NotesBloc, NotesState>(
       listener: (context, state) {
-        if (state is NotesLoaded && state.selectedNote?.id == _note.id) {
-          setState(() {
-            _note = state.selectedNote!;
-            noteContentController.text = _note.content;
-          });
+        if (state is NotesLoaded) {
+          final updatedNote = state.notes.firstWhere(
+            (note) => note.id == _note.id,
+            orElse: () => _note,
+          );
+          if (updatedNote != _note) {
+            setState(() {
+              _note = updatedNote;
+              titleController.text = _note.title;
+              noteContentController.text = _note.content;
+            });
+          }
+          if (state.selectedNote?.id == _note.id) {
+            setState(() {
+              _note = state.selectedNote!;
+              noteContentController.text = _note.content;
+            });
+          }
         } else if (state is NoteLoaded && state.selectedNote?.id == _note.id) {
           setState(() {
             _note = state.selectedNote!;

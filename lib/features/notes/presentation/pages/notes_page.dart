@@ -76,10 +76,13 @@ class _NotesPageState extends State<NotesPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NoteView(
-          userId: widget.currentUser.id,
-          note: newNote,
-          isNewNote: true,
+        builder: (context) => BlocProvider<NotesBloc>.value(
+          value: _notesBloc,
+          child: NoteView(
+            userId: widget.currentUser.id,
+            note: newNote,
+            isNewNote: true,
+          ),
         ),
       ),
     );
@@ -237,7 +240,16 @@ class _NotesPageState extends State<NotesPage> {
                 ),
               ),
             ),
-            child: NotesList(userId: widget.currentUser.id),
+            child: BlocBuilder<NotesBloc, NotesState>(
+              builder: (context, state) {
+                if (state is NotesError) {
+                  return Center(
+                    child: Text(state.errorMessage ?? 'An error occurred'),
+                  );
+                }
+                return NotesList(userId: widget.currentUser.id);
+              },
+            ),
           ),
         ),
       ),
