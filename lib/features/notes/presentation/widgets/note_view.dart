@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../domain/entities/note.dart';
+import '../../data/models/note_model.dart';
 import '../bloc/notes_bloc.dart';
 import '../bloc/notes_event.dart';
 import '../bloc/notes_state.dart';
@@ -303,7 +304,7 @@ class _NoteViewState extends State<NoteView> {
         if (state is NotesLoaded) {
           final updatedNote = state.notes.firstWhere(
             (note) => note.id == _note.id,
-            orElse: () => _note,
+            orElse: () => NoteModel.fromNote(state.notes.isNotEmpty ? state.notes.first : _note),
           );
           if (updatedNote != _note) {
             setState(() {

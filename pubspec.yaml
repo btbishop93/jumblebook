@@ -72,7 +72,7 @@ flutter:
     - assets/images/background.png
     - assets/images/background-dark.png
     - assets/images/social/g_logo.svg
-    - assets/images/social/bmc-button.svg
+    - assets/images/social/github-mark.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

@@ -30,8 +30,8 @@ class _NotesPageState extends State<NotesPage> {
   bool _canResetPassword = false;
   late final NotesBloc _notesBloc;
 
-  Future<void> _launchBuyMeACoffee() async {
-    final Uri url = Uri.parse('https://buymeacoffee.com/brendenbishop');
+  Future<void> _launchGitHub() async {
+    final Uri url = Uri.parse('https://github.com/btbishop93/jumblebook');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -181,7 +181,7 @@ class _NotesPageState extends State<NotesPage> {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Want to support me?',
+                    'Help | Support',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -189,25 +189,49 @@ class _NotesPageState extends State<NotesPage> {
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 56,
+                    width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _launchBuyMeACoffee,
+                      onPressed: _launchGitHub,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.scaffoldBackgroundColor,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        side: BorderSide(
+                          color: theme.dividerColor,
+                          width: 1.5,
+                        ),
+                        shadowColor: theme.shadowColor.withOpacity(0.5),
+                      ).copyWith(
+                        elevation: WidgetStateProperty.resolveWith<double>(
+                          (Set<WidgetState> states) {
+                            if (states.contains(WidgetState.hovered)) {
+                              return 4;
+                            }
+                            return 2;
+                          },
+                        ),
                       ),
-                      child: SvgPicture.asset(
-                        'assets/images/social/bmc-button.svg',
-                        height: 56,
-                        fit: BoxFit.contain,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/images/social/github-mark.svg',
+                            height: 24,
+                            colorFilter: ColorFilter.mode(
+                              theme.textTheme.labelLarge?.color ?? Colors.black,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'View on GitHub',
+                                style: theme.textTheme.labelMedium,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  Text(
-                    'Note: All donations are optional and not required to use the app.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
