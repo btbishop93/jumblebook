@@ -35,25 +35,25 @@ class NotesRepositoryImpl implements NotesRepository {
   }
 
   @override
-  Future<Note> encryptNote(String userId, Note note, String password) async {
+  Future<Note> jumbleNote(String userId, Note note, String password) async {
     final noteModel = NoteModel.fromNote(note);
     // Use the provided password or reuse existing one
-    final encryptedNote = noteModel.encrypt(password);
-    await _remoteDataSource.saveNote(userId, encryptedNote);
-    return encryptedNote;
+    final jumbledNote = noteModel.jumble(password);
+    await _remoteDataSource.saveNote(userId, jumbledNote);
+    return jumbledNote;
   }
 
   @override
-  Future<Note> decryptNote(String userId, Note note, String password) async {
+  Future<Note> unjumbleNote(String userId, Note note, String password) async {
     final noteModel = NoteModel.fromNote(note);
     try {
-      final decryptedNote = password.isEmpty 
-          ? noteModel.biometricDecrypt()  // Use biometric decryption if no password provided
-          : noteModel.decrypt(password);   // Use password-based decryption otherwise
+      final unjumbledNote = password.isEmpty 
+          ? noteModel.biometricUnjumble()  // Use biometric decryption if no password provided
+          : noteModel.unjumble(password);   // Use password-based decryption otherwise
       
-      // Always save the decrypted note to persist password and shift
-      await _remoteDataSource.saveNote(userId, decryptedNote);
-      return decryptedNote;
+      // Always save the unjumbled note to persist password and shift
+      await _remoteDataSource.saveNote(userId, unjumbledNote);
+      return unjumbledNote;
     } catch (e) {
       if (e is ArgumentError && e.message == 'Invalid password') {
         // Update lock counter on failed password attempt

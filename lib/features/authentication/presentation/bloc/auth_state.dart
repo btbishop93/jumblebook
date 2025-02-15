@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/user.dart';
 import 'auth_data.dart';
 
 // Base class for all authentication states
@@ -14,7 +13,7 @@ sealed class AuthState extends Equatable {
 
 // Initial state when the app starts
 final class AuthInitial extends AuthState {
-  AuthInitial() : super(const AuthData());
+  const AuthInitial() : super(const AuthData());
 }
 
 // State while checking authentication status

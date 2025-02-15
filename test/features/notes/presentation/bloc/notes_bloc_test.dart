@@ -11,8 +11,8 @@ import 'package:jumblebook/features/notes/presentation/bloc/notes_state.dart';
 class MockGetNotes extends Mock implements usecases.GetNotes {}
 class MockSaveNote extends Mock implements usecases.SaveNote {}
 class MockDeleteNote extends Mock implements usecases.DeleteNote {}
-class MockEncryptNote extends Mock implements usecases.EncryptNote {}
-class MockDecryptNote extends Mock implements usecases.DecryptNote {}
+class MockJumbleNote extends Mock implements usecases.JumbleNote {}
+class MockUnjumbleNote extends Mock implements usecases.UnjumbleNote {}
 class MockUpdateLockCounter extends Mock implements usecases.UpdateLockCounter {}
 class MockNotesRepository extends Mock implements NotesRepository {}
 
@@ -21,8 +21,8 @@ void main() {
   late MockGetNotes mockGetNotes;
   late MockSaveNote mockSaveNote;
   late MockDeleteNote mockDeleteNote;
-  late MockEncryptNote mockEncryptNote;
-  late MockDecryptNote mockDecryptNote;
+  late MockJumbleNote mockJumbleNote;
+  late MockUnjumbleNote mockUnjumbleNote;
   late MockUpdateLockCounter mockUpdateLockCounter;
   late MockNotesRepository mockNotesRepository;
 
@@ -38,8 +38,8 @@ void main() {
     mockGetNotes = MockGetNotes();
     mockSaveNote = MockSaveNote();
     mockDeleteNote = MockDeleteNote();
-    mockEncryptNote = MockEncryptNote();
-    mockDecryptNote = MockDecryptNote();
+    mockJumbleNote = MockJumbleNote();
+    mockUnjumbleNote = MockUnjumbleNote();
     mockUpdateLockCounter = MockUpdateLockCounter();
     mockNotesRepository = MockNotesRepository();
 
@@ -47,8 +47,8 @@ void main() {
       getNotes: mockGetNotes,
       saveNote: mockSaveNote,
       deleteNote: mockDeleteNote,
-      encryptNote: mockEncryptNote,
-      decryptNote: mockDecryptNote,
+      jumbleNote: mockJumbleNote,
+      unjumbleNote: mockUnjumbleNote,
       updateLockCounter: mockUpdateLockCounter,
       notesRepository: mockNotesRepository,
     );
@@ -287,46 +287,46 @@ void main() {
     });
   });
 
-  group('EncryptNote', () {
+  group('JumbleNote', () {
     final password = 'test-password';
-    final encryptedNote = Note(
+    final jumbledNote = Note(
       id: testNote.id,
       title: testNote.title,
-      content: 'encrypted-content',
+      content: 'jumbled-content',
       date: testNote.date,
       isEncrypted: true,
       password: password,
     );
 
-    test('emits [NotesLoading, NoteEncrypted] when successful', () async {
+    test('emits [NotesLoading, NoteJumbled] when successful', () async {
       // Arrange
-      when(() => mockEncryptNote(
+      when(() => mockJumbleNote(
         userId: testUserId,
         note: testNote,
         password: password,
-      )).thenAnswer((_) async => encryptedNote);
+      )).thenAnswer((_) async => jumbledNote);
 
       // Assert
       expect(
         notesBloc.stream,
         emitsInOrder([
           isA<NotesLoading>(),
-          NoteEncrypted(note: encryptedNote, notes: []),
+          NoteJumbled(note: jumbledNote, notes: []),
         ]),
       );
 
       // Act
-      notesBloc.add(EncryptNote(
+      notesBloc.add(JumbleNote(
         userId: testUserId,
         note: testNote,
         password: password,
       ));
     });
 
-    test('emits [NotesLoading, NotesError] when encryption fails', () async {
+    test('emits [NotesLoading, NotesError] when jumbling fails', () async {
       // Arrange
-      final error = Exception('Failed to encrypt note');
-      when(() => mockEncryptNote(
+      final error = Exception('Failed to jumble note');
+      when(() => mockJumbleNote(
         userId: testUserId,
         note: testNote,
         password: password,
@@ -346,7 +346,7 @@ void main() {
       );
 
       // Act
-      notesBloc.add(EncryptNote(
+      notesBloc.add(JumbleNote(
         userId: testUserId,
         note: testNote,
         password: password,
@@ -354,22 +354,22 @@ void main() {
     });
   });
 
-  group('DecryptNote', () {
+  group('UnjumbleNote', () {
     final password = 'test-password';
-    final encryptedNote = Note(
+    final jumbledNote = Note(
       id: testNote.id,
       title: testNote.title,
-      content: 'encrypted-content',
+      content: 'jumbled-content',
       date: testNote.date,
       isEncrypted: true,
       password: password,
     );
 
-    test('emits [NotesLoading, NoteDecrypted] when successful', () async {
+    test('emits [NotesLoading, NoteUnjumbled] when successful', () async {
       // Arrange
-      when(() => mockDecryptNote(
+      when(() => mockUnjumbleNote(
         userId: testUserId,
-        note: encryptedNote,
+        note: jumbledNote,
         password: password,
       )).thenAnswer((_) async => testNote);
 
@@ -378,24 +378,24 @@ void main() {
         notesBloc.stream,
         emitsInOrder([
           isA<NotesLoading>(),
-          NoteDecrypted(note: testNote, notes: []),
+          NoteUnjumbled(note: testNote, notes: []),
         ]),
       );
 
       // Act
-      notesBloc.add(DecryptNote(
+      notesBloc.add(UnjumbleNote(
         userId: testUserId,
-        note: encryptedNote,
+        note: jumbledNote,
         password: password,
       ));
     });
 
-    test('emits [NotesLoading, NotesError] when decryption fails', () async {
+    test('emits [NotesLoading, NotesError] when unjumbling fails', () async {
       // Arrange
-      final error = Exception('Failed to decrypt note');
-      when(() => mockDecryptNote(
+      final error = Exception('Failed to unjumble note');
+      when(() => mockUnjumbleNote(
         userId: testUserId,
-        note: encryptedNote,
+        note: jumbledNote,
         password: password,
       )).thenThrow(error);
 
@@ -413,9 +413,9 @@ void main() {
       );
 
       // Act
-      notesBloc.add(DecryptNote(
+      notesBloc.add(UnjumbleNote(
         userId: testUserId,
-        note: encryptedNote,
+        note: jumbledNote,
         password: password,
       ));
     });

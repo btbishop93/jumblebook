@@ -23,6 +23,12 @@ class NoteModel extends Note {
     return digest.toString();
   }
 
+  // Check if a string is likely a SHA-256 hash
+  static bool isHashedPassword(String password) {
+    // SHA-256 hashes are 64 characters long and contain only hex digits
+    return password.length == 64 && RegExp(r'^[a-fA-F0-9]+$').hasMatch(password);
+  }
+
   // Verify if a password matches the stored hash or plain text (for backward compatibility)
   bool verifyPassword(String password) {
     final hashedInput = hashPassword(password);
@@ -70,67 +76,67 @@ class NoteModel extends Note {
     );
   }
 
-  NoteModel encrypt(String plainPassword) {
+  NoteModel jumble(String plainPassword) {
     if (isEncrypted) {
       throw StateError('Note is already encrypted');
     }
 
-    // If we already have a password (from previous encryption), use it
-    final passwordToUse = password.isNotEmpty ? password : hashPassword(plainPassword);
+    // Only hash the password if it's not already hashed
+    final passwordToUse = isHashedPassword(plainPassword) ? plainPassword : hashPassword(plainPassword);
     final shiftToUse = decryptShift > 0 ? decryptShift : Random().nextInt(255);
 
-    final encryptedStr = StringBuffer();
-    content.runes.forEach((int rune) {
+    final jumbledStr = StringBuffer();
+    for (final rune in content.runes) {
       var char = String.fromCharCode(rune + shiftToUse);
-      encryptedStr.write(char);
-    });
+      jumbledStr.write(char);
+    }
 
     return copyWith(
-      content: encryptedStr.toString(),
+      content: jumbledStr.toString(),
       decryptShift: shiftToUse,
       isEncrypted: true,
       password: passwordToUse,
     ) as NoteModel;
   }
 
-  NoteModel decrypt(String plainPassword) {
+  NoteModel unjumble(String plainPassword) {
     if (!isEncrypted) {
       throw StateError('Note is not encrypted');
     }
-    
-    // Verify against both hashed and plain text passwords
+
+    // Verify password before decryption
     if (!verifyPassword(plainPassword)) {
       throw ArgumentError('Invalid password');
     }
 
-    return _performDecryption();
+    return _performUnjumble();
   }
 
   // Method for biometric decryption that bypasses password verification
-  NoteModel biometricDecrypt() {
+  NoteModel biometricUnjumble() {
     if (!isEncrypted) {
       throw StateError('Note is not encrypted');
     }
 
-    return _performDecryption();
+    return _performUnjumble();
   }
 
   // Internal method to perform the actual decryption
-  NoteModel _performDecryption() {
-    final decryptedStr = StringBuffer();
-    content.runes.forEach((int rune) {
+  NoteModel _performUnjumble() {
+    final unjumbledStr = StringBuffer();
+    for (final rune in content.runes) {
       var char = String.fromCharCode(rune - decryptShift);
-      decryptedStr.write(char);
-    });
+      unjumbledStr.write(char);
+    }
 
     // Keep the password and decryptShift for reuse
     final originalPassword = password;
     final originalShift = decryptShift;
 
     return copyWith(
-      content: decryptedStr.toString(),
+      content: unjumbledStr.toString(),
       isEncrypted: false,
-      password: originalPassword,  // Keep the original password
+      password: originalPassword, // Keep the original password
       decryptShift: originalShift, // Keep the original shift
     ) as NoteModel;
   }

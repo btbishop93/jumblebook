@@ -126,7 +126,7 @@ class _NoteViewState extends State<NoteView> {
       if (!_note.isEncrypted) {
         // If the note has a password, reuse it
         if (_note.password.isNotEmpty) {
-          _notesBloc.add(EncryptNote(
+          _notesBloc.add(JumbleNote(
             userId: widget.userId,
             note: _note.copyWith(password: ''), // Clear hashed password before re-encrypting
             password: _note.password, // Pass the stored password for re-encryption
@@ -197,7 +197,7 @@ class _NoteViewState extends State<NoteView> {
     );
     if (result.password.isNotEmpty) {
       if (!mounted) return;
-      _notesBloc.add(EncryptNote(
+      _notesBloc.add(JumbleNote(
         userId: widget.userId,
         note: _note,
         password: result.password,
@@ -210,10 +210,10 @@ class _NoteViewState extends State<NoteView> {
     if (await _isBiometricAvailable()) {
       if (await _authenticateNote(true)) {
         if (!mounted) return;
-        _notesBloc.add(DecryptNote(
+        _notesBloc.add(UnjumbleNote(
           userId: widget.userId,
           note: _note,
-          password: _note.password, // Empty password triggers biometric decryption
+          password: _note.password,
         ));
         return;
       } else {
@@ -226,10 +226,10 @@ class _NoteViewState extends State<NoteView> {
     } else {
       if (await _authenticateNote(false)) {
         if (!mounted) return;
-        _notesBloc.add(DecryptNote(
+        _notesBloc.add(UnjumbleNote(
           userId: widget.userId,
           note: _note,
-          password: '', // Empty password triggers biometric decryption
+          password: _note.password,
         ));
         return;
       } else {
@@ -244,7 +244,7 @@ class _NoteViewState extends State<NoteView> {
     if (!mounted) return;
     
     if (result.password.isNotEmpty) {
-      _notesBloc.add(DecryptNote(
+      _notesBloc.add(UnjumbleNote(
         userId: widget.userId,
         note: _note,
         password: result.password,
@@ -324,12 +324,12 @@ class _NoteViewState extends State<NoteView> {
             _note = state.selectedNote!;
             noteContentController.text = _note.content;
           });
-        } else if (state is NoteEncrypted && state.selectedNote?.id == _note.id) {
+        } else if (state is NoteJumbled && state.selectedNote?.id == _note.id) {
           setState(() {
             _note = state.selectedNote!;
             noteContentController.text = _note.content;
           });
-        } else if (state is NoteDecrypted && state.selectedNote?.id == _note.id) {
+        } else if (state is NoteUnjumbled && state.selectedNote?.id == _note.id) {
           setState(() {
             _note = state.selectedNote!;
             noteContentController.text = _note.content;

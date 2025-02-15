@@ -69,12 +69,12 @@ final class DeleteNote extends NotesEvent {
   List<Object> get props => [userId, noteId];
 }
 
-final class EncryptNote extends NotesEvent {
+final class JumbleNote extends NotesEvent {
   final String userId;
   final Note note;
   final String password;
 
-  const EncryptNote({
+  const JumbleNote({
     required this.userId,
     required this.note,
     required this.password,
@@ -84,12 +84,12 @@ final class EncryptNote extends NotesEvent {
   List<Object> get props => [userId, note, password];
 }
 
-final class DecryptNote extends NotesEvent {
+final class UnjumbleNote extends NotesEvent {
   final String userId;
   final Note note;
   final String password;
 
-  const DecryptNote({
+  const UnjumbleNote({
     required this.userId,
     required this.note,
     required this.password,

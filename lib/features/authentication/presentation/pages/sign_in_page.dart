@@ -8,7 +8,6 @@ import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/auth_form.dart';
 import '../widgets/sign_in_button.dart';
-import 'sign_up_page.dart';
 
 class SignInPage extends StatelessWidget {
   const SignInPage({required this.toggleView, super.key});

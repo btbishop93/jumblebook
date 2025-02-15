@@ -8,7 +8,6 @@ import 'package:jumblebook/features/notes/presentation/bloc/notes_bloc.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_event.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_state.dart';
 import 'package:jumblebook/features/notes/presentation/widgets/note_view.dart';
-import 'package:jumblebook/features/notes/presentation/widgets/jumble_prompt.dart';
 
 // Mock classes
 class MockNotesBloc extends Mock implements NotesBloc {}
@@ -38,8 +37,8 @@ void main() {
     registerFallbackValue(CreateNote(userId: testUserId, note: testNote));
     registerFallbackValue(UpdateNote(userId: testUserId, note: testNote));
     registerFallbackValue(DeleteNote(userId: testUserId, noteId: testNote.id));
-    registerFallbackValue(EncryptNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(DecryptNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(JumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
     registerFallbackValue(UpdateLockCounter(userId: testUserId, noteId: testNote.id, lockCounter: 1));
     registerFallbackValue(StartListeningToNotes(testUserId));
     registerFallbackValue(StopListeningToNotes());
@@ -74,13 +73,13 @@ void main() {
                   icon: const Icon(Icons.lock),
                   onPressed: () {
                     if (!currentNote.isEncrypted) {
-                      mockNotesBloc.add(EncryptNote(
+                      mockNotesBloc.add(JumbleNote(
                         userId: testUserId,
                         note: currentNote,
                         password: 'password123',
                       ));
                     } else {
-                      mockNotesBloc.add(DecryptNote(
+                      mockNotesBloc.add(UnjumbleNote(
                         userId: testUserId,
                         note: currentNote,
                         password: 'password123',
@@ -179,7 +178,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert
-      verify(() => mockNotesBloc.add(any(that: isA<EncryptNote>()))).called(1);
+      verify(() => mockNotesBloc.add(any(that: isA<JumbleNote>()))).called(1);
     });
 
     testWidgets('should decrypt note when lock button is tapped', (WidgetTester tester) async {
@@ -200,7 +199,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert
-      verify(() => mockNotesBloc.add(any(that: isA<DecryptNote>()))).called(1);
+      verify(() => mockNotesBloc.add(any(that: isA<UnjumbleNote>()))).called(1);
     });
   });
 } 

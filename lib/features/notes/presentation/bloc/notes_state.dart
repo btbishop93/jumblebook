@@ -58,8 +58,8 @@ final class NoteDeleted extends NotesState {
   const NoteDeleted(List<Note> notes) : super(notes: notes);
 }
 
-final class NoteEncrypted extends NotesState {
-  const NoteEncrypted({
+final class NoteJumbled extends NotesState {
+  const NoteJumbled({
     required Note note,
     required List<Note> notes,
   }) : super(
@@ -68,8 +68,8 @@ final class NoteEncrypted extends NotesState {
   );
 }
 
-final class NoteDecrypted extends NotesState {
-  const NoteDecrypted({
+final class NoteUnjumbled extends NotesState {
+  const NoteUnjumbled({
     required Note note,
     required List<Note> notes,
   }) : super(

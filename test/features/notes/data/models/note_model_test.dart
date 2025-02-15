@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jumblebook/features/notes/data/models/note_model.dart';
-import 'package:jumblebook/features/notes/domain/entities/note.dart';
 
 void main() {
   final testDate = DateTime(2024);

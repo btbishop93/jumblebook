@@ -27,13 +27,9 @@ void main() {
   group('AuthForm', () {
     testWidgets('should render sign in form fields', (WidgetTester tester) async {
       // Arrange
-      String? submittedEmail;
-      String? submittedPassword;
       await tester.pumpWidget(createWidgetUnderTest(
         formType: FormType.LOGIN,
         onSubmit: (email, password) {
-          submittedEmail = email;
-          submittedPassword = password;
         },
       ));
 
@@ -45,14 +41,9 @@ void main() {
 
     testWidgets('should render sign up form fields', (WidgetTester tester) async {
       // Arrange
-      String? submittedEmail;
-      String? submittedPassword;
       await tester.pumpWidget(createWidgetUnderTest(
         formType: FormType.REGISTER,
-        onSubmit: (email, password) {
-          submittedEmail = email;
-          submittedPassword = password;
-        },
+        onSubmit: (_, __) {},
       ));
 
       // Assert

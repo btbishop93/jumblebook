@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:jumblebook/features/authentication/data/datasources/firebase_auth_datasource.dart';
 import 'package:jumblebook/features/authentication/data/models/user_model.dart';
 
@@ -234,7 +233,7 @@ void main() {
     test('should sign out successfully', () async {
       // Arrange
       when(() => mockFirebaseAuth.signOut())
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockGoogleSignIn.signOut())
           .thenAnswer((_) async => null);
 
@@ -262,7 +261,7 @@ void main() {
       // Arrange
       when(() => mockFirebaseAuth.sendPasswordResetEmail(
         email: any(named: 'email'),
-      )).thenAnswer((_) async => null);
+      )).thenAnswer((_) async {});
 
       // Act & Assert
       await expectLater(

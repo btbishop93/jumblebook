@@ -62,8 +62,8 @@ void main() {
     registerFallbackValue(CreateNote(userId: testUserId, note: testNote));
     registerFallbackValue(UpdateNote(userId: testUserId, note: testNote));
     registerFallbackValue(DeleteNote(userId: testUserId, noteId: testNote.id));
-    registerFallbackValue(EncryptNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(DecryptNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(JumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
     registerFallbackValue(UpdateLockCounter(userId: testUserId, noteId: testNote.id, lockCounter: 1));
     registerFallbackValue(StartListeningToNotes(testUserId));
     registerFallbackValue(StopListeningToNotes());

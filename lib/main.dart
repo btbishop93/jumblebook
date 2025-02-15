@@ -51,8 +51,8 @@ Future<void> main() async {
     final getNotes = notes_usecases.GetNotes(notesRepository);
     final saveNote = notes_usecases.SaveNote(notesRepository);
     final deleteNote = notes_usecases.DeleteNote(notesRepository);
-    final encryptNote = notes_usecases.EncryptNote(notesRepository);
-    final decryptNote = notes_usecases.DecryptNote(notesRepository);
+    final jumbleNote = notes_usecases.JumbleNote(notesRepository);
+    final unjumbleNote = notes_usecases.UnjumbleNote(notesRepository);
     final updateLockCounter = notes_usecases.UpdateLockCounter(notesRepository);
 
     runApp(
@@ -76,8 +76,8 @@ Future<void> main() async {
               getNotes: getNotes,
               saveNote: saveNote,
               deleteNote: deleteNote,
-              encryptNote: encryptNote,
-              decryptNote: decryptNote,
+              jumbleNote: jumbleNote,
+              unjumbleNote: unjumbleNote,
               updateLockCounter: updateLockCounter,
               notesRepository: notesRepository,
             ),

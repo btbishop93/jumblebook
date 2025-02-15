@@ -2,17 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
 import 'package:jumblebook/features/notes/domain/repositories/notes_repository.dart';
-import 'package:jumblebook/features/notes/domain/usecases/encrypt_note.dart';
-
+import 'package:jumblebook/features/notes/domain/usecases/jumble_note.dart';
 class MockNotesRepository extends Mock implements NotesRepository {}
 
 void main() {
-  late EncryptNote useCase;
+  late JumbleNote useCase;
   late MockNotesRepository mockRepository;
 
   setUp(() {
     mockRepository = MockNotesRepository();
-    useCase = EncryptNote(mockRepository);
+    useCase = JumbleNote(mockRepository);
   });
 
   final testUserId = 'test-user-id';
@@ -35,7 +34,7 @@ void main() {
 
   test('should encrypt note using the repository', () async {
     // Arrange
-    when(() => mockRepository.encryptNote(testUserId, testNote, testPassword))
+    when(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .thenAnswer((_) async => encryptedNote);
 
     // Act
@@ -47,14 +46,14 @@ void main() {
 
     // Assert
     expect(result, equals(encryptedNote));
-    verify(() => mockRepository.encryptNote(testUserId, testNote, testPassword))
+    verify(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .called(1);
   });
 
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Repository error');
-    when(() => mockRepository.encryptNote(testUserId, testNote, testPassword))
+    when(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .thenThrow(error);
 
     // Act & Assert
@@ -66,7 +65,7 @@ void main() {
       ),
       throwsA(isA<Exception>()),
     );
-    verify(() => mockRepository.encryptNote(testUserId, testNote, testPassword))
+    verify(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .called(1);
   });
 } 

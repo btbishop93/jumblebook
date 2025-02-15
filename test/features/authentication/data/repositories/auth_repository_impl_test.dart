@@ -3,7 +3,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:jumblebook/features/authentication/data/datasources/firebase_auth_datasource.dart';
 import 'package:jumblebook/features/authentication/data/models/user_model.dart';
 import 'package:jumblebook/features/authentication/data/repositories/auth_repository_impl.dart';
-import 'package:jumblebook/features/authentication/domain/entities/user.dart';
 
 class MockAuthDataSource extends Mock implements AuthDataSource {}
 

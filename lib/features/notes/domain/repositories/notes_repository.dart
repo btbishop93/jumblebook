@@ -16,11 +16,11 @@ abstract class NotesRepository {
   /// Get the total count of notes for a user
   Future<int> getNoteCount(String userId);
 
-  /// Encrypt a note's content
-  Future<Note> encryptNote(String userId, Note note, String password);
+  /// Jumble a note's content
+  Future<Note> jumbleNote(String userId, Note note, String password);
 
-  /// Decrypt a note's content
-  Future<Note> decryptNote(String userId, Note note, String password);
+  /// Unjumble a note's content
+  Future<Note> unjumbleNote(String userId, Note note, String password);
 
   /// Update note's lock counter
   Future<void> updateLockCounter(String userId, String noteId, int lockCounter);

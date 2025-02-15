@@ -10,8 +10,8 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
   final usecases.GetNotes _getNotes;
   final usecases.SaveNote _saveNote;
   final usecases.DeleteNote _deleteNote;
-  final usecases.EncryptNote _encryptNote;
-  final usecases.DecryptNote _decryptNote;
+  final usecases.JumbleNote _jumbleNote;
+  final usecases.UnjumbleNote _unjumbleNote;
   final usecases.UpdateLockCounter _updateLockCounter;
   final NotesRepository _notesRepository;
   StreamSubscription<List<dynamic>>? _notesSubscription;
@@ -20,15 +20,15 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     required usecases.GetNotes getNotes,
     required usecases.SaveNote saveNote,
     required usecases.DeleteNote deleteNote,
-    required usecases.EncryptNote encryptNote,
-    required usecases.DecryptNote decryptNote,
+    required usecases.JumbleNote jumbleNote,
+    required usecases.UnjumbleNote unjumbleNote,
     required usecases.UpdateLockCounter updateLockCounter,
     required NotesRepository notesRepository,
   })  : _getNotes = getNotes,
         _saveNote = saveNote,
         _deleteNote = deleteNote,
-        _encryptNote = encryptNote,
-        _decryptNote = decryptNote,
+        _jumbleNote = jumbleNote,
+        _unjumbleNote = unjumbleNote,
         _updateLockCounter = updateLockCounter,
         _notesRepository = notesRepository,
         super(const NotesInitial()) {
@@ -37,8 +37,8 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     on<CreateNote>(_onCreateNote);
     on<UpdateNote>(_onUpdateNote);
     on<DeleteNote>(_onDeleteNote);
-    on<EncryptNote>(_onEncryptNote);
-    on<DecryptNote>(_onDecryptNote);
+    on<JumbleNote>(_onJumbleNote);
+    on<UnjumbleNote>(_onUnjumbleNote);
     on<UpdateLockCounter>(_onUpdateLockCounter);
     on<StartListeningToNotes>(_onStartListeningToNotes);
     on<StopListeningToNotes>(_onStopListeningToNotes);
@@ -112,35 +112,35 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     }
   }
 
-  Future<void> _onEncryptNote(
-    EncryptNote event,
+  Future<void> _onJumbleNote(
+    JumbleNote event,
     Emitter<NotesState> emit,
   ) async {
     emit(NotesLoading(notes: state.notes));
     try {
-      final encryptedNote = await _encryptNote(
+      final jumbledNote = await _jumbleNote(
         userId: event.userId,
         note: event.note,
         password: event.password,
       );
-      emit(NoteEncrypted(note: encryptedNote, notes: state.notes));
+      emit(NoteJumbled(note: jumbledNote, notes: state.notes));
     } catch (e) {
       emit(NotesError(e.toString(), notes: state.notes));
     }
   }
 
-  Future<void> _onDecryptNote(
-    DecryptNote event,
+  Future<void> _onUnjumbleNote(
+    UnjumbleNote event,
     Emitter<NotesState> emit,
   ) async {
     emit(NotesLoading(notes: state.notes));
     try {
-      final decryptedNote = await _decryptNote(
+      final unjumbledNote = await _unjumbleNote(
         userId: event.userId,
         note: event.note,
         password: event.password,
       );
-      emit(NoteDecrypted(note: decryptedNote, notes: state.notes));
+      emit(NoteUnjumbled(note: unjumbledNote, notes: state.notes));
     } catch (e) {
       emit(NotesError(e.toString(), notes: state.notes));
     }
