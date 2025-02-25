@@ -1,0 +1,220 @@
+name: iOS TestFlight Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'ios/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type (patch/minor/major)'
+        required: false
+        default: 'patch'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  MARKETING_VERSION: ${{ vars.MARKETING_VERSION || '3.1.0' }}
+  BUILD_NUMBER: ${{ vars.BUILD_NUMBER || 1 }}
+
+permissions:
+  actions: write
+  contents: read
+  repository-projects: write
+  id-token: write
+
+jobs:
+  ios-deploy:
+    name: Build and Deploy iOS
+    runs-on: macos-latest
+    
+    steps:
+      # Common Setup Steps
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Calculate new version
+        id: version
+        run: |
+          IFS='.' read -r major minor patch <<< "$MARKETING_VERSION"
+          case '${{ github.event.inputs.version_bump }}' in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            *)
+              patch=$((patch + 1))
+              ;;
+          esac
+          echo "new_marketing_version=$major.$minor.$patch" >> $GITHUB_OUTPUT
+          echo "Using build number: $BUILD_NUMBER"
+
+      - name: Import Certificate
+        env:
+          DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: temporary
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+        run: |
+          # Create variables
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import distribution certificate
+          CERTIFICATE_PATH=$RUNNER_TEMP/distribution.p12
+          echo $DISTRIBUTION_CERTIFICATE_BASE64 | base64 --decode -o $CERTIFICATE_PATH
+          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          rm $CERTIFICATE_PATH
+
+          # Create provisioning profiles directory
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+
+          # Install iOS App Store profile
+          echo "$IOS_PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/Jumblebook_App_Store.mobileprovision
+
+          # Set permissions
+          sudo chown -R $USER:staff ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          # Set key partition list
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # List keychains
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: Set up App Store Connect API
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPLE_API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
+
+      - name: Update iOS version
+        run: |
+          cd ios
+          agvtool new-marketing-version "${{ steps.version.outputs.new_marketing_version }}"
+          agvtool new-version -all $BUILD_NUMBER
+          cd ..
+
+      - name: Build iOS App
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Build Flutter iOS app
+          flutter build ios --release --no-codesign
+          
+          # Archive
+          cd ios
+          xcodebuild archive \
+            -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="Jumblebook App Store" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
+            MARKETING_VERSION=${{ steps.version.outputs.new_marketing_version }} \
+            CURRENT_PROJECT_VERSION=$BUILD_NUMBER
+
+          # Create exportOptions.plist for iOS
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>teamID</key>
+              <string>$APPLE_TEAM_ID</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>xyz.bsquared.jumblebook</key>
+                  <string>Jumblebook App Store</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportPath build/ios \
+            -exportOptionsPlist exportOptions.plist \
+            -allowProvisioningUpdates
+
+          # List build directory contents for debugging
+          echo "iOS build directory contents:"
+          ls -R build/ios/
+
+      - name: Upload iOS App to TestFlight
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+        run: |
+          # Find the IPA file
+          IPA_PATH=$(find ios/build/ios -name "*.ipa" -type f)
+          if [ -z "$IPA_PATH" ]; then
+            echo "Error: No IPA file found in ios/build/ios directory"
+            exit 1
+          fi
+          echo "Found IPA at: $IPA_PATH"
+
+          # Upload iOS build
+          echo "Uploading iOS build..."
+          xcrun altool --upload-app --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$APPLE_API_KEY_ID" \
+            --apiIssuer "$APPLE_API_KEY_ISSUER_ID"
+
+      - name: Update GitHub variables
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          # Update marketing version
+          gh api -X PATCH /repos/${{ github.repository }}/actions/variables/MARKETING_VERSION \
+            -f value="${{ steps.version.outputs.new_marketing_version }}"
+
+          # Increment build number
+          NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          gh api -X PATCH /repos/${{ github.repository }}/actions/variables/BUILD_NUMBER \
+            -f value="$NEW_BUILD_NUMBER"
+
+      # Cleanup
+      - name: Clean up secrets
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
+          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*
+          rm -f ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8 

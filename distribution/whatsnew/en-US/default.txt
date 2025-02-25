@@ -1,0 +1,1 @@
+Initial release of Jumblebook - a social reading app that connects book lovers. 

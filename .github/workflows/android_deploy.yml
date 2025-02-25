@@ -1,0 +1,145 @@
+name: Android Play Store Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'android/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type (patch/minor/major)'
+        required: false
+        default: 'patch'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  MARKETING_VERSION: ${{ vars.MARKETING_VERSION || '3.1.0' }}
+  BUILD_NUMBER: ${{ vars.BUILD_NUMBER || 1 }}
+
+permissions:
+  actions: write
+  contents: read
+  repository-projects: write
+  id-token: write
+
+jobs:
+  android-deploy:
+    name: Build and Deploy Android
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Common Setup Steps
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Calculate new version
+        id: version
+        run: |
+          IFS='.' read -r major minor patch <<< "$MARKETING_VERSION"
+          case '${{ github.event.inputs.version_bump }}' in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            *)
+              patch=$((patch + 1))
+              ;;
+          esac
+          echo "new_marketing_version=$major.$minor.$patch" >> $GITHUB_OUTPUT
+          echo "Using build number: $BUILD_NUMBER"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Decode keystore
+          echo $ANDROID_KEYSTORE_BASE64 | base64 --decode > android/app/keystore.jks
+          
+          # Create key.properties file
+          cat > android/key.properties << EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+
+      - name: Update version in pubspec.yaml
+        run: |
+          # Update version in pubspec.yaml
+          sed -i "s/^version: .*/version: ${{ steps.version.outputs.new_marketing_version }}+$BUILD_NUMBER/" pubspec.yaml
+          cat pubspec.yaml | grep "version:"
+
+      - name: Setup Google Play Service Account
+        env:
+          PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          # Create service account json file
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > android/play-store-service-account.json
+
+      - name: Build Android App Bundle
+        run: |
+          flutter build appbundle --release
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: android/play-store-service-account.json
+          packageName: xyz.bsquared.jumblebook
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: beta
+          status: completed
+          whatsNewDirectory: distribution/whatsnew
+          mappingFile: build/app/outputs/mapping/release/mapping.txt
+
+      - name: Update GitHub variables
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          # Update marketing version
+          gh api -X PATCH /repos/${{ github.repository }}/actions/variables/MARKETING_VERSION \
+            -f value="${{ steps.version.outputs.new_marketing_version }}"
+
+          # Increment build number
+          NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          gh api -X PATCH /repos/${{ github.repository }}/actions/variables/BUILD_NUMBER \
+            -f value="$NEW_BUILD_NUMBER"
+
+      # Cleanup
+      - name: Clean up secrets
+        if: always()
+        run: |
+          rm -f android/app/keystore.jks
+          rm -f android/key.properties
+          rm -f android/play-store-service-account.json
