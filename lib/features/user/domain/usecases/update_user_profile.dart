@@ -15,4 +15,4 @@ class UpdateUserProfile {
     }
     return repository.updateUserProfile(profile);
   }
-} 
+}

@@ -26,13 +26,15 @@ class NoteModel extends Note {
   // Check if a string is likely a SHA-256 hash
   static bool isHashedPassword(String password) {
     // SHA-256 hashes are 64 characters long and contain only hex digits
-    return password.length == 64 && RegExp(r'^[a-fA-F0-9]+$').hasMatch(password);
+    return password.length == 64 &&
+        RegExp(r'^[a-fA-F0-9]+$').hasMatch(password);
   }
 
   // Verify if a password matches the stored hash or plain text (for backward compatibility)
   bool verifyPassword(String password) {
     final hashedInput = hashPassword(password);
-    return hashedInput == this.password || password == this.password; // Check both hashed and plain text
+    return hashedInput == this.password ||
+        password == this.password; // Check both hashed and plain text
   }
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
@@ -44,7 +46,7 @@ class NoteModel extends Note {
       isEncrypted: json['isEncrypted'] as bool? ?? false,
       lockCounter: json['lockCounter'] as int? ?? 0,
       password: json['password'] as String? ?? '',
-      date: json['date'] != null 
+      date: json['date'] != null
           ? (json['date'] as Timestamp).toDate()
           : DateTime.now(),
     );
@@ -82,7 +84,9 @@ class NoteModel extends Note {
     }
 
     // Only hash the password if it's not already hashed
-    final passwordToUse = isHashedPassword(plainPassword) ? plainPassword : hashPassword(plainPassword);
+    final passwordToUse = isHashedPassword(plainPassword)
+        ? plainPassword
+        : hashPassword(plainPassword);
     final shiftToUse = decryptShift > 0 ? decryptShift : Random().nextInt(255);
 
     final jumbledStr = StringBuffer();
@@ -163,4 +167,4 @@ class NoteModel extends Note {
       lockCounter: lockCounter ?? this.lockCounter,
     );
   }
-} 
+}

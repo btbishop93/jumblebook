@@ -47,4 +47,4 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   User? get currentUser => _dataSource.currentUser;
-} 
+}

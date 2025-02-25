@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
 import 'package:jumblebook/features/notes/domain/repositories/notes_repository.dart';
 import 'package:jumblebook/features/notes/domain/usecases/jumble_note.dart';
+
 class MockNotesRepository extends Mock implements NotesRepository {}
 
 void main() {
@@ -68,4 +69,4 @@ void main() {
     verify(() => mockRepository.jumbleNote(testUserId, testNote, testPassword))
         .called(1);
   });
-} 
+}

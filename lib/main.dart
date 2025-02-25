@@ -20,7 +20,7 @@ import 'features/notes/presentation/bloc/notes_bloc.dart';
 Future<void> main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    
+
     // Configure system UI overlay style
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -34,7 +34,7 @@ Future<void> main() async {
       SystemUiMode.manual,
       overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
     );
-    
+
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
@@ -66,7 +66,8 @@ Future<void> main() async {
               signUpWithEmail: auth_usecases.SignUpWithEmail(authRepository),
               signInWithGoogle: auth_usecases.SignInWithGoogle(authRepository),
               signInWithApple: auth_usecases.SignInWithApple(authRepository),
-              signInAnonymously: auth_usecases.SignInAnonymously(authRepository),
+              signInAnonymously:
+                  auth_usecases.SignInAnonymously(authRepository),
               signOut: auth_usecases.SignOut(authRepository),
               resetPassword: auth_usecases.ResetPassword(authRepository),
             )..add(CheckAuthStatus()), // Check auth status when app starts

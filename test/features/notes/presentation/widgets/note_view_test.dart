@@ -11,6 +11,7 @@ import 'package:jumblebook/features/notes/presentation/widgets/note_view.dart';
 
 // Mock classes
 class MockNotesBloc extends Mock implements NotesBloc {}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
 void main() {
@@ -37,9 +38,12 @@ void main() {
     registerFallbackValue(CreateNote(userId: testUserId, note: testNote));
     registerFallbackValue(UpdateNote(userId: testUserId, note: testNote));
     registerFallbackValue(DeleteNote(userId: testUserId, noteId: testNote.id));
-    registerFallbackValue(JumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UpdateLockCounter(userId: testUserId, noteId: testNote.id, lockCounter: 1));
+    registerFallbackValue(
+        JumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(
+        UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(UpdateLockCounter(
+        userId: testUserId, noteId: testNote.id, lockCounter: 1));
     registerFallbackValue(StartListeningToNotes(testUserId));
     registerFallbackValue(StopListeningToNotes());
     registerFallbackValue(MaterialPageRoute<void>(builder: (_) => Container()));
@@ -54,11 +58,13 @@ void main() {
     required StreamController<NotesState> streamController,
   }) {
     final currentNote = note ?? testNote;
-    
+
     // Setup default behaviors for each test
     when(() => mockNotesBloc.state).thenReturn(NotesLoaded([currentNote]));
-    when(() => mockNotesBloc.stream).thenAnswer((_) => streamController.stream.asBroadcastStream());
-    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>()))).thenAnswer((_) async {});
+    when(() => mockNotesBloc.stream)
+        .thenAnswer((_) => streamController.stream.asBroadcastStream());
+    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>())))
+        .thenAnswer((_) async {});
     when(() => mockNotesBloc.close()).thenAnswer((_) async {});
 
     return MaterialApp(
@@ -99,12 +105,13 @@ void main() {
     );
   }
 
-  Future<void> pumpAndWaitForLoadNote(WidgetTester tester, StreamController<NotesState> streamController, Note note) async {
+  Future<void> pumpAndWaitForLoadNote(WidgetTester tester,
+      StreamController<NotesState> streamController, Note note) async {
     await tester.pumpWidget(createWidgetUnderTest(
       note: note,
       streamController: streamController,
     ));
-    
+
     // Wait for LoadNote to complete
     await tester.pump();
     streamController.add(NoteLoaded(note: note, notes: [note]));
@@ -112,18 +119,20 @@ void main() {
   }
 
   group('NoteView', () {
-    testWidgets('should update note when title is changed', (WidgetTester tester) async {
+    testWidgets('should update note when title is changed',
+        (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
       // Arrange
-      when(() => mockNotesBloc.add(any(that: isA<LoadNote>()))).thenAnswer((_) async {
+      when(() => mockNotesBloc.add(any(that: isA<LoadNote>())))
+          .thenAnswer((_) async {
         streamController.add(NoteLoaded(note: testNote, notes: [testNote]));
       });
 
       // Act
       await pumpAndWaitForLoadNote(tester, streamController, testNote);
-      
+
       // Find and interact with title field
       final titleField = find.byType(TextField).first;
       await tester.tap(titleField);
@@ -136,18 +145,20 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<UpdateNote>()))).called(1);
     });
 
-    testWidgets('should update note when content is changed', (WidgetTester tester) async {
+    testWidgets('should update note when content is changed',
+        (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
       // Arrange
-      when(() => mockNotesBloc.add(any(that: isA<LoadNote>()))).thenAnswer((_) async {
+      when(() => mockNotesBloc.add(any(that: isA<LoadNote>())))
+          .thenAnswer((_) async {
         streamController.add(NoteLoaded(note: testNote, notes: [testNote]));
       });
 
       // Act
       await pumpAndWaitForLoadNote(tester, streamController, testNote);
-      
+
       // Find and interact with content field
       final contentField = find.byType(TextField).last;
       await tester.tap(contentField);
@@ -160,18 +171,20 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<UpdateNote>()))).called(1);
     });
 
-    testWidgets('should jumble note when lock button is tapped', (WidgetTester tester) async {
+    testWidgets('should jumble note when lock button is tapped',
+        (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
       // Arrange
-      when(() => mockNotesBloc.add(any(that: isA<LoadNote>()))).thenAnswer((_) async {
+      when(() => mockNotesBloc.add(any(that: isA<LoadNote>())))
+          .thenAnswer((_) async {
         streamController.add(NoteLoaded(note: testNote, notes: [testNote]));
       });
 
       // Act
       await pumpAndWaitForLoadNote(tester, streamController, testNote);
-      
+
       // Find and tap the lock button
       final lockButton = find.byKey(const Key('lock_button'));
       await tester.tap(lockButton);
@@ -181,18 +194,21 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<JumbleNote>()))).called(1);
     });
 
-    testWidgets('should unjumble note when lock button is tapped', (WidgetTester tester) async {
+    testWidgets('should unjumble note when lock button is tapped',
+        (WidgetTester tester) async {
       final streamController = StreamController<NotesState>.broadcast();
       addTearDown(streamController.close);
 
       // Arrange
-      when(() => mockNotesBloc.add(any(that: isA<LoadNote>()))).thenAnswer((_) async {
-        streamController.add(NoteLoaded(note: jumbledNote, notes: [jumbledNote]));
+      when(() => mockNotesBloc.add(any(that: isA<LoadNote>())))
+          .thenAnswer((_) async {
+        streamController
+            .add(NoteLoaded(note: jumbledNote, notes: [jumbledNote]));
       });
 
       // Act
       await pumpAndWaitForLoadNote(tester, streamController, jumbledNote);
-      
+
       // Find and tap the lock button
       final lockButton = find.byKey(const Key('lock_button'));
       await tester.tap(lockButton);
@@ -202,4 +218,4 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<UnjumbleNote>()))).called(1);
     });
   });
-} 
+}

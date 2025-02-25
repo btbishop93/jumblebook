@@ -47,7 +47,8 @@ void main() {
   }
 
   group('PasswordInputForm', () {
-    testWidgets('should render password input field', (WidgetTester tester) async {
+    testWidgets('should render password input field',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         onFormUpdate: (_) {},
@@ -73,7 +74,8 @@ void main() {
       expect(find.text('Enter a password.'), findsOneWidget);
     });
 
-    testWidgets('should validate password length when jumbling', (WidgetTester tester) async {
+    testWidgets('should validate password length when jumbling',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         isJumbling: true,
@@ -89,10 +91,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert
-      expect(find.text('Use 8 characters or more for your password.'), findsOneWidget);
+      expect(find.text('Use 8 characters or more for your password.'),
+          findsOneWidget);
     });
 
-    testWidgets('should call onFormUpdate with valid password when jumbling', (WidgetTester tester) async {
+    testWidgets('should call onFormUpdate with valid password when jumbling',
+        (WidgetTester tester) async {
       // Arrange
       PasswordForm? updatedForm;
       await tester.pumpWidget(createWidgetUnderTest(
@@ -113,7 +117,8 @@ void main() {
       expect(updatedForm?.password, equals('password123'));
     });
 
-    testWidgets('should accept correct password when unjumbling', (WidgetTester tester) async {
+    testWidgets('should accept correct password when unjumbling',
+        (WidgetTester tester) async {
       // Arrange
       PasswordForm? updatedForm;
       await tester.pumpWidget(createWidgetUnderTest(
@@ -128,7 +133,7 @@ void main() {
       // Act
       await tester.enterText(
         find.byType(TextFormField),
-        'correctpass',  // Enter the original unhashed password
+        'correctpass', // Enter the original unhashed password
       );
       validationController.add(true);
       await tester.pumpAndSettle();
@@ -138,7 +143,8 @@ void main() {
       expect(updatedForm?.success, isTrue);
     });
 
-    testWidgets('should show first warning on incorrect password', (WidgetTester tester) async {
+    testWidgets('should show first warning on incorrect password',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         isJumbling: false,
@@ -159,12 +165,14 @@ void main() {
 
       // Assert
       expect(
-        find.text('Warning! This note will be locked after 2 more failed attempts.'),
+        find.text(
+            'Warning! This note will be locked after 2 more failed attempts.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('should show second warning on second failed attempt', (WidgetTester tester) async {
+    testWidgets('should show second warning on second failed attempt',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         isJumbling: false,
@@ -185,12 +193,14 @@ void main() {
 
       // Assert
       expect(
-        find.text('Warning! This note will be locked after 1 more failed attempt.'),
+        find.text(
+            'Warning! This note will be locked after 1 more failed attempt.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('should show locked message on third failed attempt', (WidgetTester tester) async {
+    testWidgets('should show locked message on third failed attempt',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         isJumbling: false,
@@ -211,12 +221,14 @@ void main() {
 
       // Assert
       expect(
-        find.text('This note is now locked and can only be unlocked via TouchID or FaceID.'),
+        find.text(
+            'This note is now locked and can only be unlocked via TouchID or FaceID.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('should show helper text when jumbling', (WidgetTester tester) async {
+    testWidgets('should show helper text when jumbling',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         isJumbling: true,
@@ -225,12 +237,14 @@ void main() {
 
       // Assert
       expect(
-        find.text('Use 8 or more characters with a mix of letters, numbers & symbols.'),
+        find.text(
+            'Use 8 or more characters with a mix of letters, numbers & symbols.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('should clear error text on input change', (WidgetTester tester) async {
+    testWidgets('should clear error text on input change',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         onFormUpdate: (_) {},
@@ -249,4 +263,4 @@ void main() {
       expect(find.text('Enter a password.'), findsNothing);
     });
   });
-} 
+}

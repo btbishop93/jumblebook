@@ -44,4 +44,4 @@ class AuthData {
   AuthData reset() {
     return const AuthData();
   }
-} 
+}

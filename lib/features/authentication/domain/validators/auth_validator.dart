@@ -9,7 +9,7 @@ class AuthValidator {
     final pattern = RegExp(
       r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$',
     );
-    
+
     return pattern.hasMatch(value) ? null : 'Enter a valid email.';
   }
 
@@ -24,13 +24,16 @@ class AuthValidator {
 
     switch (type) {
       case FormType.REGISTER:
-        if (value.length < 8) return 'Use 8 characters or more for your password.';
+        if (value.length < 8)
+          return 'Use 8 characters or more for your password.';
         return value != formData?.password ? 'Passwords do not match.' : null;
       case FormType.JUMBLE:
-        return value.length < 8 ? 'Use 8 characters or more for your password.' : null;
+        return value.length < 8
+            ? 'Use 8 characters or more for your password.'
+            : null;
       case FormType.UNJUMBLE:
         if (formData == null) return 'Invalid form data';
-        return value != formData.password 
+        return value != formData.password
             ? 'Incorrect password. ${unjumbleAttemptMessage(formData)}'
             : null;
       default:
@@ -48,4 +51,4 @@ class AuthValidator {
         return 'This note is now locked and can only be unlocked via TouchID or FaceID.';
     }
   }
-} 
+}

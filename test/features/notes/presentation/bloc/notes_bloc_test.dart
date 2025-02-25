@@ -3,17 +3,25 @@ import 'package:mocktail/mocktail.dart';
 import 'dart:async';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
 import 'package:jumblebook/features/notes/domain/repositories/notes_repository.dart';
-import 'package:jumblebook/features/notes/domain/usecases/usecases.dart' as usecases;
+import 'package:jumblebook/features/notes/domain/usecases/usecases.dart'
+    as usecases;
 import 'package:jumblebook/features/notes/presentation/bloc/notes_bloc.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_event.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_state.dart';
 
 class MockGetNotes extends Mock implements usecases.GetNotes {}
+
 class MockSaveNote extends Mock implements usecases.SaveNote {}
+
 class MockDeleteNote extends Mock implements usecases.DeleteNote {}
+
 class MockJumbleNote extends Mock implements usecases.JumbleNote {}
+
 class MockUnjumbleNote extends Mock implements usecases.UnjumbleNote {}
-class MockUpdateLockCounter extends Mock implements usecases.UpdateLockCounter {}
+
+class MockUpdateLockCounter extends Mock
+    implements usecases.UpdateLockCounter {}
+
 class MockNotesRepository extends Mock implements NotesRepository {}
 
 void main() {
@@ -301,10 +309,10 @@ void main() {
     test('emits [NotesLoading, NoteJumbled] when successful', () async {
       // Arrange
       when(() => mockJumbleNote(
-        userId: testUserId,
-        note: testNote,
-        password: password,
-      )).thenAnswer((_) async => jumbledNote);
+            userId: testUserId,
+            note: testNote,
+            password: password,
+          )).thenAnswer((_) async => jumbledNote);
 
       // Assert
       expect(
@@ -327,10 +335,10 @@ void main() {
       // Arrange
       final error = Exception('Failed to jumble note');
       when(() => mockJumbleNote(
-        userId: testUserId,
-        note: testNote,
-        password: password,
-      )).thenThrow(error);
+            userId: testUserId,
+            note: testNote,
+            password: password,
+          )).thenThrow(error);
 
       // Assert
       expect(
@@ -368,10 +376,10 @@ void main() {
     test('emits [NotesLoading, NoteUnjumbled] when successful', () async {
       // Arrange
       when(() => mockUnjumbleNote(
-        userId: testUserId,
-        note: jumbledNote,
-        password: password,
-      )).thenAnswer((_) async => testNote);
+            userId: testUserId,
+            note: jumbledNote,
+            password: password,
+          )).thenAnswer((_) async => testNote);
 
       // Assert
       expect(
@@ -394,10 +402,10 @@ void main() {
       // Arrange
       final error = Exception('Failed to unjumble note');
       when(() => mockUnjumbleNote(
-        userId: testUserId,
-        note: jumbledNote,
-        password: password,
-      )).thenThrow(error);
+            userId: testUserId,
+            note: jumbledNote,
+            password: password,
+          )).thenThrow(error);
 
       // Assert
       expect(
@@ -426,12 +434,12 @@ void main() {
       // Arrange
       final lockCounter = 1;
       final lockedNote = testNote.copyWith(lockCounter: lockCounter);
-      
+
       when(() => mockUpdateLockCounter(
-        userId: testUserId,
-        noteId: testNote.id,
-        lockCounter: lockCounter,
-      )).thenAnswer((_) async => null);
+            userId: testUserId,
+            noteId: testNote.id,
+            lockCounter: lockCounter,
+          )).thenAnswer((_) async => null);
       when(() => mockNotesRepository.getNote(testUserId, testNote.id))
           .thenAnswer((_) async => lockedNote);
 
@@ -455,10 +463,10 @@ void main() {
       // Arrange
       final error = Exception('Failed to update lock counter');
       when(() => mockUpdateLockCounter(
-        userId: testUserId,
-        noteId: testNote.id,
-        lockCounter: 1,
-      )).thenThrow(error);
+            userId: testUserId,
+            noteId: testNote.id,
+            lockCounter: 1,
+          )).thenThrow(error);
 
       // Assert
       expect(
@@ -490,7 +498,7 @@ void main() {
 
       // Act & Assert
       notesBloc.add(StartListeningToNotes(testUserId));
-      
+
       await expectLater(
         notesBloc.stream,
         emitsInOrder([
@@ -508,7 +516,7 @@ void main() {
 
       // Act & Assert
       notesBloc.add(StartListeningToNotes(testUserId));
-      
+
       await expectLater(
         notesBloc.stream,
         emitsInOrder([
@@ -525,12 +533,11 @@ void main() {
     test('processes stream updates', () async {
       // Arrange
       final controller = StreamController<List<Note>>();
-      when(() => mockGetNotes(testUserId))
-          .thenAnswer((_) => controller.stream);
+      when(() => mockGetNotes(testUserId)).thenAnswer((_) => controller.stream);
 
       // Act & Assert initial state
       notesBloc.add(StartListeningToNotes(testUserId));
-      
+
       await expectLater(
         notesBloc.stream,
         emits(isA<NotesLoading>()),
@@ -539,7 +546,7 @@ void main() {
       // Add notes and verify state updates
       final updatedNotes = [testNote];
       controller.add(updatedNotes);
-      
+
       await expectLater(
         notesBloc.stream,
         emits(NotesLoaded(updatedNotes)),
@@ -554,8 +561,7 @@ void main() {
     test('stops listening to note changes', () async {
       // Arrange
       final controller = StreamController<List<Note>>();
-      when(() => mockGetNotes(testUserId))
-          .thenAnswer((_) => controller.stream);
+      when(() => mockGetNotes(testUserId)).thenAnswer((_) => controller.stream);
 
       // Act
       notesBloc.add(StartListeningToNotes(testUserId));
@@ -576,4 +582,4 @@ void main() {
       await controller.close();
     });
   });
-} 
+}

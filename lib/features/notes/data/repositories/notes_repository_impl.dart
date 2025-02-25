@@ -47,10 +47,12 @@ class NotesRepositoryImpl implements NotesRepository {
   Future<Note> unjumbleNote(String userId, Note note, String password) async {
     final noteModel = NoteModel.fromNote(note);
     try {
-      final unjumbledNote = password.isEmpty 
-          ? noteModel.biometricUnjumble()  // Use biometric unjumbling if no password provided
-          : noteModel.unjumble(password);   // Use password-based unjumbling otherwise
-      
+      final unjumbledNote = password.isEmpty
+          ? noteModel
+              .biometricUnjumble() // Use biometric unjumbling if no password provided
+          : noteModel
+              .unjumble(password); // Use password-based unjumbling otherwise
+
       // Always save the unjumbled note to persist password and shift
       await _remoteDataSource.saveNote(userId, unjumbledNote);
       return unjumbledNote;
@@ -59,7 +61,8 @@ class NotesRepositoryImpl implements NotesRepository {
         // Update lock counter on failed password attempt
         final newLockCounter = note.lockCounter + 1;
         await updateLockCounter(userId, note.id, newLockCounter);
-        throw ArgumentError('Incorrect password. ${_getLockMessage(newLockCounter)}');
+        throw ArgumentError(
+            'Incorrect password. ${_getLockMessage(newLockCounter)}');
       }
       rethrow;
     }
@@ -84,4 +87,4 @@ class NotesRepositoryImpl implements NotesRepository {
   ) async {
     return _remoteDataSource.updateLockCounter(userId, noteId, lockCounter);
   }
-} 
+}

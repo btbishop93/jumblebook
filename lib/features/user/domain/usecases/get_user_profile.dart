@@ -12,4 +12,4 @@ class GetUserProfile {
     }
     return repository.getUserProfile(userId);
   }
-} 
+}

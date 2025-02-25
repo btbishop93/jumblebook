@@ -79,4 +79,4 @@ final class StartListeningToUserProfile extends UserEvent {
   List<Object> get props => [userId];
 }
 
-final class StopListeningToUserProfile extends UserEvent {} 
+final class StopListeningToUserProfile extends UserEvent {}

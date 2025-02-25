@@ -20,4 +20,4 @@ class SignInWithEmail {
       params.password,
     );
   }
-} 
+}

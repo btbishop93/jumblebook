@@ -25,21 +25,23 @@ void main() {
   }
 
   group('AuthForm', () {
-    testWidgets('should render sign in form fields', (WidgetTester tester) async {
+    testWidgets('should render sign in form fields',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         formType: FormType.LOGIN,
-        onSubmit: (email, password) {
-        },
+        onSubmit: (email, password) {},
       ));
 
       // Assert
-      expect(find.byType(TextFormField), findsNWidgets(2)); // Email and password
+      expect(
+          find.byType(TextFormField), findsNWidgets(2)); // Email and password
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
     });
 
-    testWidgets('should render sign up form fields', (WidgetTester tester) async {
+    testWidgets('should render sign up form fields',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         formType: FormType.REGISTER,
@@ -47,7 +49,8 @@ void main() {
       ));
 
       // Assert
-      expect(find.byType(TextFormField), findsNWidgets(3)); // Email, password, and confirm password
+      expect(find.byType(TextFormField),
+          findsNWidgets(3)); // Email, password, and confirm password
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Confirm Password'), findsOneWidget);
@@ -94,7 +97,8 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('should toggle password visibility', (WidgetTester tester) async {
+    testWidgets('should toggle password visibility',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         formType: FormType.LOGIN,
@@ -174,4 +178,4 @@ void main() {
       );
     });
   });
-} 
+}

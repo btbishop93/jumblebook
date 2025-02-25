@@ -9,7 +9,7 @@ abstract class AuthRepository {
   // Social Sign In
   Future<User> signInWithGoogle();
   Future<User> signInWithApple();
-  
+
   // Anonymous
   Future<User> signInAnonymously();
 
@@ -17,4 +17,4 @@ abstract class AuthRepository {
   Future<void> signOut();
   Stream<User?> get authStateChanges;
   User? get currentUser;
-} 
+}

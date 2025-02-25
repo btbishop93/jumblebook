@@ -168,9 +168,9 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     Emitter<NotesState> emit,
   ) async {
     await _notesSubscription?.cancel();
-    
+
     emit(NotesLoading(notes: state.notes));
-    
+
     await emit.forEach<List<dynamic>>(
       _getNotes(event.userId),
       onData: (notes) => NotesLoaded(notes.cast<Note>()),
@@ -194,4 +194,4 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     await _notesSubscription?.cancel();
     return super.close();
   }
-} 
+}

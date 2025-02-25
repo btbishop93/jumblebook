@@ -32,7 +32,8 @@ void main() {
       expect(find.text('Sign in'), findsOneWidget);
     });
 
-    testWidgets('should call onPressed when tapped', (WidgetTester tester) async {
+    testWidgets('should call onPressed when tapped',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         text: 'Sign in',
@@ -47,7 +48,8 @@ void main() {
       expect(true, isTrue);
     });
 
-    testWidgets('should render button with custom icon', (WidgetTester tester) async {
+    testWidgets('should render button with custom icon',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         text: 'Continue with Google',
@@ -60,7 +62,8 @@ void main() {
       expect(find.text('Continue with Google'), findsOneWidget);
     });
 
-    testWidgets('should maintain layout when text is long', (WidgetTester tester) async {
+    testWidgets('should maintain layout when text is long',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         text: 'A very long button text that should still fit nicely',
@@ -75,7 +78,8 @@ void main() {
       expect(buttonSize.height, greaterThan(0)); // Should have a height
     });
 
-    testWidgets('should handle rapid taps gracefully', (WidgetTester tester) async {
+    testWidgets('should handle rapid taps gracefully',
+        (WidgetTester tester) async {
       // Arrange
       int tapCount = 0;
       await tester.pumpWidget(createWidgetUnderTest(
@@ -95,7 +99,8 @@ void main() {
       expect(tapCount, equals(3)); // Each tap should be counted
     });
 
-    testWidgets('should have correct button style', (WidgetTester tester) async {
+    testWidgets('should have correct button style',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
         text: 'Sign in',
@@ -107,4 +112,4 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
   });
-} 
+}

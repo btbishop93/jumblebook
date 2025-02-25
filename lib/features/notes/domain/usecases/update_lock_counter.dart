@@ -21,4 +21,4 @@ class UpdateLockCounter {
     }
     return repository.updateLockCounter(userId, noteId, lockCounter);
   }
-} 
+}

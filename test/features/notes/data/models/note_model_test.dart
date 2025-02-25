@@ -5,7 +5,7 @@ import 'package:jumblebook/features/notes/data/models/note_model.dart';
 void main() {
   final testDate = DateTime(2024);
   final testTimestamp = Timestamp.fromDate(testDate);
-  
+
   final testNoteModel = NoteModel(
     id: 'test-id',
     title: 'Test Note',
@@ -167,4 +167,4 @@ void main() {
       expect(result, contains('Test content'));
     });
   });
-} 
+}

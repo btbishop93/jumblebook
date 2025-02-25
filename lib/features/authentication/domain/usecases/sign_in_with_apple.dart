@@ -10,4 +10,4 @@ class SignInWithApple {
   Future<User> call(NoParams params) async {
     return repository.signInWithApple();
   }
-} 
+}

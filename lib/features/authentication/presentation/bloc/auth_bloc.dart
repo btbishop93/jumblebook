@@ -74,7 +74,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data));
-    
+
     final currentUser = _authRepository.currentUser;
     if (currentUser != null) {
       emit(Authenticated(state.data.copyWith(
@@ -94,7 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data.copyWith(email: event.email)));
-    
+
     try {
       final user = await _signInWithEmail(
         EmailAuthParams(
@@ -102,7 +102,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
         ),
       );
-      
+
       emit(Authenticated(state.data.copyWith(
         user: user,
         email: event.email,
@@ -118,7 +118,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data.copyWith(email: event.email)));
-    
+
     try {
       final user = await _signUpWithEmail(
         EmailAuthParams(
@@ -126,7 +126,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
         ),
       );
-      
+
       emit(Authenticated(state.data.copyWith(
         user: user,
         email: event.email,
@@ -142,7 +142,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data));
-    
+
     try {
       final user = await _signInWithGoogle(const NoParams());
       emit(Authenticated(state.data.copyWith(
@@ -160,7 +160,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data));
-    
+
     try {
       final user = await _signInWithApple(const NoParams());
       emit(Authenticated(state.data.copyWith(
@@ -178,7 +178,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data));
-    
+
     try {
       final user = await _signInAnonymously(const NoParams());
       emit(Authenticated(state.data.copyWith(user: user)));
@@ -193,7 +193,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data));
-    
+
     try {
       await _signOut(const NoParams());
       // Preserve the email for convenience on next login
@@ -210,7 +210,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading(state.data.copyWith(email: event.email)));
-    
+
     try {
       await _resetPassword(EmailOnlyParams(email: event.email));
       emit(PasswordResetEmailSent(state.data.copyWith(email: event.email)));
@@ -224,4 +224,4 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await _authStateSubscription?.cancel();
     return super.close();
   }
-} 
+}

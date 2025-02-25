@@ -123,4 +123,4 @@ final class StartListeningToNotes extends NotesEvent {
   List<Object> get props => [userId];
 }
 
-final class StopListeningToNotes extends NotesEvent {} 
+final class StopListeningToNotes extends NotesEvent {}

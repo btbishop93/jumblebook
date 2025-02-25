@@ -7,6 +7,7 @@ import 'package:jumblebook/features/notes/data/repositories/notes_repository_imp
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
 
 class MockNotesRemoteDataSource extends Mock implements NotesRemoteDataSource {}
+
 class FakeNoteModel extends Fake implements NoteModel {}
 
 void main() {
@@ -90,7 +91,8 @@ void main() {
 
       // Assert
       expect(result, equals(testNoteModel));
-      verify(() => mockRemoteDataSource.getNote(testUserId, testNoteId)).called(1);
+      verify(() => mockRemoteDataSource.getNote(testUserId, testNoteId))
+          .called(1);
     });
 
     test('should propagate errors from remote data source', () async {
@@ -117,8 +119,8 @@ void main() {
       await repository.saveNote(testUserId, testNote);
 
       // Assert
-      verify(() => mockRemoteDataSource.saveNote(testUserId, any(that: isA<NoteModel>())))
-          .called(1);
+      verify(() => mockRemoteDataSource.saveNote(
+          testUserId, any(that: isA<NoteModel>()))).called(1);
     });
 
     test('should propagate errors from remote data source', () async {
@@ -203,9 +205,9 @@ void main() {
 
       // Assert
       verify(() => mockRemoteDataSource.saveNote(
-        testUserId,
-        any(that: isA<NoteModel>()),
-      )).called(1);
+            testUserId,
+            any(that: isA<NoteModel>()),
+          )).called(1);
     });
 
     test('should propagate errors from remote data source', () async {
@@ -233,28 +235,29 @@ void main() {
 
       // Assert
       verify(() => mockRemoteDataSource.saveNote(
-        testUserId,
-        any(that: isA<NoteModel>()),
-      )).called(1);
+            testUserId,
+            any(that: isA<NoteModel>()),
+          )).called(1);
     });
 
     test('should update lock counter on failed password attempt', () async {
       // Arrange
       when(() => mockRemoteDataSource.saveNote(testUserId, any()))
           .thenThrow(ArgumentError('Invalid password'));
-      when(() => mockRemoteDataSource.updateLockCounter(testUserId, testNoteId, any()))
-          .thenAnswer((_) async => null);
+      when(() => mockRemoteDataSource.updateLockCounter(
+          testUserId, testNoteId, any())).thenAnswer((_) async => null);
 
       // Act & Assert
       expect(
-        () => repository.unjumbleNote(testUserId, jumbledNote, 'wrong_password'),
+        () =>
+            repository.unjumbleNote(testUserId, jumbledNote, 'wrong_password'),
         throwsA(isArgumentError),
       );
       verify(() => mockRemoteDataSource.updateLockCounter(
-        testUserId,
-        testNoteId,
-        any(that: isA<int>()),
-      )).called(1);
+            testUserId,
+            testNoteId,
+            any(that: isA<int>()),
+          )).called(1);
     });
   });
-} 
+}

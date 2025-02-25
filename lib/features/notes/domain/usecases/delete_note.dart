@@ -14,4 +14,4 @@ class DeleteNote {
     }
     return repository.deleteNote(userId, noteId);
   }
-} 
+}

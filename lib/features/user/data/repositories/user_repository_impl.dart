@@ -30,12 +30,14 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> updatePreferences(String userId, List<String> preferences) async {
+  Future<void> updatePreferences(
+      String userId, List<String> preferences) async {
     return _remoteDataSource.updatePreferences(userId, preferences);
   }
 
   @override
-  Future<void> updateSettings(String userId, Map<String, dynamic> settings) async {
+  Future<void> updateSettings(
+      String userId, Map<String, dynamic> settings) async {
     return _remoteDataSource.updateSettings(userId, settings);
   }
 
@@ -48,4 +50,4 @@ class UserRepositoryImpl implements UserRepository {
   Stream<UserProfile> userProfileChanges(String userId) {
     return _remoteDataSource.userProfileChanges(userId);
   }
-} 
+}

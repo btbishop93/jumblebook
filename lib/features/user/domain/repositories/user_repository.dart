@@ -24,4 +24,4 @@ abstract class UserRepository {
 
   /// Stream of user profile changes
   Stream<UserProfile> userProfileChanges(String userId);
-} 
+}

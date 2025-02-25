@@ -18,4 +18,4 @@ class ThemeState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
     );
   }
-} 
+}

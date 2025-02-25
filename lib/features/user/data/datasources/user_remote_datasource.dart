@@ -14,11 +14,11 @@ abstract class UserRemoteDataSource {
 
 class FirebaseUserDataSource implements UserRemoteDataSource {
   final FirebaseFirestore _firestore;
-  
-  FirebaseUserDataSource({FirebaseFirestore? firestore}) 
+
+  FirebaseUserDataSource({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  CollectionReference<Map<String, dynamic>> get _usersCollection => 
+  CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _firestore.collection('users');
 
   @override
@@ -38,7 +38,7 @@ class FirebaseUserDataSource implements UserRemoteDataSource {
     final docRef = _usersCollection.doc(profile.id);
     final data = profile.toJson()
       ..remove('id'); // Remove ID from data as it's part of the document path
-    
+
     await docRef.update(data);
     return profile;
   }
@@ -56,14 +56,16 @@ class FirebaseUserDataSource implements UserRemoteDataSource {
   }
 
   @override
-  Future<void> updatePreferences(String userId, List<String> preferences) async {
+  Future<void> updatePreferences(
+      String userId, List<String> preferences) async {
     await _usersCollection.doc(userId).update({
       'preferences': preferences,
     });
   }
 
   @override
-  Future<void> updateSettings(String userId, Map<String, dynamic> settings) async {
+  Future<void> updateSettings(
+      String userId, Map<String, dynamic> settings) async {
     await _usersCollection.doc(userId).update({
       'settings': settings,
     });
@@ -75,7 +77,7 @@ class FirebaseUserDataSource implements UserRemoteDataSource {
     if (!doc.exists) {
       throw Exception('User profile not found');
     }
-    
+
     final data = doc.data()!;
     return {
       'notesCount': data['notesCount'] ?? 0,
@@ -95,4 +97,4 @@ class FirebaseUserDataSource implements UserRemoteDataSource {
       });
     });
   }
-} 
+}

@@ -83,7 +83,8 @@ class _AuthFormState extends State<AuthForm> {
 
     return Form(
       key: _formKey,
-      autovalidateMode: _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
+      autovalidateMode:
+          _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -235,4 +236,4 @@ class _AuthFormState extends State<AuthForm> {
       ),
     );
   }
-} 
+}

@@ -38,8 +38,7 @@ void main() {
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Anonymous sign in failed');
-    when(() => mockRepository.signInAnonymously())
-        .thenThrow(error);
+    when(() => mockRepository.signInAnonymously()).thenThrow(error);
 
     // Act & Assert
     expect(
@@ -48,4 +47,4 @@ void main() {
     );
     verify(() => mockRepository.signInAnonymously()).called(1);
   });
-} 
+}

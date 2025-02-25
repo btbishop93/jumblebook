@@ -36,8 +36,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   void _resetPassword() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthBloc>().add(ResetPasswordRequested(
-        email: _emailController.text,
-      ));
+            email: _emailController.text,
+          ));
     } else {
       setState(() {
         _validate = true;
@@ -53,7 +53,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     final pattern = RegExp(
       r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$',
     );
-    
+
     return pattern.hasMatch(value) ? null : 'Enter a valid email.';
   }
 
@@ -65,7 +65,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         if (state is PasswordResetEmailSent) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Password reset email sent. Please check your inbox.'),
+              content:
+                  Text('Password reset email sent. Please check your inbox.'),
               backgroundColor: Colors.green,
             ),
           );
@@ -90,9 +91,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           padding: const EdgeInsets.all(16.0),
           child: Form(
             key: _formKey,
-            autovalidateMode: _validate
-                ? AutovalidateMode.always
-                : AutovalidateMode.disabled,
+            autovalidateMode:
+                _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -141,4 +141,4 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ),
     );
   }
-} 
+}

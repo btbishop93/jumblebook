@@ -21,14 +21,12 @@ class FirebaseNotesDataSource implements NotesRemoteDataSource {
 
   @override
   Stream<List<NoteModel>> getNotes(String userId) {
-    return _notesCollection(userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => NoteModel.fromJson({
-                  'id': doc.id,
-                  ...doc.data(),
-                }))
-            .toList());
+    return _notesCollection(userId).snapshots().map((snapshot) => snapshot.docs
+        .map((doc) => NoteModel.fromJson({
+              'id': doc.id,
+              ...doc.data(),
+            }))
+        .toList());
   }
 
   @override
@@ -72,4 +70,4 @@ class FirebaseNotesDataSource implements NotesRemoteDataSource {
       'lockCounter': lockCounter,
     });
   }
-} 
+}

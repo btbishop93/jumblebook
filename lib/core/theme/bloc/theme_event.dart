@@ -15,4 +15,4 @@ class ChangeThemeEvent extends ThemeEvent {
 
   @override
   List<Object> get props => [themeMode];
-} 
+}

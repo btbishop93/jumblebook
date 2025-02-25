@@ -3,14 +3,19 @@ import 'package:mocktail/mocktail.dart';
 import 'dart:async';
 import 'package:jumblebook/features/user/domain/entities/user_profile.dart';
 import 'package:jumblebook/features/user/domain/repositories/user_repository.dart';
-import 'package:jumblebook/features/user/domain/usecases/usecases.dart' as usecases;
+import 'package:jumblebook/features/user/domain/usecases/usecases.dart'
+    as usecases;
 import 'package:jumblebook/features/user/presentation/bloc/user_bloc.dart';
 import 'package:jumblebook/features/user/presentation/bloc/user_event.dart';
 import 'package:jumblebook/features/user/presentation/bloc/user_state.dart';
 
 class MockGetUserProfile extends Mock implements usecases.GetUserProfile {}
-class MockUpdateUserProfile extends Mock implements usecases.UpdateUserProfile {}
+
+class MockUpdateUserProfile extends Mock
+    implements usecases.UpdateUserProfile {}
+
 class MockDeleteAccount extends Mock implements usecases.DeleteAccount {}
+
 class MockUserRepository extends Mock implements UserRepository {}
 
 void main() {
@@ -141,8 +146,7 @@ void main() {
   group('DeleteUserAccount', () {
     test('emits [UserLoading, UserDeleted] when successful', () async {
       // Arrange
-      when(() => mockDeleteAccount(testUserId))
-          .thenAnswer((_) async => null);
+      when(() => mockDeleteAccount(testUserId)).thenAnswer((_) async => null);
 
       // Assert
       expect(
@@ -183,9 +187,11 @@ void main() {
   group('UpdateUserPreferences', () {
     final newPreferences = ['dark_mode', 'notifications_off'];
 
-    test('emits [UserLoading, UserPreferencesUpdated] when successful', () async {
+    test('emits [UserLoading, UserPreferencesUpdated] when successful',
+        () async {
       // Arrange
-      when(() => mockUserRepository.updatePreferences(testUserId, newPreferences))
+      when(() =>
+              mockUserRepository.updatePreferences(testUserId, newPreferences))
           .thenAnswer((_) async => null);
       when(() => mockGetUserProfile(testUserId))
           .thenAnswer((_) async => testUserProfile);
@@ -209,7 +215,8 @@ void main() {
     test('emits [UserLoading, UserError] when update fails', () async {
       // Arrange
       final error = Exception('Failed to update preferences');
-      when(() => mockUserRepository.updatePreferences(testUserId, newPreferences))
+      when(() =>
+              mockUserRepository.updatePreferences(testUserId, newPreferences))
           .thenThrow(error);
 
       // Assert
@@ -440,4 +447,4 @@ void main() {
       await controller.close();
     });
   });
-} 
+}

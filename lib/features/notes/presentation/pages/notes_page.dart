@@ -153,7 +153,8 @@ class _NotesPageState extends State<NotesPage> {
                   if (_canResetPassword)
                     TextButton.icon(
                       icon: Icon(Icons.security, color: theme.primaryColor),
-                      label: Text('Reset password', style: theme.textTheme.labelLarge),
+                      label: Text('Reset password',
+                          style: theme.textTheme.labelLarge),
                       onPressed: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -248,8 +249,8 @@ class _NotesPageState extends State<NotesPage> {
           image: DecorationImage(
             image: AssetImage(
               theme.brightness == Brightness.light
-                ? 'assets/images/background.png'
-                : 'assets/images/background-dark.png',
+                  ? 'assets/images/background.png'
+                  : 'assets/images/background-dark.png',
             ),
             fit: BoxFit.fill,
           ),
@@ -287,4 +288,4 @@ class _NotesPageState extends State<NotesPage> {
       ),
     );
   }
-} 
+}

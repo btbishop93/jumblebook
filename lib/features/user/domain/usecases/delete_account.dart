@@ -11,4 +11,4 @@ class DeleteAccount {
     }
     return repository.deleteAccount(userId);
   }
-} 
+}

@@ -8,9 +8,15 @@ import 'package:jumblebook/features/authentication/domain/usecases/sign_out.dart
 import 'package:jumblebook/features/authentication/domain/usecases/reset_password.dart';
 
 class MockSignInWithEmail extends Mock implements SignInWithEmail {}
+
 class MockSignUpWithEmail extends Mock implements SignUpWithEmail {}
+
 class MockSignInWithGoogle extends Mock implements SignInWithGoogle {}
+
 class MockSignInWithApple extends Mock implements SignInWithApple {}
+
 class MockSignInAnonymously extends Mock implements SignInAnonymously {}
+
 class MockSignOut extends Mock implements SignOut {}
-class MockResetPassword extends Mock implements ResetPassword {} 
+
+class MockResetPassword extends Mock implements ResetPassword {}

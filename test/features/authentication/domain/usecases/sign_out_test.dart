@@ -17,8 +17,7 @@ void main() {
 
   test('should sign out through the repository', () async {
     // Arrange
-    when(() => mockRepository.signOut())
-        .thenAnswer((_) async => null);
+    when(() => mockRepository.signOut()).thenAnswer((_) async => null);
 
     // Act
     await useCase(const NoParams());
@@ -30,8 +29,7 @@ void main() {
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Sign out failed');
-    when(() => mockRepository.signOut())
-        .thenThrow(error);
+    when(() => mockRepository.signOut()).thenThrow(error);
 
     // Act & Assert
     expect(
@@ -40,4 +38,4 @@ void main() {
     );
     verify(() => mockRepository.signOut()).called(1);
   });
-} 
+}

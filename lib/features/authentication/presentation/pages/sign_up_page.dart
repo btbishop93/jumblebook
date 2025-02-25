@@ -17,7 +17,7 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthError) {
@@ -77,14 +77,16 @@ class SignUpPage extends StatelessWidget {
                             children: [
                               Text(
                                 'Have an account? ',
-                                style: theme.textTheme.bodySmall?.copyWith(fontSize: 14),
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontSize: 14),
                               ),
                               TextButton(
                                 onPressed: toggleView,
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: const Size(0, 0),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: Text(
                                   'Sign in',
@@ -101,15 +103,19 @@ class SignUpPage extends StatelessWidget {
                           // Divider
                           Row(
                             children: [
-                              Expanded(child: Divider(color: theme.dividerColor)),
+                              Expanded(
+                                  child: Divider(color: theme.dividerColor)),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   'or',
-                                  style: theme.textTheme.bodySmall?.copyWith(fontSize: 14),
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(fontSize: 14),
                                 ),
                               ),
-                              Expanded(child: Divider(color: theme.dividerColor)),
+                              Expanded(
+                                  child: Divider(color: theme.dividerColor)),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -122,7 +128,9 @@ class SignUpPage extends StatelessWidget {
                               color: theme.textTheme.bodyMedium?.color,
                             ),
                             onPressed: () {
-                              context.read<AuthBloc>().add(SignInAnonymouslyRequested());
+                              context
+                                  .read<AuthBloc>()
+                                  .add(SignInAnonymouslyRequested());
                             },
                           ),
                         ],
@@ -137,4 +145,4 @@ class SignUpPage extends StatelessWidget {
       },
     );
   }
-} 
+}

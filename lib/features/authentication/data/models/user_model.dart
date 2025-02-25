@@ -43,4 +43,4 @@ class UserModel extends User {
       photoUrl: json['photoUrl'] as String?,
     );
   }
-} 
+}

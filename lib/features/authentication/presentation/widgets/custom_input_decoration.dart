@@ -11,7 +11,7 @@ class CustomInputDecoration {
     Color? noFocusBorderColor,
   }) {
     final theme = Theme.of(context);
-    
+
     return InputDecoration(
       prefixIcon: icon,
       labelText: labelTextStr,
@@ -51,4 +51,4 @@ class CustomInputDecoration {
       ),
     );
   }
-} 
+}

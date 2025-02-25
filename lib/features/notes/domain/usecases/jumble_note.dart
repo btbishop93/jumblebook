@@ -22,4 +22,4 @@ class JumbleNote {
     }
     return repository.jumbleNote(userId, note, password);
   }
-} 
+}

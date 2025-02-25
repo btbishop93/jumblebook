@@ -10,13 +10,16 @@ import 'package:jumblebook/features/notes/presentation/widgets/notes_list.dart';
 
 // Mock classes
 class MockNotesBloc extends Mock implements NotesBloc {}
+
 class MockNavigator extends Mock implements NavigatorState {
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'MockNavigator';
   }
 }
+
 class MockBlocStream extends Mock implements Stream<NotesState> {}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
 void main() {
@@ -37,9 +40,12 @@ void main() {
     registerFallbackValue(CreateNote(userId: testUserId, note: testNote));
     registerFallbackValue(UpdateNote(userId: testUserId, note: testNote));
     registerFallbackValue(DeleteNote(userId: testUserId, noteId: testNote.id));
-    registerFallbackValue(JumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UpdateLockCounter(userId: testUserId, noteId: testNote.id, lockCounter: 1));
+    registerFallbackValue(
+        JumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(
+        UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(UpdateLockCounter(
+        userId: testUserId, noteId: testNote.id, lockCounter: 1));
     registerFallbackValue(StartListeningToNotes(testUserId));
     registerFallbackValue(StopListeningToNotes());
     registerFallbackValue(MaterialPageRoute<void>(builder: (_) => Container()));
@@ -49,21 +55,22 @@ void main() {
     mockNotesBloc = MockNotesBloc();
     mockNavigator = MockNavigator();
     mockStream = MockBlocStream();
-    
+
     // Setup default behaviors
     when(() => mockNotesBloc.state).thenReturn(const NotesInitial());
     when(() => mockNotesBloc.stream).thenAnswer((_) => mockStream);
     when(() => mockStream.listen(any())).thenAnswer(
       (invocation) => Stream<NotesState>.empty().listen((event) {}),
     );
-    
+
     // Mock event handlers
-    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>()))).thenAnswer((_) async {});
-    
+    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>())))
+        .thenAnswer((_) async {});
+
     // Mock navigation
     when(() => mockNavigator.push(any())).thenAnswer((_) async => null);
     when(() => mockNavigator.pop()).thenAnswer((_) async => null);
-    
+
     // Mock close
     when(() => mockNotesBloc.close()).thenAnswer((_) async {});
   });
@@ -82,7 +89,8 @@ void main() {
   }
 
   group('NotesList', () {
-    testWidgets('should render empty state when no notes', (WidgetTester tester) async {
+    testWidgets('should render empty state when no notes',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(const NotesLoaded([]));
       when(() => mockStream.listen(any())).thenAnswer(
@@ -97,7 +105,8 @@ void main() {
       expect(find.text('No notes found'), findsOneWidget);
     });
 
-    testWidgets('should show loading indicator when loading', (WidgetTester tester) async {
+    testWidgets('should show loading indicator when loading',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(const NotesLoading());
       when(() => mockStream.listen(any())).thenAnswer(
@@ -112,7 +121,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('should display list of notes when loaded', (WidgetTester tester) async {
+    testWidgets('should display list of notes when loaded',
+        (WidgetTester tester) async {
       // Arrange
       final notes = [testNote];
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(notes));
@@ -128,7 +138,8 @@ void main() {
       expect(find.text(testNote.title), findsOneWidget);
     });
 
-    testWidgets('should navigate to note view when note is tapped', (WidgetTester tester) async {
+    testWidgets('should navigate to note view when note is tapped',
+        (WidgetTester tester) async {
       // Arrange
       final notes = [testNote];
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(notes));
@@ -141,7 +152,8 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         navigatorObservers: [mockObserver],
         builder: (context, child) {
-          return BlocProvider<NotesBloc>.value(value: mockNotesBloc, child: child!);
+          return BlocProvider<NotesBloc>.value(
+              value: mockNotesBloc, child: child!);
         },
         home: Scaffold(
           body: NotesList(userId: testUserId),
@@ -155,14 +167,16 @@ void main() {
       verify(() => mockObserver.didPush(any(), any())).called(greaterThan(0));
     });
 
-    testWidgets('should delete note when dismissed', (WidgetTester tester) async {
+    testWidgets('should delete note when dismissed',
+        (WidgetTester tester) async {
       // Arrange
       final notes = [testNote];
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(notes));
       when(() => mockStream.listen(any())).thenAnswer(
         (invocation) => Stream.value(NotesLoaded(notes)).listen((event) {}),
       );
-      when(() => mockNotesBloc.add(any(that: isA<DeleteNote>()))).thenAnswer((_) async {});
+      when(() => mockNotesBloc.add(any(that: isA<DeleteNote>())))
+          .thenAnswer((_) async {});
 
       // Act
       await tester.pumpWidget(buildTestableWidget());
@@ -174,4 +188,4 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<DeleteNote>()))).called(1);
     });
   });
-} 
+}

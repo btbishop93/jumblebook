@@ -22,4 +22,4 @@ class UnjumbleNote {
     }
     return repository.unjumbleNote(userId, note, password);
   }
-} 
+}

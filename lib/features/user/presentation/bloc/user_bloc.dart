@@ -123,13 +123,13 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     Emitter<UserState> emit,
   ) async {
     await _userProfileSubscription?.cancel();
-    
+
     try {
       // Initial load
       emit(UserLoading(profile: state.profile));
       final initialProfile = await _getUserProfile(event.userId);
       emit(UserLoaded(initialProfile));
-      
+
       // Start listening to changes
       await emit.forEach<UserProfile>(
         _userRepository.userProfileChanges(event.userId),
@@ -160,4 +160,4 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     await _userProfileSubscription?.cancel();
     return super.close();
   }
-} 
+}

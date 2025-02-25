@@ -29,11 +29,11 @@ class _AuthenticatePageState extends State<AuthenticatePage> {
         if (state is Authenticated && state.data.user != null) {
           return NotesPage(currentUser: state.data.user!);
         }
-        
+
         return showSignIn
             ? SignInPage(toggleView: toggleView)
             : SignUpPage(toggleView: toggleView);
       },
     );
   }
-} 
+}

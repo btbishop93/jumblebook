@@ -54,4 +54,4 @@ class Note extends Equatable {
         date,
         lockCounter,
       ];
-} 
+}

@@ -32,12 +32,12 @@ class HomePage extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 50,
-              backgroundImage: user.photoUrl != null
-                  ? NetworkImage(user.photoUrl!)
-                  : null,
+              backgroundImage:
+                  user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
               child: user.photoUrl == null
                   ? Text(
-                      user.displayName?[0].toUpperCase() ?? user.email[0].toUpperCase(),
+                      user.displayName?[0].toUpperCase() ??
+                          user.email[0].toUpperCase(),
                       style: const TextStyle(fontSize: 32),
                     )
                   : null,
@@ -57,4 +57,4 @@ class HomePage extends StatelessWidget {
       // Add your note-related functionality here
     );
   }
-} 
+}

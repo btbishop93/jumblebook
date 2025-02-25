@@ -13,4 +13,4 @@ class ResetPassword {
 
     return repository.resetPassword(params.email);
   }
-} 
+}

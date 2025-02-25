@@ -49,9 +49,9 @@ class NotesList extends StatelessWidget {
               ),
               onDismissed: (direction) {
                 context.read<NotesBloc>().add(DeleteNote(
-                  userId: userId,
-                  noteId: notes[index].id,
-                ));
+                      userId: userId,
+                      noteId: notes[index].id,
+                    ));
               },
               child: NoteInfo(
                 userId: userId,
@@ -63,4 +63,4 @@ class NotesList extends StatelessWidget {
       },
     );
   }
-} 
+}

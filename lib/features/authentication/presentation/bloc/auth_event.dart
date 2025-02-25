@@ -56,4 +56,4 @@ final class ResetPasswordRequested extends AuthEvent {
 
   @override
   List<Object> get props => [email];
-} 
+}

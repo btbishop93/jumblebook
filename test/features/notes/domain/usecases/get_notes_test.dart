@@ -50,4 +50,4 @@ void main() {
     await expectLater(result, emitsError(isA<Exception>()));
     verify(() => mockRepository.getNotes(testUserId)).called(1);
   });
-} 
+}

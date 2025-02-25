@@ -66,27 +66,33 @@ void main() {
 
       // Assert
       expect(find.text('Sign In'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(2)); // Email and password fields
+      expect(find.byType(TextFormField),
+          findsNWidgets(2)); // Email and password fields
     });
 
-    testWidgets('should show error message when sign in fails', (WidgetTester tester) async {
+    testWidgets('should show error message when sign in fails',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Act - Simulate failed sign in
       mockAuthBloc.emit(AuthError(AuthData(), 'Invalid credentials'));
       await tester.pump(); // Rebuild after state change
-      await tester.pump(const Duration(milliseconds: 100)); // Wait for SnackBar animation
+      await tester.pump(
+          const Duration(milliseconds: 100)); // Wait for SnackBar animation
 
       // Assert
       expect(find.byType(SnackBar), findsOneWidget);
-      expect(find.descendant(
-        of: find.byType(SnackBar),
-        matching: find.text('Invalid credentials'),
-      ), findsOneWidget);
+      expect(
+          find.descendant(
+            of: find.byType(SnackBar),
+            matching: find.text('Invalid credentials'),
+          ),
+          findsOneWidget);
     });
 
-    testWidgets('should trigger sign in when form is submitted', (WidgetTester tester) async {
+    testWidgets('should trigger sign in when form is submitted',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -105,23 +111,27 @@ void main() {
       await tester.pump();
 
       // Assert
-      verify(() => mockAuthBloc.add(any(that: isA<SignInWithEmailRequested>()))).called(1);
+      verify(() => mockAuthBloc.add(any(that: isA<SignInWithEmailRequested>())))
+          .called(1);
     });
 
-    testWidgets('should show loading indicator during authentication', (WidgetTester tester) async {
+    testWidgets('should show loading indicator during authentication',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Act - Simulate loading state
       mockAuthBloc.emit(AuthLoading(AuthData()));
       await tester.pump(); // Rebuild after state change
-      await tester.pump(const Duration(milliseconds: 100)); // Wait for animations
+      await tester
+          .pump(const Duration(milliseconds: 100)); // Wait for animations
 
       // Assert
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('should trigger Google sign in when Google button is pressed', (WidgetTester tester) async {
+    testWidgets('should trigger Google sign in when Google button is pressed',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -133,7 +143,8 @@ void main() {
       verify(() => mockAuthBloc.add(SignInWithGoogleRequested())).called(1);
     });
 
-    testWidgets('should trigger Apple sign in when Apple button is pressed', (WidgetTester tester) async {
+    testWidgets('should trigger Apple sign in when Apple button is pressed',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -177,10 +188,12 @@ void main() {
       expect(find.text('Enter a password.'), findsOneWidget);
     });
 
-    testWidgets('should toggle to sign up page when toggle button is pressed', (WidgetTester tester) async {
+    testWidgets('should toggle to sign up page when toggle button is pressed',
+        (WidgetTester tester) async {
       // Arrange
       bool toggleCalled = false;
-      await tester.binding.setSurfaceSize(const Size(800, 1000)); // Set larger window size
+      await tester.binding
+          .setSurfaceSize(const Size(800, 1000)); // Set larger window size
       await tester.pumpWidget(
         MaterialApp(
           home: ScaffoldMessenger(
@@ -205,4 +218,4 @@ void main() {
       await tester.binding.setSurfaceSize(null);
     });
   });
-} 
+}

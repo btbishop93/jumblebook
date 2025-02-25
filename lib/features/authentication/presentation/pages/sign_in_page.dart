@@ -17,7 +17,7 @@ class SignInPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthError) {
@@ -60,7 +60,9 @@ class SignInPage extends StatelessWidget {
                           height: 20,
                         ),
                         onPressed: () {
-                          context.read<AuthBloc>().add(SignInWithGoogleRequested());
+                          context
+                              .read<AuthBloc>()
+                              .add(SignInWithGoogleRequested());
                         },
                       ),
                       const SizedBox(height: 16),
@@ -72,7 +74,9 @@ class SignInPage extends StatelessWidget {
                           color: theme.textTheme.bodyMedium?.color,
                         ),
                         onPressed: () {
-                          context.read<AuthBloc>().add(SignInWithAppleRequested());
+                          context
+                              .read<AuthBloc>()
+                              .add(SignInWithAppleRequested());
                         },
                       ),
                       const SizedBox(height: 32),
@@ -141,4 +145,4 @@ class SignInPage extends StatelessWidget {
       },
     );
   }
-} 
+}

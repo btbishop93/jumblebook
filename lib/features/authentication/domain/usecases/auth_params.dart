@@ -17,4 +17,4 @@ class EmailOnlyParams {
 // Empty params for use cases that don't need parameters
 class NoParams {
   const NoParams();
-} 
+}

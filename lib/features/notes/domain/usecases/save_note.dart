@@ -15,4 +15,4 @@ class SaveNote {
     }
     return repository.saveNote(userId, note);
   }
-} 
+}

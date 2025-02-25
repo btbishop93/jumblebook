@@ -65,8 +65,8 @@ class DefaultFirebaseOptions {
     projectId: 'jumblebook-327a0',
     databaseURL: 'https://jumblebook-327a0.firebaseio.com',
     storageBucket: 'jumblebook-327a0.firebasestorage.app',
-    iosClientId: '160137972718-s0lr9okp7lai6e6k723tk5ndromb8r5o.apps.googleusercontent.com',
+    iosClientId:
+        '160137972718-s0lr9okp7lai6e6k723tk5ndromb8r5o.apps.googleusercontent.com',
     iosBundleId: 'xyz.bsquared.jumblebook',
   );
-
 }

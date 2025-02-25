@@ -56,4 +56,4 @@ class UserProfile extends User {
         preferences,
         settings,
       ];
-} 
+}

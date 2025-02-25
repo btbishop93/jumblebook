@@ -10,4 +10,4 @@ class SignInWithGoogle {
   Future<User> call(NoParams params) async {
     return repository.signInWithGoogle();
   }
-} 
+}

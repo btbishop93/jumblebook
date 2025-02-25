@@ -12,4 +12,4 @@ class GetNotes {
     }
     return repository.getNotes(userId);
   }
-} 
+}

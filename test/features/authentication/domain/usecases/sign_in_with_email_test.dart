@@ -24,9 +24,11 @@ void main() {
     displayName: 'Test User',
   );
 
-  test('should sign in with email and password through the repository', () async {
+  test('should sign in with email and password through the repository',
+      () async {
     // Arrange
-    when(() => mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
+    when(() =>
+            mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
         .thenAnswer((_) async => testUser);
 
     // Act
@@ -37,14 +39,16 @@ void main() {
 
     // Assert
     expect(result, equals(testUser));
-    verify(() => mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
+    verify(() =>
+            mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
         .called(1);
   });
 
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Invalid credentials');
-    when(() => mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
+    when(() =>
+            mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
         .thenThrow(error);
 
     // Act & Assert
@@ -55,7 +59,8 @@ void main() {
       )),
       throwsA(isA<Exception>()),
     );
-    verify(() => mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
+    verify(() =>
+            mockRepository.signInWithEmailAndPassword(testEmail, testPassword))
         .called(1);
   });
 
@@ -84,4 +89,4 @@ void main() {
 
     verifyNever(() => mockRepository.signInWithEmailAndPassword(any(), any()));
   });
-} 
+}

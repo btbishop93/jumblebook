@@ -19,10 +19,10 @@ class ThemeSwitcher extends StatelessWidget {
               TextButton.icon(
                 icon: Icon(
                   state.themeMode == ThemeMode.system
-                    ? Icons.brightness_auto
-                    : state.themeMode == ThemeMode.light
-                        ? Icons.light_mode
-                        : Icons.dark_mode,
+                      ? Icons.brightness_auto
+                      : state.themeMode == ThemeMode.light
+                          ? Icons.light_mode
+                          : Icons.dark_mode,
                   color: theme.primaryColor,
                 ),
                 label: Text('Dark mode', style: theme.textTheme.labelLarge),
@@ -30,18 +30,18 @@ class ThemeSwitcher extends StatelessWidget {
               ),
               const Spacer(),
               Switch(
-                value: state.themeMode == ThemeMode.dark || 
-                       (state.themeMode == ThemeMode.system && 
-                        MediaQuery.platformBrightnessOf(context) == Brightness.dark),
+                value: state.themeMode == ThemeMode.dark ||
+                    (state.themeMode == ThemeMode.system &&
+                        MediaQuery.platformBrightnessOf(context) ==
+                            Brightness.dark),
                 onChanged: (bool value) {
                   if (state.themeMode == ThemeMode.system) {
-                    context.read<ThemeBloc>().add(
-                      ChangeThemeEvent(value ? ThemeMode.dark : ThemeMode.light)
-                    );
+                    context.read<ThemeBloc>().add(ChangeThemeEvent(
+                        value ? ThemeMode.dark : ThemeMode.light));
                   } else {
-                    context.read<ThemeBloc>().add(
-                      const ChangeThemeEvent(ThemeMode.system)
-                    );
+                    context
+                        .read<ThemeBloc>()
+                        .add(const ChangeThemeEvent(ThemeMode.system));
                   }
                 },
                 activeColor: theme.primaryColor,
@@ -52,4 +52,4 @@ class ThemeSwitcher extends StatelessWidget {
       },
     );
   }
-} 
+}

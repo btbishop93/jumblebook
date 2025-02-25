@@ -5,12 +5,24 @@ import 'package:jumblebook/features/notes/data/datasources/notes_remote_datasour
 import 'package:jumblebook/features/notes/data/models/note_model.dart';
 
 class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
-class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
-class MockDocumentReference extends Mock implements DocumentReference<Map<String, dynamic>> {}
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {}
-class MockQueryDocumentSnapshot extends Mock implements QueryDocumentSnapshot<Map<String, dynamic>> {}
-class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, dynamic>> {}
+
+class MockCollectionReference extends Mock
+    implements CollectionReference<Map<String, dynamic>> {}
+
+class MockDocumentReference extends Mock
+    implements DocumentReference<Map<String, dynamic>> {}
+
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {}
+
+class MockQueryDocumentSnapshot extends Mock
+    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
+
+class MockDocumentSnapshot extends Mock
+    implements DocumentSnapshot<Map<String, dynamic>> {}
+
 class MockCountQuerySnapshot extends Mock implements AggregateQuerySnapshot {}
+
 class MockAggregateQuery extends Mock implements AggregateQuery {}
 
 void main() {
@@ -24,7 +36,7 @@ void main() {
   final testNoteId = 'test-note-id';
   final testDate = DateTime(2024);
   final testTimestamp = Timestamp.fromDate(testDate);
-  
+
   final testNoteModel = NoteModel(
     id: testNoteId,
     title: 'Test Note',
@@ -33,15 +45,15 @@ void main() {
   );
 
   Map<String, dynamic> createTestNoteJson() => {
-    'id': testNoteId,
-    'title': 'Test Note',
-    'content': 'Test content',
-    'decryptShift': 0,
-    'isEncrypted': false,
-    'lockCounter': 0,
-    'password': '',
-    'date': testTimestamp,
-  };
+        'id': testNoteId,
+        'title': 'Test Note',
+        'content': 'Test content',
+        'decryptShift': 0,
+        'isEncrypted': false,
+        'lockCounter': 0,
+        'password': '',
+        'date': testTimestamp,
+      };
 
   bool mapsEqual(Map<String, dynamic> map1, Map<String, dynamic> map2) {
     if (map1.length != map2.length) return false;
@@ -50,7 +62,7 @@ void main() {
       if (value2 == null) return false;
       if (entry.value is Timestamp && value2 is Timestamp) {
         return entry.value.seconds == value2.seconds &&
-               entry.value.nanoseconds == value2.nanoseconds;
+            entry.value.nanoseconds == value2.nanoseconds;
       }
       return entry.value == value2;
     });
@@ -64,20 +76,24 @@ void main() {
     dataSource = FirebaseNotesDataSource(firestore: mockFirestore);
 
     // Setup collection reference chain
-    when(() => mockFirestore.collection('users')).thenReturn(mockUsersCollection);
+    when(() => mockFirestore.collection('users'))
+        .thenReturn(mockUsersCollection);
     when(() => mockUsersCollection.doc(testUserId)).thenReturn(mockUserDocRef);
-    when(() => mockUserDocRef.collection('notes')).thenReturn(mockNotesCollection);
+    when(() => mockUserDocRef.collection('notes'))
+        .thenReturn(mockNotesCollection);
   });
 
   group('getNotes', () {
     test('should return stream of notes from Firestore', () async {
       final mockQuerySnapshot = MockQuerySnapshot();
       final mockQueryDocumentSnapshot = MockQueryDocumentSnapshot();
-      
+
       when(() => mockNotesCollection.snapshots())
           .thenAnswer((_) => Stream.value(mockQuerySnapshot));
-      when(() => mockQuerySnapshot.docs).thenReturn([mockQueryDocumentSnapshot]);
-      when(() => mockQueryDocumentSnapshot.data()).thenReturn(createTestNoteJson());
+      when(() => mockQuerySnapshot.docs)
+          .thenReturn([mockQueryDocumentSnapshot]);
+      when(() => mockQueryDocumentSnapshot.data())
+          .thenReturn(createTestNoteJson());
       when(() => mockQueryDocumentSnapshot.id).thenReturn(testNoteId);
 
       final result = dataSource.getNotes(testUserId);
@@ -154,7 +170,8 @@ void main() {
       verify(() => mockUserDocRef.collection('notes')).called(1);
       verify(() => mockNotesCollection.doc(testNoteId)).called(1);
 
-      final verifyCall = verify(() => mockDocumentReference.set(captureAny(), captureAny()));
+      final verifyCall =
+          verify(() => mockDocumentReference.set(captureAny(), captureAny()));
       verifyCall.called(1);
 
       final capturedJson = verifyCall.captured[0] as Map<String, dynamic>;
@@ -170,8 +187,7 @@ void main() {
 
       when(() => mockNotesCollection.doc(testNoteId))
           .thenReturn(mockDocumentReference);
-      when(() => mockDocumentReference.set(any(), any()))
-          .thenThrow(error);
+      when(() => mockDocumentReference.set(any(), any())).thenThrow(error);
 
       expect(
         () => dataSource.saveNote(testUserId, testNoteModel),
@@ -218,8 +234,7 @@ void main() {
       final mockAggregateQuery = MockAggregateQuery();
       final mockCountQuerySnapshot = MockCountQuerySnapshot();
 
-      when(() => mockNotesCollection.count())
-          .thenReturn(mockAggregateQuery);
+      when(() => mockNotesCollection.count()).thenReturn(mockAggregateQuery);
       when(() => mockAggregateQuery.get())
           .thenAnswer((_) async => mockCountQuerySnapshot);
       when(() => mockCountQuerySnapshot.count).thenReturn(5);
@@ -236,8 +251,7 @@ void main() {
       final mockAggregateQuery = MockAggregateQuery();
       final error = Exception('Firestore error');
 
-      when(() => mockNotesCollection.count())
-          .thenReturn(mockAggregateQuery);
+      when(() => mockNotesCollection.count()).thenReturn(mockAggregateQuery);
       when(() => mockAggregateQuery.get()).thenThrow(error);
 
       expect(
@@ -282,4 +296,4 @@ void main() {
       );
     });
   });
-} 
+}

@@ -25,7 +25,9 @@ import 'mocks/mock_use_cases.dart';
 
 // Register fallback values for Mocktail to handle auth parameter objects
 class FakeEmailAuthParams extends Fake implements EmailAuthParams {}
+
 class FakeEmailOnlyParams extends Fake implements EmailOnlyParams {}
+
 class FakeNoParams extends Fake implements NoParams {}
 
 void main() {
@@ -71,7 +73,8 @@ void main() {
     resetPassword = MockResetPassword();
 
     // Set up default stub behavior
-    when(() => authRepository.authStateChanges).thenAnswer((_) => Stream.empty());
+    when(() => authRepository.authStateChanges)
+        .thenAnswer((_) => Stream.empty());
     when(() => authRepository.currentUser).thenReturn(null);
 
     // Create a fresh AuthBloc instance for each test
@@ -113,14 +116,15 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'subscribes to auth state changes and emits new states',
       build: () {
-        when(() => authRepository.authStateChanges).thenAnswer((_) => controller.stream);
+        when(() => authRepository.authStateChanges)
+            .thenAnswer((_) => controller.stream);
         when(() => authRepository.currentUser).thenReturn(testUser);
-        
+
         // Simulate delayed auth state change
         Future.delayed(const Duration(milliseconds: 50), () {
           controller.add(testUser);
         });
-        
+
         return authBloc;
       },
       act: (bloc) async {
@@ -261,8 +265,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Authenticated] when Google sign in is successful',
       build: () {
-        when(() => signInWithGoogle(any()))
-            .thenAnswer((_) async => testUser);
+        when(() => signInWithGoogle(any())).thenAnswer((_) async => testUser);
         return authBloc;
       },
       act: (bloc) => bloc.add(SignInWithGoogleRequested()),
@@ -295,8 +298,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Authenticated] when Apple sign in is successful',
       build: () {
-        when(() => signInWithApple(any()))
-            .thenAnswer((_) async => testUser);
+        when(() => signInWithApple(any())).thenAnswer((_) async => testUser);
         return authBloc;
       },
       act: (bloc) => bloc.add(SignInWithAppleRequested()),
@@ -385,8 +387,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, AuthError] when sign out fails',
       build: () {
-        when(() => signOut(any()))
-            .thenThrow(Exception('Sign out failed'));
+        when(() => signOut(any())).thenThrow(Exception('Sign out failed'));
         return authBloc;
       },
       act: (bloc) => bloc.add(SignOutRequested()),
@@ -438,4 +439,4 @@ void main() {
       ],
     );
   });
-} 
+}

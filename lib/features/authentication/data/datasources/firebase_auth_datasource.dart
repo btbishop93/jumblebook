@@ -22,8 +22,8 @@ class FirebaseAuthDataSource implements AuthDataSource {
   FirebaseAuthDataSource({
     firebase_auth.FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
-  }) : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
-       _googleSignIn = googleSignIn ?? GoogleSignIn();
+  })  : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   @override
   Future<UserModel> signInWithEmailAndPassword(
@@ -71,7 +71,8 @@ class FirebaseAuthDataSource implements AuthDataSource {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(credential);
       return UserModel.fromFirebaseUser(userCredential.user!);
     } catch (e) {
       throw _handleFirebaseAuthError(e);
@@ -88,12 +89,14 @@ class FirebaseAuthDataSource implements AuthDataSource {
         ],
       );
 
-      final oauthCredential = firebase_auth.OAuthProvider('apple.com').credential(
+      final oauthCredential =
+          firebase_auth.OAuthProvider('apple.com').credential(
         idToken: appleCredential.identityToken,
         accessToken: appleCredential.authorizationCode,
       );
 
-      final userCredential = await _firebaseAuth.signInWithCredential(oauthCredential);
+      final userCredential =
+          await _firebaseAuth.signInWithCredential(oauthCredential);
       return UserModel.fromFirebaseUser(userCredential.user!);
     } catch (e) {
       throw _handleFirebaseAuthError(e);
@@ -173,4 +176,4 @@ class FirebaseAuthDataSource implements AuthDataSource {
     }
     return Exception('An unexpected error occurred.');
   }
-} 
+}

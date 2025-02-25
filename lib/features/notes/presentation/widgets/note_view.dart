@@ -67,7 +67,7 @@ class _NoteViewState extends State<NoteView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _notesBloc = context.read<NotesBloc>();
-    
+
     if (widget.isNewNote) {
       _notesBloc.add(CreateNote(
         userId: widget.userId,
@@ -108,7 +108,7 @@ class _NoteViewState extends State<NoteView> {
     noteContentFocusNode.unfocus();
     final inputContent = noteContentController.text;
     if (inputContent.isEmpty) return;
-    
+
     final updatedNote = _note.copyWith(
       content: inputContent,
       date: DateTime.now(),
@@ -128,8 +128,10 @@ class _NoteViewState extends State<NoteView> {
         if (_note.password.isNotEmpty) {
           _notesBloc.add(JumbleNote(
             userId: widget.userId,
-            note: _note.copyWith(password: ''), // Clear hashed password before re-jumbling
-            password: _note.password, // Pass the stored password for re-jumbling
+            note: _note.copyWith(
+                password: ''), // Clear hashed password before re-jumbling
+            password:
+                _note.password, // Pass the stored password for re-jumbling
           ));
         } else {
           _jumbleNotePrompt();
@@ -242,7 +244,7 @@ class _NoteViewState extends State<NoteView> {
     }
 
     if (!mounted) return;
-    
+
     if (result.password.isNotEmpty) {
       _notesBloc.add(UnjumbleNote(
         userId: widget.userId,
@@ -304,7 +306,8 @@ class _NoteViewState extends State<NoteView> {
         if (state is NotesLoaded) {
           final updatedNote = state.notes.firstWhere(
             (note) => note.id == _note.id,
-            orElse: () => NoteModel.fromNote(state.notes.isNotEmpty ? state.notes.first : _note),
+            orElse: () => NoteModel.fromNote(
+                state.notes.isNotEmpty ? state.notes.first : _note),
           );
           if (updatedNote != _note) {
             setState(() {
@@ -329,7 +332,8 @@ class _NoteViewState extends State<NoteView> {
             _note = state.selectedNote!;
             noteContentController.text = _note.content;
           });
-        } else if (state is NoteUnjumbled && state.selectedNote?.id == _note.id) {
+        } else if (state is NoteUnjumbled &&
+            state.selectedNote?.id == _note.id) {
           setState(() {
             _note = state.selectedNote!;
             noteContentController.text = _note.content;
@@ -419,4 +423,4 @@ class _NoteViewState extends State<NoteView> {
       },
     );
   }
-} 
+}

@@ -38,8 +38,7 @@ void main() {
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Repository error');
-    when(() => mockRepository.saveNote(testUserId, testNote))
-        .thenThrow(error);
+    when(() => mockRepository.saveNote(testUserId, testNote)).thenThrow(error);
 
     // Act & Assert
     expect(
@@ -48,4 +47,4 @@ void main() {
     );
     verify(() => mockRepository.saveNote(testUserId, testNote)).called(1);
   });
-} 
+}

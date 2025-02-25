@@ -38,8 +38,7 @@ void main() {
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Google sign in failed');
-    when(() => mockRepository.signInWithGoogle())
-        .thenThrow(error);
+    when(() => mockRepository.signInWithGoogle()).thenThrow(error);
 
     // Act & Assert
     expect(
@@ -48,4 +47,4 @@ void main() {
     );
     verify(() => mockRepository.signInWithGoogle()).called(1);
   });
-} 
+}

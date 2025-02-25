@@ -24,4 +24,4 @@ abstract class NotesRepository {
 
   /// Update note's lock counter
   Future<void> updateLockCounter(String userId, String noteId, int lockCounter);
-} 
+}

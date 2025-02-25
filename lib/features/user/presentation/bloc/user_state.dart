@@ -43,4 +43,4 @@ final class UserPreferencesUpdated extends UserState {
 
 final class UserSettingsUpdated extends UserState {
   const UserSettingsUpdated(UserProfile profile) : super(profile: profile);
-} 
+}

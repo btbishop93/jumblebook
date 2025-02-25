@@ -25,9 +25,9 @@ void main() {
     test('should sign in with email and password successfully', () async {
       // Arrange
       when(() => mockDataSource.signInWithEmailAndPassword(
-        any(),
-        any(),
-      )).thenAnswer((_) async => testUser);
+            any(),
+            any(),
+          )).thenAnswer((_) async => testUser);
 
       // Act
       final result = await authRepository.signInWithEmailAndPassword(
@@ -38,17 +38,17 @@ void main() {
       // Assert
       expect(result, equals(testUser));
       verify(() => mockDataSource.signInWithEmailAndPassword(
-        'test@example.com',
-        'password123',
-      )).called(1);
+            'test@example.com',
+            'password123',
+          )).called(1);
     });
 
     test('should throw exception when sign in fails', () async {
       // Arrange
       when(() => mockDataSource.signInWithEmailAndPassword(
-        any(),
-        any(),
-      )).thenThrow(Exception('Invalid credentials'));
+            any(),
+            any(),
+          )).thenThrow(Exception('Invalid credentials'));
 
       // Act & Assert
       expect(
@@ -65,9 +65,9 @@ void main() {
     test('should create new account successfully', () async {
       // Arrange
       when(() => mockDataSource.signUpWithEmailAndPassword(
-        any(),
-        any(),
-      )).thenAnswer((_) async => testUser);
+            any(),
+            any(),
+          )).thenAnswer((_) async => testUser);
 
       // Act
       final result = await authRepository.signUpWithEmailAndPassword(
@@ -78,17 +78,17 @@ void main() {
       // Assert
       expect(result, equals(testUser));
       verify(() => mockDataSource.signUpWithEmailAndPassword(
-        'new@example.com',
-        'password123',
-      )).called(1);
+            'new@example.com',
+            'password123',
+          )).called(1);
     });
 
     test('should throw exception when email is already in use', () async {
       // Arrange
       when(() => mockDataSource.signUpWithEmailAndPassword(
-        any(),
-        any(),
-      )).thenThrow(Exception('Email already in use'));
+            any(),
+            any(),
+          )).thenThrow(Exception('Email already in use'));
 
       // Act & Assert
       expect(
@@ -209,8 +209,7 @@ void main() {
     test('should emit user when auth state changes', () async {
       // Arrange
       final authStates = Stream.fromIterable([testUser]);
-      when(() => mockDataSource.authStateChanges)
-          .thenAnswer((_) => authStates);
+      when(() => mockDataSource.authStateChanges).thenAnswer((_) => authStates);
 
       // Act & Assert
       expect(
@@ -222,8 +221,7 @@ void main() {
     test('should emit null when user signs out', () async {
       // Arrange
       final authStates = Stream.fromIterable([null]);
-      when(() => mockDataSource.authStateChanges)
-          .thenAnswer((_) => authStates);
+      when(() => mockDataSource.authStateChanges).thenAnswer((_) => authStates);
 
       // Act & Assert
       expect(
@@ -250,4 +248,4 @@ void main() {
       expect(authRepository.currentUser, isNull);
     });
   });
-} 
+}

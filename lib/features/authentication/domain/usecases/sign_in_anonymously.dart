@@ -10,4 +10,4 @@ class SignInAnonymously {
   Future<User> call(NoParams params) async {
     return repository.signInAnonymously();
   }
-} 
+}

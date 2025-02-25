@@ -9,4 +9,4 @@ class SignOut {
   Future<void> call(NoParams params) async {
     return repository.signOut();
   }
-} 
+}

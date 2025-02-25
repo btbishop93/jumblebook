@@ -13,7 +13,9 @@ import 'package:jumblebook/features/authentication/domain/entities/user.dart';
 
 // Mock classes
 class MockNotesBloc extends Mock implements NotesBloc {}
+
 class MockBlocStream extends Mock implements Stream<NotesState> {}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
 void main() {
@@ -38,9 +40,12 @@ void main() {
     registerFallbackValue(CreateNote(userId: testUserId, note: testNote));
     registerFallbackValue(UpdateNote(userId: testUserId, note: testNote));
     registerFallbackValue(DeleteNote(userId: testUserId, noteId: testNote.id));
-    registerFallbackValue(JumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
-    registerFallbackValue(UpdateLockCounter(userId: testUserId, noteId: testNote.id, lockCounter: 1));
+    registerFallbackValue(
+        JumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(
+        UnjumbleNote(userId: testUserId, note: testNote, password: 'password'));
+    registerFallbackValue(UpdateLockCounter(
+        userId: testUserId, noteId: testNote.id, lockCounter: 1));
     registerFallbackValue(StartListeningToNotes(testUserId));
     registerFallbackValue(StopListeningToNotes());
     registerFallbackValue(MaterialPageRoute<void>(builder: (_) => Container()));
@@ -49,17 +54,18 @@ void main() {
   setUp(() {
     mockNotesBloc = MockNotesBloc();
     mockStream = MockBlocStream();
-    
+
     // Setup default behaviors
     when(() => mockNotesBloc.state).thenReturn(const NotesInitial());
     when(() => mockNotesBloc.stream).thenAnswer((_) => mockStream);
     when(() => mockStream.listen(any())).thenAnswer(
       (invocation) => Stream<NotesState>.empty().listen((event) {}),
     );
-    
+
     // Mock event handlers
-    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>()))).thenAnswer((_) async {});
-    
+    when(() => mockNotesBloc.add(any(that: isA<NotesEvent>())))
+        .thenAnswer((_) async {});
+
     // Mock close
     when(() => mockNotesBloc.close()).thenAnswer((_) async {});
   });
@@ -77,7 +83,8 @@ void main() {
   }
 
   group('NotesPage', () {
-    testWidgets('should render initial empty state', (WidgetTester tester) async {
+    testWidgets('should render initial empty state',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(const NotesLoaded([]));
       when(() => mockStream.listen(any())).thenAnswer(
@@ -91,14 +98,17 @@ void main() {
       // Assert
       expect(find.text('No notes found'), findsOneWidget);
       expect(find.byType(FloatingActionButton), findsOneWidget);
-      verify(() => mockNotesBloc.add(any(that: isA<StartListeningToNotes>()))).called(1);
+      verify(() => mockNotesBloc.add(any(that: isA<StartListeningToNotes>())))
+          .called(1);
     });
 
-    testWidgets('should show loading indicator when loading notes', (WidgetTester tester) async {
+    testWidgets('should show loading indicator when loading notes',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(NotesLoading(notes: const []));
       when(() => mockStream.listen(any())).thenAnswer(
-        (invocation) => Stream.value(NotesLoading(notes: const [])).listen((event) {}),
+        (invocation) =>
+            Stream.value(NotesLoading(notes: const [])).listen((event) {}),
       );
 
       // Act
@@ -109,12 +119,15 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('should show error message when loading fails', (WidgetTester tester) async {
+    testWidgets('should show error message when loading fails',
+        (WidgetTester tester) async {
       // Arrange
       const errorMessage = 'Failed to load notes';
-      when(() => mockNotesBloc.state).thenReturn(const NotesError(errorMessage));
+      when(() => mockNotesBloc.state)
+          .thenReturn(const NotesError(errorMessage));
       when(() => mockStream.listen(any())).thenAnswer(
-        (invocation) => Stream.value(const NotesError(errorMessage)).listen((event) {}),
+        (invocation) =>
+            Stream.value(const NotesError(errorMessage)).listen((event) {}),
       );
 
       // Act
@@ -125,7 +138,8 @@ void main() {
       expect(find.text(errorMessage), findsOneWidget);
     });
 
-    testWidgets('should navigate to note view when FAB is tapped', (WidgetTester tester) async {
+    testWidgets('should navigate to note view when FAB is tapped',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(const NotesLoaded([]));
       when(() => mockStream.listen(any())).thenAnswer(
@@ -137,7 +151,8 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         navigatorObservers: [mockObserver],
         builder: (context, child) {
-          return BlocProvider<NotesBloc>.value(value: mockNotesBloc, child: child!);
+          return BlocProvider<NotesBloc>.value(
+              value: mockNotesBloc, child: child!);
         },
         home: NotesPage(currentUser: testUser),
       ));
@@ -149,7 +164,8 @@ void main() {
       verify(() => mockObserver.didPush(any(), any())).called(greaterThan(0));
     });
 
-    testWidgets('should display notes list when notes are loaded', (WidgetTester tester) async {
+    testWidgets('should display notes list when notes are loaded',
+        (WidgetTester tester) async {
       // Arrange
       final notes = [testNote];
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(notes));
@@ -166,7 +182,8 @@ void main() {
       expect(find.text(testNote.title), findsOneWidget);
     });
 
-    testWidgets('should open note creation dialog when FAB is pressed', (WidgetTester tester) async {
+    testWidgets('should open note creation dialog when FAB is pressed',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(const []));
       when(() => mockStream.listen(any())).thenAnswer(
@@ -181,10 +198,12 @@ void main() {
 
       // Assert
       expect(find.byType(NoteView), findsOneWidget);
-      expect(find.byType(TextField), findsNWidgets(2)); // Title and content fields
+      expect(
+          find.byType(TextField), findsNWidgets(2)); // Title and content fields
     });
 
-    testWidgets('should create note when form is submitted', (WidgetTester tester) async {
+    testWidgets('should create note when form is submitted',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(const []));
       when(() => mockStream.listen(any())).thenAnswer(
@@ -199,7 +218,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField).first, 'New Title');
       await tester.enterText(find.byType(TextField).last, 'New Content');
-      
+
       // Unfocus to trigger save
       await tester.tap(find.byType(Scaffold).first);
       await tester.pumpAndSettle();
@@ -209,7 +228,8 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<UpdateNote>()))).called(4);
     });
 
-    testWidgets('should open note view when note is tapped', (WidgetTester tester) async {
+    testWidgets('should open note view when note is tapped',
+        (WidgetTester tester) async {
       // Arrange
       final notes = [testNote];
       when(() => mockNotesBloc.state).thenReturn(NotesLoaded(notes));
@@ -236,7 +256,8 @@ void main() {
       when(() => mockStream.listen(any())).thenAnswer(
         (invocation) => Stream.value(NotesLoaded(notes)).listen((event) {}),
       );
-      when(() => mockNotesBloc.add(any(that: isA<DeleteNote>()))).thenAnswer((_) async {});
+      when(() => mockNotesBloc.add(any(that: isA<DeleteNote>())))
+          .thenAnswer((_) async {});
 
       // Act
       await tester.pumpWidget(createWidgetUnderTest());
@@ -248,4 +269,4 @@ void main() {
       verify(() => mockNotesBloc.add(any(that: isA<DeleteNote>()))).called(1);
     });
   });
-} 
+}

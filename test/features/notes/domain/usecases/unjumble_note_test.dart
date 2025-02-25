@@ -37,7 +37,8 @@ void main() {
 
   test('should decrypt note using the repository', () async {
     // Arrange
-    when(() => mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
+    when(() =>
+            mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
         .thenAnswer((_) async => decryptedNote);
 
     // Act
@@ -49,14 +50,16 @@ void main() {
 
     // Assert
     expect(result, equals(decryptedNote));
-    verify(() => mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
+    verify(() =>
+            mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
         .called(1);
   });
 
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Repository error');
-    when(() => mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
+    when(() =>
+            mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
         .thenThrow(error);
 
     // Act & Assert
@@ -68,13 +71,15 @@ void main() {
       ),
       throwsA(isA<Exception>()),
     );
-    verify(() => mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
+    verify(() =>
+            mockRepository.unjumbleNote(testUserId, jumbledNote, testPassword))
         .called(1);
   });
 
   test('should throw ArgumentError when wrong password is provided', () async {
     // Arrange
-    when(() => mockRepository.unjumbleNote(testUserId, jumbledNote, 'wrong-password'))
+    when(() => mockRepository.unjumbleNote(
+            testUserId, jumbledNote, 'wrong-password'))
         .thenThrow(ArgumentError('Invalid password'));
 
     // Act & Assert
@@ -87,4 +92,4 @@ void main() {
       throwsA(isA<ArgumentError>()),
     );
   });
-} 
+}

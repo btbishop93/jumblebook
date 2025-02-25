@@ -38,8 +38,7 @@ void main() {
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Apple sign in failed');
-    when(() => mockRepository.signInWithApple())
-        .thenThrow(error);
+    when(() => mockRepository.signInWithApple()).thenThrow(error);
 
     // Act & Assert
     expect(
@@ -48,4 +47,4 @@ void main() {
     );
     verify(() => mockRepository.signInWithApple()).called(1);
   });
-} 
+}

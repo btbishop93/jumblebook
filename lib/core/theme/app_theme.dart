@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 class AppTheme {
   static ThemeData get lightTheme {
     const primaryColor = Color.fromRGBO(245, 148, 46, 1.0);
-    
+
     return ThemeData(
       brightness: Brightness.light,
       primaryColor: primaryColor,
@@ -20,7 +20,8 @@ class AppTheme {
       ),
       textTheme: const TextTheme(
         titleMedium: TextStyle(fontSize: 18.0, color: Colors.black87),
-        labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.black87),
+        labelLarge: TextStyle(
+            fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.black87),
         bodyMedium: TextStyle(color: Colors.black87),
         bodySmall: TextStyle(color: Colors.black54),
       ),
@@ -82,7 +83,7 @@ class AppTheme {
     const primaryColor = Color.fromRGBO(245, 148, 46, 1.0);
     const backgroundColor = Color(0xFF303030);
     final surfaceColor = const Color(0xFF424242);
-    
+
     return ThemeData(
       brightness: Brightness.dark,
       primaryColor: primaryColor,
@@ -98,7 +99,8 @@ class AppTheme {
       ),
       textTheme: const TextTheme(
         titleMedium: TextStyle(fontSize: 18.0, color: Colors.white),
-        labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white),
+        labelLarge: TextStyle(
+            fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white),
         bodySmall: TextStyle(color: Colors.white),
       ),
@@ -155,4 +157,4 @@ class AppTheme {
       ),
     );
   }
-} 
+}

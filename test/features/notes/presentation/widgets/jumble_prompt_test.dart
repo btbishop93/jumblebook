@@ -29,7 +29,8 @@ void main() {
   }
 
   group('jumblePrompt', () {
-    testWidgets('should render dialog with form fields', (WidgetTester tester) async {
+    testWidgets('should render dialog with form fields',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -43,7 +44,8 @@ void main() {
       expect(find.text('Password'), findsOneWidget);
     });
 
-    testWidgets('should submit form with valid input', (WidgetTester tester) async {
+    testWidgets('should submit form with valid input',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -79,7 +81,8 @@ void main() {
       expect(find.text('Enter a password.'), findsOneWidget);
     });
 
-    testWidgets('should close dialog when cancel is pressed', (WidgetTester tester) async {
+    testWidgets('should close dialog when cancel is pressed',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -95,7 +98,8 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('should show jumbled message for new note', (WidgetTester tester) async {
+    testWidgets('should show jumbled message for new note',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -105,12 +109,14 @@ void main() {
 
       // Assert
       expect(
-        find.text('Create a password. You will need your password or biometric authentication to Unjumble this note.'),
+        find.text(
+            'Create a password. You will need your password or biometric authentication to Unjumble this note.'),
         findsOneWidget,
       );
     });
 
-    testWidgets('should show unjumbling message for jumbled note', (WidgetTester tester) async {
+    testWidgets('should show unjumbling message for jumbled note',
+        (WidgetTester tester) async {
       // Arrange
       testNote = testNote.copyWith(isEncrypted: true);
       await tester.pumpWidget(createWidgetUnderTest());
@@ -126,7 +132,8 @@ void main() {
       );
     });
 
-    testWidgets('should show helper text when jumbling', (WidgetTester tester) async {
+    testWidgets('should show helper text when jumbling',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -136,9 +143,10 @@ void main() {
 
       // Assert
       expect(
-        find.text('Use 8 or more characters with a mix of letters, numbers & symbols.'),
+        find.text(
+            'Use 8 or more characters with a mix of letters, numbers & symbols.'),
         findsOneWidget,
       );
     });
   });
-} 
+}

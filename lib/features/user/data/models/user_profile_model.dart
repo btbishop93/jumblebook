@@ -21,7 +21,7 @@ class UserProfileModel extends UserProfile {
       displayName: json['displayName'] as String?,
       photoUrl: json['photoUrl'] as String?,
       bio: json['bio'] as String?,
-      lastSeen: json['lastSeen'] != null 
+      lastSeen: json['lastSeen'] != null
           ? (json['lastSeen'] as Timestamp).toDate()
           : null,
       notesCount: json['notesCount'] as int? ?? 0,
@@ -57,4 +57,4 @@ class UserProfileModel extends UserProfile {
       settings: profile.settings,
     );
   }
-} 
+}

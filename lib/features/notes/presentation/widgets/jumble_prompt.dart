@@ -22,10 +22,11 @@ class PasswordForm {
   });
 }
 
-Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async {
+Future<Prompt> jumblePrompt(
+    BuildContext context, String title, Note note) async {
   final controller = StreamController<bool>();
   final isJumbled = note.isEncrypted;
-  
+
   final result = await showDialog<Prompt>(
     context: context,
     barrierDismissible: false,
@@ -165,7 +166,7 @@ Future<Prompt> jumblePrompt(BuildContext context, String title, Note note) async
       );
     },
   );
-  
+
   return result ?? Prompt("", note.lockCounter);
 }
 
@@ -225,7 +226,7 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
     FocusScope.of(context).unfocus();
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState!.save();
-      
+
       if (!widget.isJumbling) {
         // For unjumbling, check if password matches using proper hash verification
         final noteModel = NoteModel.fromNote(widget.note);
@@ -236,22 +237,25 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
           switch (_formData.lockCounter) {
             case 0:
               _formData.lockCounter = 1;
-              _passwordErrorText = 'Warning! This note will be locked after 2 more failed attempts.';
+              _passwordErrorText =
+                  'Warning! This note will be locked after 2 more failed attempts.';
               break;
             case 1:
               _formData.lockCounter = 2;
-              _passwordErrorText = 'Warning! This note will be locked after 1 more failed attempt.';
+              _passwordErrorText =
+                  'Warning! This note will be locked after 1 more failed attempt.';
               break;
             default:
               _formData.lockCounter = 3;
-              _passwordErrorText = 'This note is now locked and can only be unlocked via TouchID or FaceID.';
+              _passwordErrorText =
+                  'This note is now locked and can only be unlocked via TouchID or FaceID.';
               break;
           }
           setState(() {});
           return;
         }
       }
-      
+
       widget.onFormUpdate(_formData);
     } else {
       setState(() {
@@ -270,17 +274,18 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
         return 'Use 8 characters or more for your password.';
       }
     }
-    
+
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Form(
       key: _formKey,
-      autovalidateMode: _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
+      autovalidateMode:
+          _validate ? AutovalidateMode.always : AutovalidateMode.disabled,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -345,4 +350,4 @@ class _PasswordInputFormState extends State<PasswordInputForm> {
       ),
     );
   }
-} 
+}

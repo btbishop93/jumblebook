@@ -6,15 +6,23 @@ import 'package:jumblebook/features/authentication/data/datasources/firebase_aut
 import 'package:jumblebook/features/authentication/data/models/user_model.dart';
 
 class MockFirebaseAuth extends Mock implements firebase_auth.FirebaseAuth {}
+
 class MockGoogleSignIn extends Mock implements GoogleSignIn {}
+
 class MockUserCredential extends Mock implements firebase_auth.UserCredential {}
+
 class MockFirebaseUser extends Mock implements firebase_auth.User {}
+
 class MockGoogleSignInAccount extends Mock implements GoogleSignInAccount {}
-class MockGoogleSignInAuthentication extends Mock implements GoogleSignInAuthentication {}
+
+class MockGoogleSignInAuthentication extends Mock
+    implements GoogleSignInAuthentication {}
 
 // Fake classes for fallback values
 class FakeAuthCredential extends Fake implements firebase_auth.AuthCredential {}
-class FakeOAuthCredential extends Fake implements firebase_auth.OAuthCredential {}
+
+class FakeOAuthCredential extends Fake
+    implements firebase_auth.OAuthCredential {}
 
 void main() {
   late FirebaseAuthDataSource dataSource;
@@ -52,9 +60,9 @@ void main() {
     test('should sign in with email and password successfully', () async {
       // Arrange
       when(() => mockFirebaseAuth.signInWithEmailAndPassword(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-      )).thenAnswer((_) async => mockUserCredential);
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          )).thenAnswer((_) async => mockUserCredential);
 
       // Act
       final result = await dataSource.signInWithEmailAndPassword(
@@ -68,9 +76,9 @@ void main() {
       expect(result.email, equals('test@example.com'));
       expect(result.displayName, equals('Test User'));
       verify(() => mockFirebaseAuth.signInWithEmailAndPassword(
-        email: 'test@example.com',
-        password: 'password123',
-      )).called(1);
+            email: 'test@example.com',
+            password: 'password123',
+          )).called(1);
     });
 
     test('should throw exception when sign in fails', () async {
@@ -80,9 +88,9 @@ void main() {
         message: 'Wrong password provided.',
       );
       when(() => mockFirebaseAuth.signInWithEmailAndPassword(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-      )).thenThrow(error);
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          )).thenThrow(error);
 
       // Act & Assert
       expect(
@@ -99,9 +107,9 @@ void main() {
     test('should create new account successfully', () async {
       // Arrange
       when(() => mockFirebaseAuth.createUserWithEmailAndPassword(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-      )).thenAnswer((_) async => mockUserCredential);
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          )).thenAnswer((_) async => mockUserCredential);
 
       // Act
       final result = await dataSource.signUpWithEmailAndPassword(
@@ -114,9 +122,9 @@ void main() {
       expect(result.id, equals('test-uid'));
       expect(result.email, equals('test@example.com'));
       verify(() => mockFirebaseAuth.createUserWithEmailAndPassword(
-        email: 'new@example.com',
-        password: 'password123',
-      )).called(1);
+            email: 'new@example.com',
+            password: 'password123',
+          )).called(1);
     });
 
     test('should throw exception when email is already in use', () async {
@@ -126,9 +134,9 @@ void main() {
         message: 'Email is already in use.',
       );
       when(() => mockFirebaseAuth.createUserWithEmailAndPassword(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-      )).thenThrow(error);
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          )).thenThrow(error);
 
       // Act & Assert
       expect(
@@ -174,8 +182,7 @@ void main() {
 
     test('should throw exception when Google sign in is cancelled', () async {
       // Arrange
-      when(() => mockGoogleSignIn.signIn())
-          .thenAnswer((_) async => null);
+      when(() => mockGoogleSignIn.signIn()).thenAnswer((_) async => null);
 
       // Act & Assert
       expect(
@@ -218,8 +225,7 @@ void main() {
         code: 'operation-not-allowed',
         message: 'Anonymous auth is not enabled',
       );
-      when(() => mockFirebaseAuth.signInAnonymously())
-          .thenThrow(error);
+      when(() => mockFirebaseAuth.signInAnonymously()).thenThrow(error);
 
       // Act & Assert
       expect(
@@ -232,10 +238,8 @@ void main() {
   group('signOut', () {
     test('should sign out successfully', () async {
       // Arrange
-      when(() => mockFirebaseAuth.signOut())
-          .thenAnswer((_) async {});
-      when(() => mockGoogleSignIn.signOut())
-          .thenAnswer((_) async => null);
+      when(() => mockFirebaseAuth.signOut()).thenAnswer((_) async {});
+      when(() => mockGoogleSignIn.signOut()).thenAnswer((_) async => null);
 
       // Act & Assert
       await expectLater(dataSource.signOut(), completes);
@@ -260,8 +264,8 @@ void main() {
     test('should send password reset email successfully', () async {
       // Arrange
       when(() => mockFirebaseAuth.sendPasswordResetEmail(
-        email: any(named: 'email'),
-      )).thenAnswer((_) async {});
+            email: any(named: 'email'),
+          )).thenAnswer((_) async {});
 
       // Act & Assert
       await expectLater(
@@ -269,8 +273,8 @@ void main() {
         completes,
       );
       verify(() => mockFirebaseAuth.sendPasswordResetEmail(
-        email: 'test@example.com',
-      )).called(1);
+            email: 'test@example.com',
+          )).called(1);
     });
 
     test('should throw exception when reset password fails', () async {
@@ -280,8 +284,8 @@ void main() {
         message: 'No user found with this email.',
       );
       when(() => mockFirebaseAuth.sendPasswordResetEmail(
-        email: any(named: 'email'),
-      )).thenThrow(error);
+            email: any(named: 'email'),
+          )).thenThrow(error);
 
       // Act & Assert
       expect(
@@ -322,8 +326,7 @@ void main() {
   group('currentUser', () {
     test('should return current user when signed in', () {
       // Arrange
-      when(() => mockFirebaseAuth.currentUser)
-          .thenReturn(mockFirebaseUser);
+      when(() => mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser);
 
       // Act
       final result = dataSource.currentUser;
@@ -336,8 +339,7 @@ void main() {
 
     test('should return null when not signed in', () {
       // Arrange
-      when(() => mockFirebaseAuth.currentUser)
-          .thenReturn(null);
+      when(() => mockFirebaseAuth.currentUser).thenReturn(null);
 
       // Act
       final result = dataSource.currentUser;
@@ -347,4 +349,4 @@ void main() {
       verify(() => mockFirebaseAuth.currentUser).called(1);
     });
   });
-} 
+}

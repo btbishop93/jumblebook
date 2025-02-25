@@ -24,9 +24,11 @@ void main() {
     displayName: 'Test User',
   );
 
-  test('should sign up with email and password through the repository', () async {
+  test('should sign up with email and password through the repository',
+      () async {
     // Arrange
-    when(() => mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
+    when(() =>
+            mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
         .thenAnswer((_) async => testUser);
 
     // Act
@@ -37,14 +39,16 @@ void main() {
 
     // Assert
     expect(result, equals(testUser));
-    verify(() => mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
+    verify(() =>
+            mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
         .called(1);
   });
 
   test('should propagate errors from the repository', () async {
     // Arrange
     final error = Exception('Email already in use');
-    when(() => mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
+    when(() =>
+            mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
         .thenThrow(error);
 
     // Act & Assert
@@ -55,7 +59,8 @@ void main() {
       )),
       throwsA(isA<Exception>()),
     );
-    verify(() => mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
+    verify(() =>
+            mockRepository.signUpWithEmailAndPassword(testEmail, testPassword))
         .called(1);
   });
 
@@ -97,4 +102,4 @@ void main() {
 
     verifyNever(() => mockRepository.signUpWithEmailAndPassword(any(), any()));
   });
-} 
+}

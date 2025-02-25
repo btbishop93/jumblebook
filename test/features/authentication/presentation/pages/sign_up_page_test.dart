@@ -68,11 +68,16 @@ void main() {
 
       // Assert
       expect(find.text('Sign Up'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(3)); // Email, password, and confirm password fields
-      expect(find.text('Use 8 or more characters with a mix of letters, numbers & symbols.'), findsOneWidget);
+      expect(find.byType(TextFormField),
+          findsNWidgets(3)); // Email, password, and confirm password fields
+      expect(
+          find.text(
+              'Use 8 or more characters with a mix of letters, numbers & symbols.'),
+          findsOneWidget);
     });
 
-    testWidgets('should show error message when sign up fails', (WidgetTester tester) async {
+    testWidgets('should show error message when sign up fails',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -86,7 +91,8 @@ void main() {
       expect(find.text('Email already in use'), findsOneWidget);
     });
 
-    testWidgets('should trigger sign up when form is submitted', (WidgetTester tester) async {
+    testWidgets('should trigger sign up when form is submitted',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump();
@@ -113,12 +119,13 @@ void main() {
 
       // Assert
       verify(() => mockAuthBloc.add(SignUpWithEmailRequested(
-        email: 'test@example.com',
-        password: 'password123',
-      ))).called(1);
+            email: 'test@example.com',
+            password: 'password123',
+          ))).called(1);
     });
 
-    testWidgets('should show loading state during authentication', (WidgetTester tester) async {
+    testWidgets('should show loading state during authentication',
+        (WidgetTester tester) async {
       // Arrange
       when(() => mockAuthBloc.state).thenReturn(AuthLoading(AuthData()));
       await tester.pumpWidget(createWidgetUnderTest());
@@ -131,7 +138,8 @@ void main() {
       expect(skeletonizerFinder, findsOneWidget);
     });
 
-    testWidgets('should trigger anonymous sign in when guest button is pressed', (WidgetTester tester) async {
+    testWidgets('should trigger anonymous sign in when guest button is pressed',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.binding.setSurfaceSize(const Size(800, 800));
@@ -225,7 +233,8 @@ void main() {
       );
     });
 
-    testWidgets('should validate matching passwords', (WidgetTester tester) async {
+    testWidgets('should validate matching passwords',
+        (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -255,7 +264,8 @@ void main() {
       );
     });
 
-    testWidgets('should toggle to sign in page when toggle button is pressed', (WidgetTester tester) async {
+    testWidgets('should toggle to sign in page when toggle button is pressed',
+        (WidgetTester tester) async {
       // Arrange
       bool toggleCalled = false;
       await tester.pumpWidget(
@@ -279,4 +289,4 @@ void main() {
       expect(toggleCalled, isTrue);
     });
   });
-} 
+}
