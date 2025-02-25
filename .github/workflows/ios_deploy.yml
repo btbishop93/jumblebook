@@ -49,6 +49,14 @@ jobs:
       - name: Install Flutter dependencies
         run: flutter pub get
 
+      - name: Create Firebase configuration file
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          echo "Created GoogleService-Info.plist"
+          ls -la ios/Runner/GoogleService-Info.plist
+
       - name: Calculate new version
         id: version
         run: |
