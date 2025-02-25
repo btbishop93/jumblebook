@@ -30,20 +30,18 @@ final class NotesLoading extends NotesState {
 }
 
 final class NotesLoaded extends NotesState {
-  const NotesLoaded(List<Note> notes, {Note? selectedNote})
+  const NotesLoaded(List<Note> notes, {super.selectedNote})
       : super(
           notes: notes,
-          selectedNote: selectedNote,
         );
 }
 
 final class NoteLoaded extends NotesState {
   const NoteLoaded({
     required Note note,
-    required List<Note> notes,
+    required super.notes,
   }) : super(
           selectedNote: note,
-          notes: notes,
         );
 }
 
@@ -62,29 +60,26 @@ final class NoteDeleted extends NotesState {
 final class NoteJumbled extends NotesState {
   const NoteJumbled({
     required Note note,
-    required List<Note> notes,
+    required super.notes,
   }) : super(
           selectedNote: note,
-          notes: notes,
         );
 }
 
 final class NoteUnjumbled extends NotesState {
   const NoteUnjumbled({
     required Note note,
-    required List<Note> notes,
+    required super.notes,
   }) : super(
           selectedNote: note,
-          notes: notes,
         );
 }
 
 final class NoteLocked extends NotesState {
   const NoteLocked({
     required Note note,
-    required List<Note> notes,
+    required super.notes,
   }) : super(
           selectedNote: note,
-          notes: notes,
         );
 }

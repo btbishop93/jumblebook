@@ -158,7 +158,7 @@ void main() {
   group('signOut', () {
     test('should sign out successfully', () async {
       // Arrange
-      when(() => mockDataSource.signOut()).thenAnswer((_) async => null);
+      when(() => mockDataSource.signOut()).thenAnswer((_) async {});
 
       // Act & Assert
       await expectLater(authRepository.signOut(), completes);
@@ -182,7 +182,7 @@ void main() {
     test('should send password reset email successfully', () async {
       // Arrange
       when(() => mockDataSource.resetPassword(any()))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Act & Assert
       await expectLater(

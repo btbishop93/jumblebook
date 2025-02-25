@@ -146,7 +146,7 @@ void main() {
   group('DeleteUserAccount', () {
     test('emits [UserLoading, UserDeleted] when successful', () async {
       // Arrange
-      when(() => mockDeleteAccount(testUserId)).thenAnswer((_) async => null);
+      when(() => mockDeleteAccount(testUserId)).thenAnswer((_) async {});
 
       // Assert
       expect(
@@ -192,7 +192,7 @@ void main() {
       // Arrange
       when(() =>
               mockUserRepository.updatePreferences(testUserId, newPreferences))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockGetUserProfile(testUserId))
           .thenAnswer((_) async => testUserProfile);
 
@@ -246,7 +246,7 @@ void main() {
     test('emits [UserLoading, UserSettingsUpdated] when successful', () async {
       // Arrange
       when(() => mockUserRepository.updateSettings(testUserId, newSettings))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockGetUserProfile(testUserId))
           .thenAnswer((_) async => testUserProfile);
 
@@ -297,7 +297,7 @@ void main() {
     test('does not emit new states when successful', () async {
       // Arrange
       when(() => mockUserRepository.updateLastSeen(testUserId))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Assert
       expect(

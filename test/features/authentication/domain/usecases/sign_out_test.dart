@@ -17,7 +17,7 @@ void main() {
 
   test('should sign out through the repository', () async {
     // Arrange
-    when(() => mockRepository.signOut()).thenAnswer((_) async => null);
+    when(() => mockRepository.signOut()).thenAnswer((_) async {});
 
     // Act
     await useCase(const NoParams());

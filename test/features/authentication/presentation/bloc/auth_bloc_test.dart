@@ -371,7 +371,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, Unauthenticated] when sign out is successful',
       build: () {
-        when(() => signOut(any())).thenAnswer((_) async => null);
+        when(() => signOut(any())).thenAnswer((_) async {});
         return authBloc;
       },
       act: (bloc) => bloc.add(SignOutRequested()),
@@ -405,7 +405,7 @@ void main() {
     blocTest<AuthBloc, AuthState>(
       'emits [AuthLoading, PasswordResetEmailSent] when password reset is successful',
       build: () {
-        when(() => resetPassword.call(any())).thenAnswer((_) async => null);
+        when(() => resetPassword.call(any())).thenAnswer((_) async {});
         return authBloc;
       },
       act: (bloc) => bloc.add(const ResetPasswordRequested(email: email)),

@@ -24,8 +24,9 @@ class AuthValidator {
 
     switch (type) {
       case FormType.REGISTER:
-        if (value.length < 8)
+        if (value.length < 8) {
           return 'Use 8 characters or more for your password.';
+        }
         return value != formData?.password ? 'Passwords do not match.' : null;
       case FormType.JUMBLE:
         return value.length < 8

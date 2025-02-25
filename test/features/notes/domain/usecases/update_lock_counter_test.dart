@@ -21,7 +21,7 @@ void main() {
   test('should update lock counter in the repository', () async {
     // Arrange
     when(() => mockRepository.updateLockCounter(
-        testUserId, testNoteId, testLockCounter)).thenAnswer((_) async => null);
+        testUserId, testNoteId, testLockCounter)).thenAnswer((_) async {});
 
     // Act
     await useCase(

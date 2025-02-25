@@ -3,18 +3,12 @@ import '../../domain/entities/user.dart';
 
 class UserModel extends User {
   const UserModel({
-    required String id,
-    required String email,
-    String? displayName,
-    String? photoUrl,
-    bool isAnonymous = false,
-  }) : super(
-          id: id,
-          email: email,
-          displayName: displayName,
-          photoUrl: photoUrl,
-          isAnonymous: isAnonymous,
-        );
+    required super.id,
+    required super.email,
+    super.displayName,
+    super.photoUrl,
+    super.isAnonymous,
+  });
 
   factory UserModel.fromFirebaseUser(firebase_auth.User firebaseUser) {
     return UserModel(

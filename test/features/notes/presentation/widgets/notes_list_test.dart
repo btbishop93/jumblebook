@@ -69,7 +69,7 @@ void main() {
 
     // Mock navigation
     when(() => mockNavigator.push(any())).thenAnswer((_) async => null);
-    when(() => mockNavigator.pop()).thenAnswer((_) async => null);
+    when(() => mockNavigator.pop()).thenAnswer((_) async {});
 
     // Mock close
     when(() => mockNotesBloc.close()).thenAnswer((_) async {});

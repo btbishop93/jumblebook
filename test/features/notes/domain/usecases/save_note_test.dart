@@ -26,7 +26,7 @@ void main() {
   test('should save note to the repository', () async {
     // Arrange
     when(() => mockRepository.saveNote(testUserId, testNote))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     // Act
     await useCase(userId: testUserId, note: testNote);

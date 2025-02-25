@@ -29,8 +29,8 @@ final class UserLoaded extends UserState {
 }
 
 final class UserError extends UserState {
-  const UserError(String message, {UserProfile? profile})
-      : super(errorMessage: message, profile: profile);
+  const UserError(String message, {super.profile})
+      : super(errorMessage: message);
 }
 
 final class UserDeleted extends UserState {

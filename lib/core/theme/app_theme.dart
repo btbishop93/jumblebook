@@ -60,7 +60,6 @@ class AppTheme {
         primary: primaryColor,
         secondary: Colors.orange[300]!,
         surface: Colors.white,
-        background: Colors.grey[50]!,
         error: Colors.red[700]!,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -139,7 +138,6 @@ class AppTheme {
         primary: primaryColor,
         secondary: Colors.orange[300]!,
         surface: surfaceColor,
-        background: backgroundColor,
         error: Colors.red[700]!,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

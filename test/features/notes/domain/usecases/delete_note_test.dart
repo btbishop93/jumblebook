@@ -20,7 +20,7 @@ void main() {
   test('should delete note from the repository', () async {
     // Arrange
     when(() => mockRepository.deleteNote(testUserId, testNoteId))
-        .thenAnswer((_) async => null);
+        .thenAnswer((_) async {});
 
     // Act
     await useCase(userId: testUserId, noteId: testNoteId);

@@ -36,7 +36,7 @@ void main() {
   final jumbledNoteModel = testNoteModel.copyWith(
     isEncrypted: true,
     password: 'password123',
-  ) as NoteModel;
+  );
 
   final jumbledNote = testNote.copyWith(
     isEncrypted: true,
@@ -113,7 +113,7 @@ void main() {
     test('should save note to remote data source', () async {
       // Arrange
       when(() => mockRemoteDataSource.saveNote(testUserId, any()))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Act
       await repository.saveNote(testUserId, testNote);
@@ -141,7 +141,7 @@ void main() {
     test('should delete note from remote data source', () async {
       // Arrange
       when(() => mockRemoteDataSource.deleteNote(testUserId, testNoteId))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Act
       await repository.deleteNote(testUserId, testNoteId);
@@ -198,7 +198,7 @@ void main() {
     test('should jumble note and save to remote data source', () async {
       // Arrange
       when(() => mockRemoteDataSource.saveNote(testUserId, any()))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Act
       await repository.jumbleNote(testUserId, testNote, 'password123');
@@ -228,7 +228,7 @@ void main() {
     test('should unjumble note and save to remote data source', () async {
       // Arrange
       when(() => mockRemoteDataSource.saveNote(testUserId, any()))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
 
       // Act
       await repository.unjumbleNote(testUserId, jumbledNote, 'password123');
@@ -245,7 +245,7 @@ void main() {
       when(() => mockRemoteDataSource.saveNote(testUserId, any()))
           .thenThrow(ArgumentError('Invalid password'));
       when(() => mockRemoteDataSource.updateLockCounter(
-          testUserId, testNoteId, any())).thenAnswer((_) async => null);
+          testUserId, testNoteId, any())).thenAnswer((_) async {});
 
       // Act & Assert
       expect(

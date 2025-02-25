@@ -20,6 +20,7 @@ class MockAuthBloc extends Mock implements AuthBloc {
     await _controller.close();
   }
 
+  @override
   void emit(AuthState state) {
     _controller.add(state);
   }

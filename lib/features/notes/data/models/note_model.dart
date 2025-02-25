@@ -100,7 +100,7 @@ class NoteModel extends Note {
       decryptShift: shiftToUse,
       isEncrypted: true,
       password: passwordToUse,
-    ) as NoteModel;
+    );
   }
 
   NoteModel unjumble(String plainPassword) {
@@ -142,7 +142,7 @@ class NoteModel extends Note {
       isEncrypted: false,
       password: originalPassword, // Keep the original password
       decryptShift: originalShift, // Keep the original shift
-    ) as NoteModel;
+    );
   }
 
   @override

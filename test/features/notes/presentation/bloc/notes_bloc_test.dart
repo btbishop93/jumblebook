@@ -162,7 +162,7 @@ void main() {
       // Arrange
       final notes = [testNote];
       when(() => mockSaveNote(userId: testUserId, note: testNote))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockNotesRepository.getNotes(testUserId))
           .thenAnswer((_) => Stream.value(notes));
 
@@ -208,7 +208,7 @@ void main() {
       // Arrange
       final notes = [testNote];
       when(() => mockSaveNote(userId: testUserId, note: testNote))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockNotesRepository.getNotes(testUserId))
           .thenAnswer((_) => Stream.value(notes));
 
@@ -254,7 +254,7 @@ void main() {
       // Arrange
       final notes = [testNote];
       when(() => mockDeleteNote(userId: testUserId, noteId: testNote.id))
-          .thenAnswer((_) async => null);
+          .thenAnswer((_) async {});
       when(() => mockNotesRepository.getNotes(testUserId))
           .thenAnswer((_) => Stream.value(notes));
 
@@ -439,7 +439,7 @@ void main() {
             userId: testUserId,
             noteId: testNote.id,
             lockCounter: lockCounter,
-          )).thenAnswer((_) async => null);
+          )).thenAnswer((_) async {});
       when(() => mockNotesRepository.getNote(testUserId, testNote.id))
           .thenAnswer((_) async => lockedNote);
 
