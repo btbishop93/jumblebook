@@ -46,7 +46,7 @@ jobs:
 
       # Cache Flutter dependencies
       - name: Cache Flutter dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.pub-cache
@@ -79,7 +79,7 @@ jobs:
 
       # Cache Ruby gems (including CocoaPods)
       - name: Cache Ruby gems
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
@@ -88,7 +88,7 @@ jobs:
 
       # Cache CocoaPods
       - name: Cache CocoaPods
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
@@ -174,7 +174,7 @@ jobs:
 
       # Upload artifacts for next jobs
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-build-artifacts
           path: |
@@ -198,14 +198,14 @@ jobs:
 
       # Download artifacts from setup job
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ios-build-artifacts
           path: .
 
       # Cache Xcode build
       - name: Cache Xcode build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/Library/Developer/Xcode/DerivedData
@@ -386,7 +386,7 @@ jobs:
 
       # Upload IPA for next job
       - name: Upload IPA
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
           path: ios/build/ios/*.ipa
@@ -404,7 +404,7 @@ jobs:
 
       # Download IPA from build job
       - name: Download IPA
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ios-ipa
           path: ios-ipa
