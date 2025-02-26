@@ -30,14 +30,34 @@ permissions:
   id-token: write
 
 jobs:
-  ios-deploy:
-    name: Build and Deploy iOS
+  # Job 1: Setup and prepare dependencies
+  setup:
+    name: Setup Dependencies
     runs-on: macos-latest
+    outputs:
+      new_marketing_version: ${{ steps.version.outputs.new_marketing_version }}
+      bundle_id: ${{ steps.profile.outputs.bundle_id }}
+      profile_name: ${{ steps.profile.outputs.profile_name }}
+      profile_uuid: ${{ steps.profile.outputs.profile_uuid }}
     
     steps:
-      # Common Setup Steps
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Cache Flutter dependencies
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.cocoapods
+            ~/Library/Caches/CocoaPods
+            **/.flutter-plugins-dependencies
+            **/.dart_tool
+            **/.pub
+          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -57,12 +77,41 @@ jobs:
           echo "Created GoogleService-Info.plist"
           ls -la ios/Runner/GoogleService-Info.plist
 
+      # Cache Ruby gems (including CocoaPods)
+      - name: Cache Ruby gems
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      # Cache CocoaPods
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: Update CocoaPods and install iOS dependencies
         run: |
-          gem install cocoapods -v 1.13.0
+          # Setup Ruby bundler
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+          
+          # Install CocoaPods
           cd ios
-          pod repo update
-          pod install --repo-update
+          if [ ! -d "Pods" ] || [ ! -f "Podfile.lock" ]; then
+            echo "Pod cache miss, installing..."
+            bundle exec pod repo update
+            bundle exec pod install --repo-update
+          else
+            echo "Using cached Pods directory"
+            bundle exec pod install --deployment
+          fi
           cd ..
 
       - name: Calculate new version
@@ -86,27 +135,11 @@ jobs:
           echo "new_marketing_version=$major.$minor.$patch" >> $GITHUB_OUTPUT
           echo "Using build number: $BUILD_NUMBER"
 
-      - name: Import Certificate
+      - name: Process provisioning profile
+        id: profile
         env:
-          DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: temporary
           IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
         run: |
-          # Create variables
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          
-          # Create keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          # Import distribution certificate
-          CERTIFICATE_PATH=$RUNNER_TEMP/distribution.p12
-          echo $DISTRIBUTION_CERTIFICATE_BASE64 | base64 --decode -o $CERTIFICATE_PATH
-          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          rm $CERTIFICATE_PATH
-
           # Create provisioning profiles directory
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
 
@@ -130,13 +163,89 @@ jobs:
           BUNDLE_ID=$(echo "$APP_ID" | sed 's/^[A-Z0-9]*\.//')
           echo "Bundle identifier in profile: $BUNDLE_ID"
           
-          # Save UUID, name, and bundle ID for later steps
-          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
-          echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
-          echo "BUNDLE_ID=$BUNDLE_ID" >> $GITHUB_ENV
+          # Output values for next jobs
+          echo "bundle_id=$BUNDLE_ID" >> $GITHUB_OUTPUT
+          echo "profile_name=$PROFILE_NAME" >> $GITHUB_OUTPUT
+          echo "profile_uuid=$PROFILE_UUID" >> $GITHUB_OUTPUT
           
-          # Rename profile with UUID
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
+          # Save profile for artifact
+          mkdir -p ios/provisioning
+          cp "$PROFILE_PATH" ios/provisioning/
+
+      # Upload artifacts for next jobs
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build-artifacts
+          path: |
+            ios/
+            .pub-cache/
+            pubspec.lock
+            pubspec.yaml
+            Gemfile
+            Gemfile.lock
+            vendor/bundle/
+
+  # Job 2: Build the iOS app
+  build:
+    name: Build iOS App
+    needs: setup
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Download artifacts from setup job
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-build-artifacts
+          path: .
+
+      # Cache Xcode build
+      - name: Cache Xcode build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ios/build
+          key: ${{ runner.os }}-xcode-${{ hashFiles('ios/Runner.xcworkspace/**/*.pbxproj') }}-${{ hashFiles('ios/Podfile.lock') }}-${{ env.BUILD_NUMBER }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Import Certificate
+        env:
+          DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: temporary
+        run: |
+          # Create variables
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import distribution certificate
+          CERTIFICATE_PATH=$RUNNER_TEMP/distribution.p12
+          echo $DISTRIBUTION_CERTIFICATE_BASE64 | base64 --decode -o $CERTIFICATE_PATH
+          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          rm $CERTIFICATE_PATH
+
+          # Create provisioning profiles directory
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          
+          # Copy provisioning profile
+          cp ios/provisioning/Jumblebook_Distribution.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
           
           # Set permissions
           sudo chown -R $USER:staff ~/Library/MobileDevice/Provisioning\ Profiles/
@@ -146,10 +255,6 @@ jobs:
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
           echo "Certificate identities:"
           security find-identity -v -p codesigning
-          
-          # Print profile details
-          echo "Provisioning profile details:"
-          security cms -D -i "$PROFILE_PATH" | grep -A 5 -B 5 "Name"
 
           # Set key partition list
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -157,25 +262,18 @@ jobs:
           # List keychains
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      - name: Set up App Store Connect API
-        env:
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
-          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APPLE_API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
-
       - name: Update iOS version
         run: |
           cd ios
-          agvtool new-marketing-version "${{ steps.version.outputs.new_marketing_version }}"
+          agvtool new-marketing-version "${{ needs.setup.outputs.new_marketing_version }}"
           agvtool new-version -all $BUILD_NUMBER
           cd ..
 
       - name: Build iOS App
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUNDLE_ID: ${{ needs.setup.outputs.bundle_id }}
+          PROFILE_NAME: ${{ needs.setup.outputs.profile_name }}
         run: |
           # Clean build directory
           cd ios
@@ -228,7 +326,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
-            MARKETING_VERSION=${{ steps.version.outputs.new_marketing_version }} \
+            MARKETING_VERSION=${{ needs.setup.outputs.new_marketing_version }} \
             CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
             ONLY_ACTIVE_ARCH=NO \
             EXCLUDED_ARCHS=armv7 \
@@ -286,15 +384,49 @@ jobs:
           echo "iOS build directory contents:"
           ls -R build/ios/
 
+      # Upload IPA for next job
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-ipa
+          path: ios/build/ios/*.ipa
+          retention-days: 1
+
+  # Job 3: Deploy to TestFlight
+  deploy:
+    name: Deploy to TestFlight
+    needs: [setup, build]
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Download IPA from build job
+      - name: Download IPA
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-ipa
+          path: ios-ipa
+
+      - name: Set up App Store Connect API
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$APPLE_API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
+
       - name: Upload iOS App to TestFlight
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
         run: |
           # Find the IPA file
-          IPA_PATH=$(find ios/build/ios -name "*.ipa" -type f)
+          IPA_PATH=$(find ios-ipa -name "*.ipa" -type f)
           if [ -z "$IPA_PATH" ]; then
-            echo "Error: No IPA file found in ios/build/ios directory"
+            echo "Error: No IPA file found in ios-ipa directory"
             exit 1
           fi
           echo "Found IPA at: $IPA_PATH"
@@ -313,7 +445,7 @@ jobs:
         run: |
           # Update marketing version
           gh api -X PATCH /repos/${{ github.repository }}/actions/variables/MARKETING_VERSION \
-            -f value="${{ steps.version.outputs.new_marketing_version }}"
+            -f value="${{ needs.setup.outputs.new_marketing_version }}"
 
           # Increment build number
           NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
@@ -324,6 +456,4 @@ jobs:
       - name: Clean up secrets
         if: always()
         run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
-          rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*
           rm -f ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8 
