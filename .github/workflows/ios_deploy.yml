@@ -111,10 +111,45 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
 
           # Install iOS App Store profile
-          echo "$IOS_PROFILE_BASE64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/Jumblebook_App_Store.mobileprovision
-
+          PROFILE_PATH=~/Library/MobileDevice/Provisioning\ Profiles/Jumblebook_Distribution.mobileprovision
+          echo "$IOS_PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+          
+          # Extract UUID from provisioning profile
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROFILE_PATH"))
+          echo "Provisioning profile UUID: $PROFILE_UUID"
+          
+          # Extract profile name from provisioning profile
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROFILE_PATH"))
+          echo "Provisioning profile name: $PROFILE_NAME"
+          
+          # Extract application identifier from provisioning profile
+          APP_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROFILE_PATH"))
+          echo "Application identifier in profile: $APP_ID"
+          
+          # Extract bundle identifier from application identifier (remove team prefix)
+          BUNDLE_ID=$(echo "$APP_ID" | sed 's/^[A-Z0-9]*\.//')
+          echo "Bundle identifier in profile: $BUNDLE_ID"
+          
+          # Save UUID, name, and bundle ID for later steps
+          echo "PROFILE_UUID=$PROFILE_UUID" >> $GITHUB_ENV
+          echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
+          echo "BUNDLE_ID=$BUNDLE_ID" >> $GITHUB_ENV
+          
+          # Rename profile with UUID
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
+          
           # Set permissions
           sudo chown -R $USER:staff ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          # Verify provisioning profile
+          echo "Provisioning profiles directory contents:"
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "Certificate identities:"
+          security find-identity -v -p codesigning
+          
+          # Print profile details
+          echo "Provisioning profile details:"
+          security cms -D -i "$PROFILE_PATH" | grep -A 5 -B 5 "Name"
 
           # Set key partition list
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -142,6 +177,11 @@ jobs:
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          # Clean build directory
+          cd ios
+          rm -rf build
+          cd ..
+          
           # Build Flutter iOS app
           flutter build ios --release --no-codesign
           
@@ -159,11 +199,17 @@ jobs:
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>xyz.bsquared.jumblebook</key>
-                  <string>Jumblebook App Store</string>
+                  <key>$BUNDLE_ID</key>
+                  <string>$PROFILE_NAME</string>
               </dict>
               <key>signingCertificate</key>
               <string>Apple Distribution</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
           </dict>
           </plist>
           EOF
@@ -180,15 +226,14 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
-            "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*][config=Release]=Jumblebook App Store" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
             MARKETING_VERSION=${{ steps.version.outputs.new_marketing_version }} \
             CURRENT_PROJECT_VERSION=$BUILD_NUMBER \
             ONLY_ACTIVE_ARCH=NO \
             EXCLUDED_ARCHS=armv7 \
-            "OTHER_LDFLAGS=$(inherited) -framework Flutter" \
-            PRODUCT_BUNDLE_IDENTIFIER=xyz.bsquared.jumblebook \
-            archive
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            clean archive
 
           # Export IPA
           xcodebuild -exportArchive \
