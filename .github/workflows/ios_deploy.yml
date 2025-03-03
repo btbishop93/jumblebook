@@ -75,7 +75,6 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
           echo "Created GoogleService-Info.plist"
-          ls -la ios/Runner/GoogleService-Info.plist
 
       # Cache Ruby gems (including CocoaPods)
       - name: Cache Ruby gems
@@ -98,10 +97,10 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.2.2'
           bundler-cache: true
 
-      - name: Update CocoaPods and install iOS dependencies
+      - name: Install CocoaPods dependencies
         run: |
           # Setup Ruby bundler
           bundle config path vendor/bundle
@@ -109,24 +108,7 @@ jobs:
           
           # Install CocoaPods
           cd ios
-          if [ ! -d "Pods" ] || [ ! -f "Podfile.lock" ]; then
-            echo "Pod cache miss, installing..."
-            # Try with bundler first
-            if ! bundle exec pod repo update && ! bundle exec pod install --repo-update; then
-              echo "Bundler approach failed, trying direct CocoaPods installation..."
-              # Fallback to direct installation
-              sudo gem install cocoapods -v 1.12.1
-              pod repo update
-              pod install --repo-update
-            fi
-          else
-            echo "Using cached Pods directory"
-            if ! bundle exec pod install --deployment; then
-              echo "Bundler approach failed, trying direct CocoaPods installation..."
-              sudo gem install cocoapods -v 1.12.1
-              pod install
-            fi
-          fi
+          bundle exec pod install --repo-update
           cd ..
 
       - name: Calculate new version
@@ -194,7 +176,6 @@ jobs:
           name: ios-build-artifacts
           path: |
             ios/
-            .pub-cache/
             pubspec.lock
             pubspec.yaml
             Gemfile
@@ -239,7 +220,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.2.2'
           bundler-cache: true
 
       - name: Import Certificate
@@ -271,12 +252,6 @@ jobs:
           # Set permissions
           sudo chown -R $USER:staff ~/Library/MobileDevice/Provisioning\ Profiles/
 
-          # Verify provisioning profile
-          echo "Provisioning profiles directory contents:"
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-          echo "Certificate identities:"
-          security find-identity -v -p codesigning
-
           # Set key partition list
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
@@ -305,7 +280,7 @@ jobs:
           flutter build ios --release --no-codesign
           
           # Create exportOptions.plist for iOS
-          cat > ios/exportOptions.plist << EOF
+          cat > ios/exportOptions.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -313,15 +288,15 @@ jobs:
               <key>method</key>
               <string>app-store-connect</string>
               <key>teamID</key>
-              <string>$APPLE_TEAM_ID</string>
+              <string>${APPLE_TEAM_ID}</string>
               <key>destination</key>
               <string>upload</string>
               <key>signingStyle</key>
               <string>manual</string>
               <key>provisioningProfiles</key>
               <dict>
-                  <key>$BUNDLE_ID</key>
-                  <string>$PROFILE_NAME</string>
+                  <key>${BUNDLE_ID}</key>
+                  <string>${PROFILE_NAME}</string>
               </dict>
               <key>signingCertificate</key>
               <string>Apple Distribution</string>
@@ -369,37 +344,11 @@ jobs:
 
           # Export IPA
           echo "Exporting IPA..."
-          if ! xcodebuild -exportArchive \
+          xcrun xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportPath build/ios \
             -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates; then
-            
-            echo "First export attempt failed, trying alternative approach..."
-            
-            # Create alternative exportOptions.plist
-            cat > exportOptions_alt.plist << EOF
-            <?xml version="1.0" encoding="UTF-8"?>
-            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-            <plist version="1.0">
-            <dict>
-                <key>method</key>
-                <string>app-store</string>
-                <key>teamID</key>
-                <string>$APPLE_TEAM_ID</string>
-                <key>signingStyle</key>
-                <string>automatic</string>
-            </dict>
-            </plist>
-            EOF
-            
-            # Try alternative export
-            xcodebuild -exportArchive \
-              -archivePath build/Runner.xcarchive \
-              -exportPath build/ios \
-              -exportOptionsPlist exportOptions_alt.plist \
-              -allowProvisioningUpdates
-          fi
+            -allowProvisioningUpdates
 
           # List build directory contents for debugging
           echo "iOS build directory contents:"
@@ -420,9 +369,6 @@ jobs:
     runs-on: macos-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       # Download IPA from build job
       - name: Download IPA
         uses: actions/download-artifact@v4
