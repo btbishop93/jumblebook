@@ -3,6 +3,12 @@ name: Simple iOS TestFlight Deployment
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type (patch/minor/major)'
+        required: false
+        default: 'patch'
 
 jobs:
   build-and-deploy:
