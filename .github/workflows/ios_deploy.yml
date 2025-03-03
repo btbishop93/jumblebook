@@ -223,6 +223,12 @@ jobs:
           ruby-version: '3.2.2'
           bundler-cache: true
 
+      - name: Fix script permissions
+        run: |
+          # Fix permissions for all scripts in the Pods directory
+          find ios/Pods -name "*.sh" -type f -exec chmod +x {} \;
+          echo "Fixed permissions for Pod scripts"
+
       - name: Import Certificate
         env:
           DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
@@ -276,8 +282,8 @@ jobs:
           rm -rf build
           cd ..
           
-          # Build Flutter iOS app
-          flutter build ios --release --no-codesign
+          # Build Flutter iOS app with reduced verbosity
+          flutter build ios --release --no-codesign --quiet
           
           # Create exportOptions.plist for iOS
           cat > ios/exportOptions.plist << 'EOF'
@@ -286,7 +292,7 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store-connect</string>
+              <string>app-store</string>
               <key>teamID</key>
               <string>${APPLE_TEAM_ID}</string>
               <key>destination</key>
@@ -304,11 +310,13 @@ jobs:
               <false/>
               <key>uploadSymbols</key>
               <true/>
+              <key>compileBitcode</key>
+              <false/>
           </dict>
           </plist>
           EOF
           
-          # Archive
+          # Archive with reduced verbosity
           cd ios
           # Set code signing settings for the main app target only
           xcrun xcodebuild -workspace Runner.xcworkspace \
@@ -327,17 +335,16 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             EXCLUDED_ARCHS=armv7 \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            -quiet \
             clean archive
 
           # Prepare archive for export - remove provisioning profile from frameworks
           echo "Preparing archive for export..."
           find build/Runner.xcarchive/Products/Applications -name "*.framework" -type d | while read -r framework; do
-            echo "Removing provisioning profile from $framework"
             rm -rf "$framework/embedded.mobileprovision" 2>/dev/null || true
             
             # Check if Info.plist exists and modify it
             if [ -f "$framework/Info.plist" ]; then
-              echo "Modifying Info.plist in $framework"
               /usr/libexec/PlistBuddy -c "Delete :CFBundleResourceSpecification" "$framework/Info.plist" 2>/dev/null || true
             fi
           done
@@ -349,10 +356,6 @@ jobs:
             -exportPath build/ios \
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates
-
-          # List build directory contents for debugging
-          echo "iOS build directory contents:"
-          ls -R build/ios/
 
       # Upload IPA for next job
       - name: Upload IPA
