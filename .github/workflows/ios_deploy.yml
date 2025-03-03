@@ -210,19 +210,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.29.0'
-          channel: 'stable'
-          cache: true
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2.2'
-          bundler-cache: true
-
       - name: Fix script permissions
         run: |
           # Fix permissions for all scripts in the Pods directory
@@ -276,19 +263,11 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           BUNDLE_ID: ${{ needs.setup.outputs.bundle_id }}
           PROFILE_NAME: ${{ needs.setup.outputs.profile_name }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
-          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           # Clean build directory
           cd ios
           rm -rf build
           cd ..
-          
-          # Set up App Store Connect API for xcodebuild
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "$APPLE_API_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
-          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8
           
           # Build Flutter iOS app with reduced verbosity
           flutter build ios --release --no-codesign --quiet
@@ -355,13 +334,6 @@ jobs:
                   <key>$BUNDLE_ID</key>
                   <string>$PROFILE_NAME</string>
               </dict>
-              <key>signingEntitlements</key>
-              <dict>
-                  <key>$BUNDLE_ID</key>
-                  <string>Runner.entitlements</string>
-              </dict>
-              <key>distributionBundleIdentifier</key>
-              <string>$BUNDLE_ID</string>
           </dict>
           </plist>
           EOF
@@ -372,13 +344,7 @@ jobs:
             -archivePath build/Runner.xcarchive \
             -exportPath build/ios \
             -exportOptionsPlist exportOptions.plist \
-            -allowProvisioningUpdates \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            EXPANDED_CODE_SIGN_IDENTITY="-" \
-            EXPANDED_PROVISIONING_PROFILE="-" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
-            SKIP_INSTALL=NO
+            -allowProvisioningUpdates
 
       # Upload IPA for next job
       - name: Upload IPA
@@ -416,8 +382,6 @@ jobs:
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
-          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           # Find the IPA file
           IPA_PATH=$(find ios-ipa -name "*.ipa" -type f)
@@ -433,7 +397,6 @@ jobs:
             --file "$IPA_PATH" \
             --apiKey "$APPLE_API_KEY_ID" \
             --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-            --asc-provider "$APPLE_TEAM_ID" \
             --verbose
 
       - name: Update GitHub variables
@@ -454,4 +417,4 @@ jobs:
       - name: Clean up secrets
         if: always()
         run: |
-          rm -f ~/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8 
+          rm -f ~/.appstoreconnect/private_keys/AuthKey_*
