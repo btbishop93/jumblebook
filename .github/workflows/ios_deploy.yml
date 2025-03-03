@@ -95,10 +95,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
       - name: Update CocoaPods and install iOS dependencies
         run: |
           # Setup Ruby bundler
-          gem install bundler
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
           
@@ -106,11 +111,21 @@ jobs:
           cd ios
           if [ ! -d "Pods" ] || [ ! -f "Podfile.lock" ]; then
             echo "Pod cache miss, installing..."
-            bundle exec pod repo update
-            bundle exec pod install --repo-update
+            # Try with bundler first
+            if ! bundle exec pod repo update && ! bundle exec pod install --repo-update; then
+              echo "Bundler approach failed, trying direct CocoaPods installation..."
+              # Fallback to direct installation
+              sudo gem install cocoapods -v 1.12.1
+              pod repo update
+              pod install --repo-update
+            fi
           else
             echo "Using cached Pods directory"
-            bundle exec pod install --deployment
+            if ! bundle exec pod install --deployment; then
+              echo "Bundler approach failed, trying direct CocoaPods installation..."
+              sudo gem install cocoapods -v 1.12.1
+              pod install
+            fi
           fi
           cd ..
 
@@ -220,6 +235,12 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
           cache: true
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
 
       - name: Import Certificate
         env:
