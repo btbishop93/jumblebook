@@ -2,20 +2,15 @@ name: Simple iOS TestFlight Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [master]  # Adjusted to master based on your previous log
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: 'Version bump type (patch/minor/major)'
-        required: false
-        default: 'patch'
 
 jobs:
   build-and-deploy:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -75,24 +70,33 @@ jobs:
             -allowProvisioningUpdates \
             clean archive
 
+      - name: Create build directory
+        run: mkdir -p ios/build
+
       - name: Create exportOptions.plist
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          cat > ios/build/options.plist << EOF
+          cat << EOF > ios/build/options.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>$APPLE_TEAM_ID</string>
-              <key>signingStyle</key>
-              <string>automatic</string>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
           </dict>
           </plist>
           EOF
+
+      - name: Debug exportOptions.plist
+        run: |
+          cat ios/build/options.plist
+          echo "Verifying plist syntax:"
+          plutil -lint ios/build/options.plist
 
       - name: Export IPA
         run: |
