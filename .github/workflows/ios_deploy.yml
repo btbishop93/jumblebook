@@ -300,24 +300,33 @@ jobs:
           <plist version="1.0">
           <dict>
               <key>method</key>
-              <string>app-store</string>
+              <string>app-store-connect</string>
               <key>teamID</key>
               <string>$APPLE_TEAM_ID</string>
               <key>signingStyle</key>
               <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>thinning</key>
+              <string>&lt;none&gt;</string>
+              <key>signingCertificate</key>
+              <string>Apple Distribution</string>
               <key>provisioningProfiles</key>
               <dict>
                   <key>$BUNDLE_ID</key>
                   <string>$PROFILE_NAME</string>
               </dict>
-              <key>signingCertificate</key>
-              <string>Apple Distribution</string>
               <key>uploadBitcode</key>
               <false/>
               <key>uploadSymbols</key>
               <true/>
               <key>compileBitcode</key>
               <false/>
+              <key>manifest</key>
+              <dict>
+                  <key>appURL</key>
+                  <string>https://testflight.apple.com</string>
+              </dict>
           </dict>
           </plist>
           EOF
@@ -344,12 +353,10 @@ jobs:
             -quiet \
             clean archive
 
-          # Prepare archive for export - remove provisioning profile from frameworks
+          # Remove embedded provisioning profiles from frameworks before export
           echo "Preparing archive for export..."
-          find build/Runner.xcarchive/Products/Applications -name "*.framework" -type d | while read -r framework; do
+          find build/Runner.xcarchive/Products/Applications/Runner.app/Frameworks -name "*.framework" -type d | while read -r framework; do
             rm -rf "$framework/embedded.mobileprovision" 2>/dev/null || true
-            
-            # Check if Info.plist exists and modify it
             if [ -f "$framework/Info.plist" ]; then
               /usr/libexec/PlistBuddy -c "Delete :CFBundleResourceSpecification" "$framework/Info.plist" 2>/dev/null || true
             fi
@@ -362,6 +369,10 @@ jobs:
             -exportPath build/ios \
             -exportOptionsPlist exportOptions.plist \
             -allowProvisioningUpdates \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            EXPANDED_CODE_SIGN_IDENTITY="-" \
+            EXPANDED_PROVISIONING_PROFILE="-" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db"
 
       # Upload IPA for next job
