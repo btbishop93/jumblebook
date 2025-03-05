@@ -1,227 +1,82 @@
-name: Simple iOS TestFlight Deployment
+name: Push iOS build on TestFlight
 
 on:
   push:
-    branches: [master]  # Adjusted to master based on your previous log
-  workflow_dispatch:
+    branches:
+      - master
 
 jobs:
-  build-and-deploy:
+  ios_deployment:
     runs-on: macos-latest
+    env:
+      APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APPLE_API_KEY }}
+      APP_STORE_APP_ID: ${{ secrets.APP_STORE_APP_ID }}
+      DISTRIBUTION_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+      DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      PROVISIONING_PROFILE: ${{ secrets.IOS_PROFILE_BASE64 }}
+      GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Repo
+        uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
         with:
-          flutter-version: '3.29.0'
+          channel: stable
+          version: 3.24.0
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Create Firebase configuration file
-        env:
-          GOOGLE_SERVICE_INFORMATION_PLIST: ${{ secrets.GOOGLE_SERVICE_INFORMATION_PLIST }}
+      - name: Install dependencies & Lint check
         run: |
-          # Create the plist file
-          echo "$GOOGLE_SERVICE_INFORMATION_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
+          flutter clean
+          flutter pub get
+          flutter analyze --fatal-infos
           
-          # Verify file exists and show permissions
-          ls -la ios/Runner/GoogleService-Info.plist
-          
-          # Verify file is a valid plist
-          plutil -lint ios/Runner/GoogleService-Info.plist
-          
-          # Show file contents (excluding sensitive data)
-          echo "File structure:"
-          plutil -p ios/Runner/GoogleService-Info.plist | grep -v -E "API|KEY|ID|TOKEN|SECRET"
-          
-          # Ensure file has correct permissions
-          chmod 644 ios/Runner/GoogleService-Info.plist
-          
-          echo "Created and verified GoogleService-Info.plist"
+      - name: Install the CodeMagic CLI
+        run:  pip install codemagic-cli-tools
 
-      - name: Build iOS app
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
+      - name: Initialize keychain
+        run: keychain initialize
+
+      - name: Set up Provisioning Profile
         run: |
-          cd ios
-          
-          # Debug Flutter environment
-          flutter doctor -v
-          
-          # Ensure proper CocoaPods setup
-          pod repo update
-          rm -rf Pods Podfile.lock
-          pod install --verbose
-          
-          # Build with verbose output
-          flutter build ios --release --no-codesign --verbose
-          
-          # List Xcode project details
-          xcodebuild -list -project Runner.xcodeproj
-          
-          # Show workspace structure
-          echo "Workspace structure:"
-          ls -R Runner.xcworkspace
+          PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_HOME"
+          PROFILE_PATH="$(mktemp "$PROFILES_HOME"/$(uuidgen).mobileprovision)"
+          echo ${PROVISIONING_PROFILE} | base64 --decode > "$PROFILE_PATH"
+          echo "Saved provisioning profile $PROFILE_PATH"   
 
-      - name: Set up keychain
+      - name: Set up Distribution Certificate
         run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD=temporary
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo $DISTRIBUTION_CERTIFICATE | base64 --decode > /tmp/certificate.p12
+          keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password $DISTRIBUTION_CERTIFICATE_PASSWORD
 
-      - name: Import distribution certificate
-        env:
-          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
-          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      - name: Set up Google Service Info plist
         run: |
-          echo "$IOS_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > distribution.p12
-          security import distribution.p12 -k "$KEYCHAIN_PATH" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12
-          rm distribution.p12
-          # Set key partition list for signing
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temporary" "$KEYCHAIN_PATH"
+          mkdir -p ios/Runner
+          echo $GOOGLE_SERVICE_INFO_PLIST | base64 --decode > ios/Runner/GoogleService-Info.plist
+          echo "Added GoogleService-Info.plist to ios/Runner directory"
 
-      - name: Import provisioning profile
-        env:
-          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+      - name: Set up Code signing settings on Xcode project
+        run: xcode-project use-profiles
+
+      - name: Build IPA for Distribution
         run: |
-          echo "$IOS_PROFILE_BASE64" | base64 --decode > profile.mobileprovision
-          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-          mv profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/"
-          sudo chown -R "$USER:staff" "$HOME/Library/MobileDevice/Provisioning Profiles/"
+          file='VERSION'
+          fileData=`cat $file`
+          IFS='.'
+          read -a versionValue <<< "$fileData"
+          buildNumber=$(( ${versionValue[0]} * 1000000 + ${versionValue[1]} * 10000 + ${{ github.run_number }} ))
+          IFS=''
+          buildName="${versionValue[0]}.${versionValue[1]}.${{ github.run_number }}"
+          echo "Uploading build $buildName"
+          flutter build ipa --release --build-number=$buildNumber --build-name=$buildName --export-options-plist=$HOME/export_options.plist
 
-      - name: Archive the app
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
-          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
-          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
+      - name: Upload IPA to App Store Connect
         run: |
-          cd ios
-          
-          # Debug information
-          echo "Environment variables:"
-          echo "APPLE_TEAM_ID: $APPLE_TEAM_ID"
-          echo "BUNDLE_IDENTIFIER: $BUNDLE_IDENTIFIER"
-          echo "PROVISIONING_PROFILE_NAME: $PROVISIONING_PROFILE_NAME"
-          
-          echo "Workspace contents:"
-          ls -la
-          echo "Runner.xcworkspace contents:"
-          ls -la Runner.xcworkspace
-          
-          # Create build directory if it doesn't exist
-          mkdir -p build
-          
-          # Clean DerivedData
-          rm -rf ~/Library/Developer/Xcode/DerivedData
-          
-          xcodebuild clean archive \
-            -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            -destination 'generic/platform=iOS' \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
-            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_IDENTIFIER" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
-            -allowProvisioningUpdates \
-            -verbose
+          APP_FILE=$(find $(pwd) -name "*.ipa")
+          app-store-connect publish \
+          --path "$APP_FILE"
 
-      - name: Create build directory
-        run: mkdir -p ios/build
-
-      - name: Create exportOptions.plist
-        env:
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
-          PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
-        run: |
-          # Ensure build directory exists
-          mkdir -p ios/build
-          
-          # Create options.plist with proper encoding
-          /usr/libexec/PlistBuddy -c "Clear" ios/build/options.plist || true
-          /usr/libexec/PlistBuddy -c "Add :method string app-store" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :teamID string ${APPLE_TEAM_ID}" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_IDENTIFIER} string ${PROVISIONING_PROFILE_NAME}" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :signingCertificate string Apple Distribution" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :stripSwiftSymbols bool true" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" ios/build/options.plist
-          /usr/libexec/PlistBuddy -c "Add :compileBitcode bool false" ios/build/options.plist
-          
-          echo "Generated options.plist content:"
-          plutil -p ios/build/options.plist
-          
-          echo "Validating plist syntax..."
-          plutil -lint ios/build/options.plist
-          
-          # Set correct permissions
-          chmod 644 ios/build/options.plist
-
-      - name: Export IPA
-        run: |
-          cd ios
-          
-          # Verify archive exists
-          if [ ! -d "build/Runner.xcarchive" ]; then
-            echo "Error: Archive not found at build/Runner.xcarchive"
-            exit 1
-          fi
-          
-          # Verify options.plist exists and is valid
-          if [ ! -f "build/options.plist" ]; then
-            echo "Error: options.plist not found at build/options.plist"
-            exit 1
-          fi
-          
-          plutil -lint build/options.plist
-          
-          # Clean export directory
-          rm -rf build/Runner.ipa
-          
-          # Export archive
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath build \
-            -exportOptionsPlist build/options.plist \
-            -allowProvisioningUpdates \
-            -verbose
-          
-          # Verify IPA was created
-          if [ ! -f "build/Runner.ipa" ]; then
-            echo "Error: IPA file was not created"
-            exit 1
-          fi
-          
-          echo "Successfully exported IPA"
-
-      - name: Set up App Store Connect API key
-        env:
-          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
-        run: |
-          mkdir -p "$HOME/.appstoreconnect/private_keys"
-          echo "$APPLE_API_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8"
-
-      - name: Upload to TestFlight
-        env:
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ISSUER_ID: ${{ secrets.APPLE_API_KEY_ISSUER_ID }}
-        run: |
-          IPA_PATH="ios/build/Runner.ipa"
-          xcrun altool --upload-app \
-            -f "$IPA_PATH" \
-            --type ios \
-            --apiKey "$APPLE_API_KEY" \
-            --apiIssuer "$APPLE_API_KEY_ISSUER_ID" \
-            --verbose
