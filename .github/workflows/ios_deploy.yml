@@ -28,7 +28,10 @@ jobs:
           echo "Created GoogleService-Info.plist"
 
       - name: Build iOS app
-        run: flutter build ios --release --no-codesign
+        run: |
+          cd ios
+          flutter build ios --release --no-codesign --verbose
+          xcodebuild -list -project Runner.xcodeproj
 
       - name: Set up keychain
         run: |
@@ -62,8 +65,19 @@ jobs:
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
+          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
         run: |
           cd ios
+          
+          # Debug information
+          echo "Workspace contents:"
+          ls -la
+          echo "Runner.xcworkspace contents:"
+          ls -la Runner.xcworkspace
+          
+          # Create build directory if it doesn't exist
+          mkdir -p build
+          
           xcodebuild archive \
             -workspace Runner.xcworkspace \
             -scheme Runner \
@@ -74,8 +88,10 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_IDENTIFIER" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
             -allowProvisioningUpdates \
+            -verbose \
             clean archive
 
       - name: Create build directory
@@ -87,7 +103,7 @@ jobs:
           BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
-          cat << EOF > ios/build/options.plist
+          cat > ios/build/options.plist << 'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -105,15 +121,20 @@ jobs:
             </dict>
             <key>signingCertificate</key>
             <string>Apple Distribution</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
           </dict>
           </plist>
           EOF
 
-      - name: Debug exportOptions.plist
-        run: |
-          cat ios/build/options.plist
-          echo "Verifying plist syntax:"
+          # Verify and validate the plist file
+          ls -la ios/build/options.plist
           plutil -lint ios/build/options.plist
+          plutil -convert xml1 ios/build/options.plist
 
       - name: Export IPA
         run: |
