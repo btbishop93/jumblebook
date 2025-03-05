@@ -28,10 +28,29 @@ jobs:
           echo "Created GoogleService-Info.plist"
 
       - name: Build iOS app
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
         run: |
           cd ios
+          
+          # Debug Flutter environment
+          flutter doctor -v
+          
+          # Ensure proper CocoaPods setup
+          pod repo update
+          rm -rf Pods Podfile.lock
+          pod install --verbose
+          
+          # Build with verbose output
           flutter build ios --release --no-codesign --verbose
+          
+          # List Xcode project details
           xcodebuild -list -project Runner.xcodeproj
+          
+          # Show workspace structure
+          echo "Workspace structure:"
+          ls -R Runner.xcworkspace
 
       - name: Set up keychain
         run: |
@@ -66,10 +85,16 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
           BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
+          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
         run: |
           cd ios
           
           # Debug information
+          echo "Environment variables:"
+          echo "APPLE_TEAM_ID: $APPLE_TEAM_ID"
+          echo "BUNDLE_IDENTIFIER: $BUNDLE_IDENTIFIER"
+          echo "PROVISIONING_PROFILE_NAME: $PROVISIONING_PROFILE_NAME"
+          
           echo "Workspace contents:"
           ls -la
           echo "Runner.xcworkspace contents:"
@@ -78,7 +103,10 @@ jobs:
           # Create build directory if it doesn't exist
           mkdir -p build
           
-          xcodebuild archive \
+          # Clean DerivedData
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          
+          xcodebuild clean archive \
             -workspace Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
@@ -89,10 +117,9 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
             PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_IDENTIFIER" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
             -allowProvisioningUpdates \
-            -verbose \
-            clean archive
+            -verbose
 
       - name: Create build directory
         run: mkdir -p ios/build
@@ -103,13 +130,13 @@ jobs:
           BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
-          cat > ios/build/options.plist << 'EOF'
+          cat > ios/build/options.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store-connect</string>
+            <string>app-store</string>
             <key>teamID</key>
             <string>${APPLE_TEAM_ID}</string>
             <key>signingStyle</key>
@@ -131,10 +158,11 @@ jobs:
           </plist>
           EOF
 
-          # Verify and validate the plist file
-          ls -la ios/build/options.plist
+          echo "Generated options.plist content:"
+          cat ios/build/options.plist
+          
+          echo "Validating plist syntax..."
           plutil -lint ios/build/options.plist
-          plutil -convert xml1 ios/build/options.plist
 
       - name: Export IPA
         run: |
