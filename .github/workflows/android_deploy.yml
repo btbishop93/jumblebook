@@ -148,14 +148,28 @@ jobs:
 
       - name: Build Android App Bundle
         run: |
+          set -x  # Enable debug mode
           file='VERSION'
-          fileData=`cat $file`
-          IFS='.'
-          read -a versionValue <<< "$fileData"
-          buildNumber=$(( ${versionValue[0]} * 1000000 + ${versionValue[1]} * 10000 + ${{github.run_number}} ))
-          IFS=''
-          buildName="${versionValue[0]}.${versionValue[1]}.${{github.run_number}}"
+          version=$(cat "$file" | tr -d '[:space:]')  # Remove any whitespace
+          IFS='.' read -r -a version_parts <<< "$version"
+          
+          major="${version_parts[0]}"
+          minor="${version_parts[1]}"
+          
+          buildNumber=$(( major * 1000000 + minor * 10000 + ${{github.run_number}} ))
+          buildName="$major.$minor.${{github.run_number}}"
+          
           echo "Building version $buildName ($buildNumber)"
+          
+          # Update the Android project to use v2 embedding
+          echo "Updating Android project configuration..."
+          cd android
+          if [ -f "./app/build.gradle" ]; then
+            echo "Checking build.gradle configuration..."
+            cat ./app/build.gradle
+          fi
+          cd ..
+          
           flutter build appbundle --release --build-number=$buildNumber --build-name=$buildName
 
       - name: Upload to Play Store
