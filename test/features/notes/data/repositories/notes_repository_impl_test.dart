@@ -17,7 +17,6 @@ void main() {
   final testUserId = 'test-user-id';
   final testNoteId = 'test-note-id';
   final testDate = DateTime(2024);
-  final testTimestamp = Timestamp.fromDate(testDate);
 
   final testNoteModel = NoteModel(
     id: testNoteId,
@@ -31,11 +30,6 @@ void main() {
     title: 'Test Note',
     content: 'Test content',
     date: testDate,
-  );
-
-  final jumbledNoteModel = testNoteModel.copyWith(
-    isEncrypted: true,
-    password: 'password123',
   );
 
   final jumbledNote = testNote.copyWith(

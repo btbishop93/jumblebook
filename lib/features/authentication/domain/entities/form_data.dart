@@ -1,10 +1,10 @@
 enum FormType {
-  LOGIN,
-  REGISTER,
-  FORGOT_PASSWORD,
-  PASSWORD_RESET,
-  JUMBLE,
-  UNJUMBLE,
+  login,
+  register,
+  forgotPassword,
+  passwordReset,
+  jumble,
+  unjumble,
 }
 
 class FormData {

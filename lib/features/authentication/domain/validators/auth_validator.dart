@@ -18,21 +18,21 @@ class AuthValidator {
     required FormType type,
     FormData? formData,
   }) {
-    if (value == null || (value.isEmpty && type != FormType.UNJUMBLE)) {
+    if (value == null || (value.isEmpty && type != FormType.unjumble)) {
       return 'Enter a password.';
     }
 
     switch (type) {
-      case FormType.REGISTER:
+      case FormType.register:
         if (value.length < 8) {
           return 'Use 8 characters or more for your password.';
         }
         return value != formData?.password ? 'Passwords do not match.' : null;
-      case FormType.JUMBLE:
+      case FormType.jumble:
         return value.length < 8
             ? 'Use 8 characters or more for your password.'
             : null;
-      case FormType.UNJUMBLE:
+      case FormType.unjumble:
         if (formData == null) return 'Invalid form data';
         return value != formData.password
             ? 'Incorrect password. ${unjumbleAttemptMessage(formData)}'

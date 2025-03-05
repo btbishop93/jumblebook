@@ -192,6 +192,7 @@ class _NoteViewState extends State<NoteView> {
   }
 
   void _jumbleNotePrompt() async {
+    if (!mounted) return;
     final result = await jumblePrompt(
       context,
       'Jumble this note?',
@@ -219,6 +220,7 @@ class _NoteViewState extends State<NoteView> {
         ));
         return;
       } else {
+        if (!mounted) return;
         result = await jumblePrompt(
           context,
           'Enter your password',
@@ -235,6 +237,7 @@ class _NoteViewState extends State<NoteView> {
         ));
         return;
       } else {
+        if (!mounted) return;
         result = await jumblePrompt(
           context,
           'Enter your password',

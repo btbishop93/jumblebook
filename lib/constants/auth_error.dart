@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 enum AuthError {
   ERROR_USER_NOT_FOUND,
   ERROR_WRONG_PASSWORD,

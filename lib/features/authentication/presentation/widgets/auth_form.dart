@@ -120,7 +120,7 @@ class _AuthFormState extends State<AuthForm> {
               context: context,
               icon: const Icon(Icons.lock),
               labelTextStr: 'Password',
-              helperTextStr: widget.formType == FormType.REGISTER
+              helperTextStr: widget.formType == FormType.register
                   ? 'Use 8 or more characters with a mix of letters, numbers & symbols.'
                   : null,
               floatingLabel: _passwordFocusNode.hasFocus
@@ -137,18 +137,18 @@ class _AuthFormState extends State<AuthForm> {
             onChanged: (val) => setState(() {
               _passwordErrorText = null;
             }),
-            textInputAction: widget.formType == FormType.REGISTER
+            textInputAction: widget.formType == FormType.register
                 ? TextInputAction.next
                 : TextInputAction.done,
             onFieldSubmitted: (_) {
-              if (widget.formType == FormType.REGISTER) {
+              if (widget.formType == FormType.register) {
                 FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
               } else {
                 _validateCredentials();
               }
             },
           ),
-          if (widget.formType == FormType.LOGIN) ...[
+          if (widget.formType == FormType.login) ...[
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
@@ -181,7 +181,7 @@ class _AuthFormState extends State<AuthForm> {
               ),
             ),
           ],
-          if (widget.formType == FormType.REGISTER) ...[
+          if (widget.formType == FormType.register) ...[
             const SizedBox(height: 16),
             TextFormField(
               focusNode: _confirmPasswordFocusNode,

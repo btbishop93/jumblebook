@@ -29,7 +29,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.LOGIN,
+        formType: FormType.login,
         onSubmit: (email, password) {},
       ));
 
@@ -44,7 +44,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.REGISTER,
+        formType: FormType.register,
         onSubmit: (_, __) {},
       ));
 
@@ -60,7 +60,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.LOGIN,
+        formType: FormType.login,
         onSubmit: (_, __) {},
       ));
 
@@ -80,7 +80,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.REGISTER,
+        formType: FormType.register,
         onSubmit: (_, __) {},
       ));
 
@@ -101,7 +101,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.LOGIN,
+        formType: FormType.login,
         onSubmit: (_, __) {},
       ));
 
@@ -117,7 +117,7 @@ void main() {
       // Arrange
       bool submitted = false;
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.LOGIN,
+        formType: FormType.login,
         onSubmit: (email, password) {
           submitted = true;
         },
@@ -140,7 +140,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.REGISTER,
+        formType: FormType.register,
         onSubmit: (_, __) {},
       ));
 
@@ -155,7 +155,7 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       await tester.pumpWidget(createWidgetUnderTest(
-        formType: FormType.REGISTER,
+        formType: FormType.register,
         onSubmit: (_, __) {},
       ));
 

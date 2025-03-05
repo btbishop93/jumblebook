@@ -59,7 +59,7 @@ class SignUpPage extends StatelessWidget {
                           const SizedBox(height: 48),
                           // Email Sign Up Form
                           AuthForm(
-                            formType: FormType.REGISTER,
+                            formType: FormType.register,
                             onSubmit: (email, password) {
                               context.read<AuthBloc>().add(
                                     SignUpWithEmailRequested(

@@ -97,7 +97,7 @@ class SignInPage extends StatelessWidget {
                       const SizedBox(height: 32),
                       // Email Sign In Form
                       AuthForm(
-                        formType: FormType.LOGIN,
+                        formType: FormType.login,
                         onSubmit: (email, password) {
                           context.read<AuthBloc>().add(
                                 SignInWithEmailRequested(

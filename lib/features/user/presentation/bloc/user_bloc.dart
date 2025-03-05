@@ -5,6 +5,7 @@ import '../../domain/usecases/usecases.dart' as usecases;
 import '../../domain/entities/user_profile.dart';
 import 'user_event.dart';
 import 'user_state.dart';
+import 'package:flutter/foundation.dart';
 
 class UserBloc extends Bloc<UserEvent, UserState> {
   final usecases.GetUserProfile _getUserProfile;
@@ -113,8 +114,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     try {
       await _userRepository.updateLastSeen(event.userId);
     } catch (e) {
-      // Silently fail as this is not critical
-      print('Failed to update last seen: $e');
+      debugPrint('Failed to update last seen: $e');
     }
   }
 

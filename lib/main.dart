@@ -88,8 +88,8 @@ Future<void> main() async {
       ),
     );
   } catch (e, stackTrace) {
-    print('Error initializing app: $e');
-    print('Stack trace: $stackTrace');
+    debugPrint('Error initializing app: $e');
+    debugPrint('Stack trace: $stackTrace');
     rethrow;
   }
 }
