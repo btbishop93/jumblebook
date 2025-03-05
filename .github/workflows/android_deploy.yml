@@ -79,7 +79,17 @@ jobs:
             cat "$file"
             
             echo "Reading version components..."
-            IFS='.' read -r major minor patch < "$file"
+            # Read the version and ensure it has three components
+            version=$(cat "$file")
+            # Split version into parts and pad with zeros if needed
+            IFS='.' read -r major minor patch <<< "${version}.0.0"
+            
+            # Validate that we got numbers
+            if ! [[ "$major" =~ ^[0-9]+$ ]] || ! [[ "$minor" =~ ^[0-9]+$ ]] || ! [[ "$patch" =~ ^[0-9]+$ ]]; then
+              echo "Error: Version components must be numbers. Got major=$major minor=$minor patch=$patch"
+              exit 1
+            fi
+            
             echo "Current version: major=$major minor=$minor patch=$patch"
             
             echo "Getting version bump type from input..."
