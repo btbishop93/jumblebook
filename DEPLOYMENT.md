@@ -9,6 +9,18 @@ This document provides instructions for setting up and managing the deployment o
 - GitHub repository with appropriate permissions
 - Flutter SDK 3.24.0 or later
 
+### Google Play Store Setup
+
+Before running the Android deployment, ensure you have:
+1. Created your app in the Google Play Console
+2. Set up the Beta testing track:
+   - Go to Google Play Console > Your App > Testing > Open testing
+   - Click "Create track" if it doesn't exist
+   - Configure testers and testing details
+   - Save the track settings
+3. Created a service account with the necessary permissions
+4. Generated and downloaded the service account JSON key
+
 ## GitHub Secrets Setup
 
 The following secrets need to be set up in your GitHub repository:
@@ -58,11 +70,16 @@ The following variables need to be set up in your GitHub repository:
 
 ## CodeMagic CLI Tools
 
-The deployment process uses CodeMagic CLI tools for iOS code signing and deployment. These tools provide the following key functionalities:
+The deployment process uses CodeMagic CLI tools for both iOS and Android deployment. These tools provide the following key functionalities:
 
+### iOS Tools
 1. `keychain initialize`: Sets up a new keychain for secure certificate management
 2. `xcode-project use-profiles`: Configures Xcode project settings with the provided provisioning profiles
 3. `app-store-connect publish`: Handles the upload of IPA files to App Store Connect
+
+### Android Tools
+1. `android-app-bundle verify`: Verifies the Android App Bundle before upload
+2. `android-app-bundle upload`: Handles the upload of AAB files to Google Play Store
 
 The tools are automatically installed during the deployment process using pip:
 ```bash
@@ -109,12 +126,43 @@ The version and build numbers are managed using a `VERSION` file in the root dir
 buildNumber = (majorVersion * 1000000) + (minorVersion * 10000) + github_run_number
 ```
 
-### Automatic Deployment
+### Android Deployment
 
-The workflows are configured to run automatically when changes are pushed to the main branch that affect:
+The Android deployment can be triggered in two ways:
 
-- iOS: Changes to `lib/`, `ios/`, `pubspec.yaml`, or `pubspec.lock`
-- Android: Changes to `lib/`, `android/`, `pubspec.yaml`, or `pubspec.lock`
+1. **Automatically**: When changes are pushed to the `master` branch
+2. **Manually**: Through the GitHub Actions interface with version bump options
+
+#### Manual Deployment Steps
+
+1. Go to the "Actions" tab in your GitHub repository
+2. Select "Push Android build to Play Store Beta"
+3. Click "Run workflow"
+4. Choose the version bump type:
+   - `patch`: For backwards-compatible bug fixes (e.g., 1.0.0 → 1.0.1)
+   - `minor`: For new backwards-compatible functionality (e.g., 1.0.0 → 1.1.0)
+   - `major`: For incompatible API changes (e.g., 1.0.0 → 2.0.0)
+5. Click "Run workflow" to start the deployment
+
+The deployment process includes:
+
+1. Setting up Flutter SDK (version 3.24.0)
+2. Installing dependencies and running lint checks
+3. Setting up Android signing configuration:
+   - Decoding and configuring the upload keystore
+   - Creating key.properties file with credentials
+   - Setting up Google Services configuration
+4. Setting up Google Play Store credentials
+5. Updating version numbers based on the selected bump type
+6. Building the Android App Bundle (AAB)
+7. Verifying and uploading the bundle to Play Store Beta track
+
+The version and build numbers are managed using a `VERSION` file in the root directory:
+- The version number is updated according to the selected bump type
+- The build number is calculated using the formula:
+```
+buildNumber = (majorVersion * 1000000) + (minorVersion * 10000) + github_run_number
+```
 
 ## Versioning
 
