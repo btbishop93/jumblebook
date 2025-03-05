@@ -24,8 +24,23 @@ jobs:
         env:
           GOOGLE_SERVICE_INFORMATION_PLIST: ${{ secrets.GOOGLE_SERVICE_INFORMATION_PLIST }}
         run: |
+          # Create the plist file
           echo "$GOOGLE_SERVICE_INFORMATION_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
-          echo "Created GoogleService-Info.plist"
+          
+          # Verify file exists and show permissions
+          ls -la ios/Runner/GoogleService-Info.plist
+          
+          # Verify file is a valid plist
+          plutil -lint ios/Runner/GoogleService-Info.plist
+          
+          # Show file contents (excluding sensitive data)
+          echo "File structure:"
+          plutil -p ios/Runner/GoogleService-Info.plist | grep -v -E "API|KEY|ID|TOKEN|SECRET"
+          
+          # Ensure file has correct permissions
+          chmod 644 ios/Runner/GoogleService-Info.plist
+          
+          echo "Created and verified GoogleService-Info.plist"
 
       - name: Build iOS app
         env:
@@ -130,48 +145,66 @@ jobs:
           BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
-          cat > ios/build/options.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>${APPLE_TEAM_ID}</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>${BUNDLE_IDENTIFIER}</key>
-              <string>${PROVISIONING_PROFILE_NAME}</string>
-            </dict>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
-
+          # Ensure build directory exists
+          mkdir -p ios/build
+          
+          # Create options.plist with proper encoding
+          /usr/libexec/PlistBuddy -c "Clear" ios/build/options.plist || true
+          /usr/libexec/PlistBuddy -c "Add :method string app-store" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :teamID string ${APPLE_TEAM_ID}" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:${BUNDLE_IDENTIFIER} string ${PROVISIONING_PROFILE_NAME}" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :signingCertificate string Apple Distribution" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :stripSwiftSymbols bool true" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" ios/build/options.plist
+          /usr/libexec/PlistBuddy -c "Add :compileBitcode bool false" ios/build/options.plist
+          
           echo "Generated options.plist content:"
-          cat ios/build/options.plist
+          plutil -p ios/build/options.plist
           
           echo "Validating plist syntax..."
           plutil -lint ios/build/options.plist
+          
+          # Set correct permissions
+          chmod 644 ios/build/options.plist
 
       - name: Export IPA
         run: |
           cd ios
+          
+          # Verify archive exists
+          if [ ! -d "build/Runner.xcarchive" ]; then
+            echo "Error: Archive not found at build/Runner.xcarchive"
+            exit 1
+          fi
+          
+          # Verify options.plist exists and is valid
+          if [ ! -f "build/options.plist" ]; then
+            echo "Error: options.plist not found at build/options.plist"
+            exit 1
+          fi
+          
+          plutil -lint build/options.plist
+          
+          # Clean export directory
+          rm -rf build/Runner.ipa
+          
+          # Export archive
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportPath build \
             -exportOptionsPlist build/options.plist \
-            -allowProvisioningUpdates
+            -allowProvisioningUpdates \
+            -verbose
+          
+          # Verify IPA was created
+          if [ ! -f "build/Runner.ipa" ]; then
+            echo "Error: IPA file was not created"
+            exit 1
+          fi
+          
+          echo "Successfully exported IPA"
 
       - name: Set up App Store Connect API key
         env:
