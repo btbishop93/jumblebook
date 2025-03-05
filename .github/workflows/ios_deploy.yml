@@ -46,6 +46,8 @@ jobs:
           echo "$IOS_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > distribution.p12
           security import distribution.p12 -k "$KEYCHAIN_PATH" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12
           rm distribution.p12
+          # Set key partition list for signing
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "temporary" "$KEYCHAIN_PATH"
 
       - name: Import provisioning profile
         env:
@@ -59,14 +61,20 @@ jobs:
       - name: Archive the app
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
           cd ios
-          xcodebuild -workspace Runner.xcworkspace \
+          xcodebuild archive \
+            -workspace Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
             -archivePath build/Runner.xcarchive \
             -destination 'generic/platform=iOS' \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
             -allowProvisioningUpdates \
             clean archive
 
@@ -76,6 +84,8 @@ jobs:
       - name: Create exportOptions.plist
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUNDLE_IDENTIFIER: ${{ secrets.BUNDLE_IDENTIFIER }}
+          PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
           cat << EOF > ios/build/options.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -87,7 +97,14 @@ jobs:
             <key>teamID</key>
             <string>${APPLE_TEAM_ID}</string>
             <key>signingStyle</key>
-            <string>automatic</string>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_IDENTIFIER}</key>
+              <string>${PROVISIONING_PROFILE_NAME}</string>
+            </dict>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
           </dict>
           </plist>
           EOF
