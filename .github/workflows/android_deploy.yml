@@ -12,9 +12,6 @@ on:
           - minor
           - major
         default: 'patch'
-  push:
-    branches:
-      - master
 
 jobs:
   android_deployment:
@@ -76,7 +73,11 @@ jobs:
           file='VERSION'
           if [ -f "$file" ]; then
             IFS='.' read -r major minor patch < "$file"
-            case "${{ github.event.inputs.version_bump }}" in
+            bump_type="${{ github.event.inputs.version_bump }}"
+            if [ "$bump_type" = "" ]; then
+              bump_type="patch"
+            fi
+            case "$bump_type" in
               "major")
                 major=$((major + 1))
                 minor=0
@@ -88,6 +89,10 @@ jobs:
                 ;;
               "patch")
                 patch=$((patch + 1))
+                ;;
+              *)
+                echo "Invalid version bump type: $bump_type"
+                exit 1
                 ;;
             esac
             echo "$major.$minor.$patch" > "$file"
