@@ -1,9 +1,17 @@
 name: Push iOS build on TestFlight
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: 'patch'
 
 jobs:
   ios_deployment:
@@ -35,7 +43,7 @@ jobs:
           flutter analyze --fatal-infos
           
       - name: Install the CodeMagic CLI
-        run:  pip install codemagic-cli-tools
+        run: pip install codemagic-cli-tools
 
       - name: Initialize keychain
         run: keychain initialize
@@ -61,6 +69,32 @@ jobs:
 
       - name: Set up Code signing settings on Xcode project
         run: xcode-project use-profiles
+
+      - name: Update Version
+        run: |
+          file='VERSION'
+          if [ -f "$file" ]; then
+            IFS='.' read -r major minor patch < "$file"
+            case "${{ github.event.inputs.version_bump }}" in
+              "major")
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              "minor")
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              "patch")
+                patch=$((patch + 1))
+                ;;
+            esac
+            echo "$major.$minor.$patch" > "$file"
+            echo "Updated version to $major.$minor.$patch"
+          else
+            echo "1.0.0" > "$file"
+            echo "Created initial version 1.0.0"
+          fi
 
       - name: Build IPA for Distribution
         run: |
