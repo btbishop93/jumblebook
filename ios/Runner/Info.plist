@@ -62,5 +62,7 @@
 	<string>Speech recognition is used to convert your voice into text notes.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>This is used to authenticate and unjumble your notes.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
