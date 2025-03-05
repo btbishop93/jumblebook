@@ -72,36 +72,80 @@ jobs:
 
       - name: Update Version
         run: |
+          set -x  # Enable debug mode to see each command
           file='VERSION'
+          echo "Checking for VERSION file..."
           if [ -f "$file" ]; then
-            IFS='.' read -r major minor patch < "$file"
+            echo "VERSION file exists"
+            echo "Current file contents:"
+            cat "$file"
+            
+            echo "Reading version components..."
+            # Read the version and split it into parts
+            version=$(cat "$file" | tr -d '[:space:]')  # Remove any whitespace
+            IFS='.' read -r -a version_parts <<< "$version"
+            
+            # Set default values for missing components
+            major="${version_parts[0]:-0}"
+            minor="${version_parts[1]:-0}"
+            patch="${version_parts[2]:-0}"
+            
+            # Validate that we got numbers
+            if ! [[ "$major" =~ ^[0-9]+$ ]] || ! [[ "$minor" =~ ^[0-9]+$ ]] || ! [[ "$patch" =~ ^[0-9]+$ ]]; then
+              echo "Error: Version components must be numbers. Got major=$major minor=$minor patch=$patch"
+              exit 1
+            fi
+            
+            echo "Current version: major=$major minor=$minor patch=$patch"
+            
+            echo "Getting version bump type from input..."
+            echo "Raw input value: ${{ github.event.inputs.version_bump }}"
             bump_type="${{ github.event.inputs.version_bump }}"
-            if [ "$bump_type" = "" ]; then
+            echo "Assigned bump_type: $bump_type"
+            
+            if [ -z "$bump_type" ]; then
+              echo "No bump type provided, defaulting to patch"
               bump_type="patch"
             fi
+            
+            echo "Using bump type: $bump_type"
+            
             case "$bump_type" in
               "major")
+                echo "Performing major version bump"
                 major=$((major + 1))
                 minor=0
                 patch=0
                 ;;
               "minor")
+                echo "Performing minor version bump"
                 minor=$((minor + 1))
                 patch=0
                 ;;
               "patch")
+                echo "Performing patch version bump"
                 patch=$((patch + 1))
                 ;;
               *)
-                echo "Invalid version bump type: $bump_type"
+                echo "Invalid version bump type: '$bump_type'"
                 exit 1
                 ;;
             esac
-            echo "$major.$minor.$patch" > "$file"
-            echo "Updated version to $major.$minor.$patch"
+            
+            new_version="$major.$minor.$patch"
+            echo "Writing new version: $new_version"
+            echo "$new_version" > "$file"
+            echo "Updated version to $new_version"
+            
+            echo "New file contents:"
+            cat "$file"
           else
+            echo "VERSION file does not exist, creating with initial version"
             echo "1.0.0" > "$file"
             echo "Created initial version 1.0.0"
+            
+            echo "New file contents:"
+            cat "$file"
           fi
 
       - name: Build IPA for Distribution

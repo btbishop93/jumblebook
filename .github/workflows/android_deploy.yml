@@ -79,10 +79,14 @@ jobs:
             cat "$file"
             
             echo "Reading version components..."
-            # Read the version and ensure it has three components
-            version=$(cat "$file")
-            # Split version into parts and pad with zeros if needed
-            IFS='.' read -r major minor patch <<< "${version}.0.0"
+            # Read the version and split it into parts
+            version=$(cat "$file" | tr -d '[:space:]')  # Remove any whitespace
+            IFS='.' read -r -a version_parts <<< "$version"
+            
+            # Set default values for missing components
+            major="${version_parts[0]:-0}"
+            minor="${version_parts[1]:-0}"
+            patch="${version_parts[2]:-0}"
             
             # Validate that we got numbers
             if ! [[ "$major" =~ ^[0-9]+$ ]] || ! [[ "$minor" =~ ^[0-9]+$ ]] || ! [[ "$patch" =~ ^[0-9]+$ ]]; then
