@@ -183,8 +183,16 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # Decode and save the service account JSON
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | base64 -d > service-account.json
+          # Create service account JSON file directly
+          echo "${PLAY_STORE_SERVICE_ACCOUNT_JSON}" > service-account.json
+          
+          # Verify the JSON file is valid
+          if ! jq empty service-account.json 2>/dev/null; then
+            echo "Error: Invalid JSON in service account file"
+            exit 1
+          fi
+          
+          echo "Successfully created service account JSON file"
           
           # First validate the bundle
           android-app-bundle validate --bundle "$APP_FILE"
