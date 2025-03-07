@@ -187,17 +187,18 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           chmod 700 "$TEMP_DIR"
           
-          # Write JSON, minified to avoid formatting issues
+          # Write minified JSON
           echo "Writing minified JSON to file..."
           printf '%s' "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | jq -c . > "$TEMP_DIR/service-account.json"
           chmod 600 "$TEMP_DIR/service-account.json"
           
-          # Debug: Verify file content
+          # Debug: Verify file
+          echo "File path: $TEMP_DIR/service-account.json"
           echo "File size: $(stat -c %s "$TEMP_DIR/service-account.json") bytes"
           echo "File permissions: $(ls -l "$TEMP_DIR/service-account.json")"
           echo "First 100 bytes (hex): $(xxd -p -l 100 "$TEMP_DIR/service-account.json")"
           
-          # Test file readability
+          # Test readability
           echo "Testing file readability..."
           if ! cat "$TEMP_DIR/service-account.json" > /dev/null; then
             echo "Error: Cannot read service-account.json"
@@ -206,33 +207,36 @@ jobs:
           echo "File is readable"
           
           # Validate JSON
-          echo "Validating JSON with jq..."
+          echo "Validating JSON..."
           if ! jq empty "$TEMP_DIR/service-account.json" 2>/dev/null; then
-            echo "Error: JSON is invalid according to jq"
+            echo "Error: JSON is invalid"
             xxd -p -l 100 "$TEMP_DIR/service-account.json"
             exit 1
           fi
-          echo "JSON is valid according to jq"
+          echo "JSON is valid"
           
-          # Debug: CLI version
+          # CLI version
           echo "Codemagic CLI version:"
           codemagic-cli-tools --version
+          
+          # Extract package name
+          PACKAGE_NAME=$(grep 'applicationId' android/app/build.gradle | awk '{print $2}' | tr -d '"')
+          echo "Package name: $PACKAGE_NAME"
+          
+          # Test CLI connectivity
+          echo "Testing CLI with tracks list..."
+          google-play tracks list \
+            --credentials "$TEMP_DIR/service-account.json" \
+            --package-name "$PACKAGE_NAME" \
+            --log-stream stderr || {
+              echo "Tracks list failed. File content (hex):"
+              xxd -p -l 100 "$TEMP_DIR/service-account.json"
+              exit 1
+            }
           
           # Validate bundle
           echo "Validating App Bundle..."
           android-app-bundle validate --bundle "$APP_FILE"
-          
-          # Test CLI with verbose output
-          echo "Testing google-play CLI..."
-          google-play bundles upload \
-            --bundle "$APP_FILE" \
-            --credentials "$TEMP_DIR/service-account.json" \
-            --json \
-            --log-stream stderr || {
-              echo "Test failed. File content (hex):"
-              xxd -p -l 100 "$TEMP_DIR/service-account.json"
-              exit 1
-            }
           
           # Upload to Play Store
           echo "Uploading to Play Store..."
@@ -243,6 +247,7 @@ jobs:
             --log-stream stderr || {
               echo "Upload failed. File content (hex):"
               xxd -p -l 100 "$TEMP_DIR/service-account.json"
+              echo "Note: If this is the first .aab upload for $PACKAGE_NAME, you must manually upload it via Google Play Console first (see https://docs.codemagic.io/flutter-publishing/publishing-to-google-play/)."
               exit 1
             }
           
