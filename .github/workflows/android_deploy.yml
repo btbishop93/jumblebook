@@ -183,11 +183,11 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          android-app-bundle validate \
-            --bundle "$APP_FILE" \
-            --service-account-credentials play-store-service-account.json
-
-          android-app-bundle upload \
-            --bundle "$APP_FILE" \
-            --service-account-credentials play-store-service-account.json \
-            --track beta
+          # First validate the bundle
+          android-app-bundle validate --bundle "$APP_FILE"
+          
+          # Then publish to Play Store using the correct command
+          google-play publish \
+            --aab "$APP_FILE" \
+            --track beta \
+            --service-account-key play-store-service-account.json
