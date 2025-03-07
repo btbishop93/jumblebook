@@ -187,16 +187,14 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           chmod 700 "$TEMP_DIR"
           
-          # Save the service account JSON with proper formatting
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$TEMP_DIR/service-account.json"
+          # Save the service account JSON with proper escaping
+          echo '${{ env.PLAY_STORE_SERVICE_ACCOUNT_JSON }}' > "$TEMP_DIR/service-account.json"
           chmod 600 "$TEMP_DIR/service-account.json"
           
           # Debug: Verify JSON structure (without showing sensitive data)
           echo "Verifying JSON structure..."
-          if jq -r 'has("type") and has("project_id") and has("private_key")' "$TEMP_DIR/service-account.json"; then
-            echo "JSON appears to have the required fields"
-          else
-            echo "JSON is missing required fields"
+          if ! jq empty "$TEMP_DIR/service-account.json" 2>/dev/null; then
+            echo "Error: Invalid JSON format"
             exit 1
           fi
           
