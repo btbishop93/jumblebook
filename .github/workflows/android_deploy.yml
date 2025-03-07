@@ -188,6 +188,6 @@ jobs:
           
           # Then publish to Play Store using the correct command
           google-play bundles upload \
-            --aab "$APP_FILE" \
-            --track beta \
-            --service-account-key play-store-service-account.json
+            --bundle "$APP_FILE" \
+            --credentials play-store-service-account.json \
+            --track beta
