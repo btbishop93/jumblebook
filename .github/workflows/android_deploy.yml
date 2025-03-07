@@ -187,21 +187,50 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           chmod 700 "$TEMP_DIR"
           
-          # Save the service account JSON with proper escaping
-          echo '${{ env.PLAY_STORE_SERVICE_ACCOUNT_JSON }}' > "$TEMP_DIR/service-account.json"
-          chmod 600 "$TEMP_DIR/service-account.json"
-          
-          # Debug: Verify JSON structure (without showing sensitive data)
-          echo "Verifying JSON structure..."
-          if ! jq empty "$TEMP_DIR/service-account.json" 2>/dev/null; then
-            echo "Error: Invalid JSON format"
+          # Debug: Inspect the PLAY_STORE_SERVICE_ACCOUNT_JSON variable
+          echo "Debugging PLAY_STORE_SERVICE_ACCOUNT_JSON..."
+          if [ -z "$PLAY_STORE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "Error: PLAY_STORE_SERVICE_ACCOUNT_JSON is empty or not set"
             exit 1
           fi
+          
+          # Output length and first few characters for inspection
+          echo "Length of PLAY_STORE_SERVICE_ACCOUNT_JSON: ${#PLAY_STORE_SERVICE_ACCOUNT_JSON}"
+          echo "First 20 characters: ${PLAY_STORE_SERVICE_ACCOUNT_JSON:0:20}"
+          
+          # Heuristic to detect if it might be base64 (looks for common base64 patterns)
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | grep -Eq '^[A-Za-z0-9+/=]+$' && echo "Content appears to be base64-encoded" || echo "Content does not appear to be base64-encoded"
+          
+          # Try writing it as raw JSON first
+          echo "Attempting to write as raw JSON..."
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$TEMP_DIR/service-account.json"
+          chmod 600 "$TEMP_DIR/service-account.json"
+          
+          # Validate as JSON
+          echo "Validating as JSON..."
+          if jq empty "$TEMP_DIR/service-account.json" 2>/dev/null; then
+            echo "Content is valid JSON"
+          else
+            echo "Not valid JSON, trying base64 decoding..."
+            echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | base64 -d > "$TEMP_DIR/service-account.json" 2>/dev/null
+            if [ $? -eq 0 ] && jq empty "$TEMP_DIR/service-account.json" 2>/dev/null; then
+              echo "Content was base64-encoded and is now valid JSON"
+            else
+              echo "Error: Content is neither valid JSON nor base64-encoded JSON"
+              echo "First 50 characters of raw content: ${PLAY_STORE_SERVICE_ACCOUNT_JSON:0:50}"
+              exit 1
+            fi
+          fi
+          
+          # Debug: Show first 50 chars of the final file for verification
+          echo "Final service-account.json first 50 chars:"
+          head -c 50 "$TEMP_DIR/service-account.json"
+          echo ""
           
           # First validate the bundle
           android-app-bundle validate --bundle "$APP_FILE"
           
-          # Then publish to Play Store using the correct command
+          # Then publish to Play Store
           google-play bundles upload \
             --bundle "$APP_FILE" \
             --credentials "$TEMP_DIR/service-account.json" \
