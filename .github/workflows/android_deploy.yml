@@ -174,7 +174,15 @@ jobs:
 
       - name: Upload to Play Store
         run: |
-          APP_FILE=$(find $(pwd) -name "*.aab")
+          APP_FILE="build/app/outputs/bundle/release/app-release.aab"
+          
+          if [ ! -f "$APP_FILE" ]; then
+            echo "Error: AAB file not found at expected path: $APP_FILE"
+            exit 1
+          fi
+          
+          echo "Found AAB file at: $APP_FILE"
+          
           android-app-bundle validate \
             --bundle "$APP_FILE" \
             --service-account-credentials play-store-service-account.json
