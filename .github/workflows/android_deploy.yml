@@ -175,7 +175,7 @@ jobs:
       - name: Upload to Play Store
         run: |
           APP_FILE=$(find $(pwd) -name "*.aab")
-          android-app-bundle verify \
+          android-app-bundle validate \
             --bundle-path "$APP_FILE" \
             --service-account-credentials play-store-service-account.json
 
