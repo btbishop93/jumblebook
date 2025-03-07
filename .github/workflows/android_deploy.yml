@@ -187,7 +187,7 @@ jobs:
           android-app-bundle validate --bundle "$APP_FILE"
           
           # Then publish to Play Store using the correct command
-          google-play publish \
+          google-play bundles upload \
             --aab "$APP_FILE" \
             --track beta \
             --service-account-key play-store-service-account.json
