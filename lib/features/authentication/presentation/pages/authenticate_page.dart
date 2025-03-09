@@ -24,7 +24,17 @@ class _AuthenticatePageState extends State<AuthenticatePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AccountDeleted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Your account has been successfully deleted'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         if (state is Authenticated && state.data.user != null) {
           return NotesPage(currentUser: state.data.user!);

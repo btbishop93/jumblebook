@@ -25,7 +25,7 @@ class ThemeSwitcher extends StatelessWidget {
                           : Icons.dark_mode,
                   color: theme.primaryColor,
                 ),
-                label: Text('Dark mode', style: theme.textTheme.labelLarge),
+                label: Text('Dark mode', style: theme.textTheme.titleSmall),
                 onPressed: () {},
               ),
               const Spacer(),

@@ -60,3 +60,16 @@ final class ResetPasswordRequested extends AuthEvent {
 
 // Account Management
 final class DeleteAccountRequested extends AuthEvent {}
+
+final class ReauthenticateAndDeleteAccountRequested extends AuthEvent {
+  final String email;
+  final String password;
+
+  const ReauthenticateAndDeleteAccountRequested({
+    required this.email,
+    required this.password,
+  });
+
+  @override
+  List<Object> get props => [email, password];
+}

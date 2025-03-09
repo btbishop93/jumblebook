@@ -57,14 +57,20 @@ class FirebaseNotesDataSource implements NotesRemoteDataSource {
 
   @override
   Future<void> deleteAllNotes(String userId) async {
-    final batch = _firestore.batch();
-    final snapshots = await _notesCollection(userId).get();
-    
-    for (var doc in snapshots.docs) {
-      batch.delete(doc.reference);
+    try {
+      final snapshots = await _notesCollection(userId).get();
+      
+      final batch = _firestore.batch();
+      for (var doc in snapshots.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      await batch.commit();
+    } catch (e) {
+      // Log the error but don't throw it
+      // This allows the account deletion to proceed even if note deletion fails
+      print('Error deleting notes: $e');
     }
-    
-    await batch.commit();
   }
 
   @override

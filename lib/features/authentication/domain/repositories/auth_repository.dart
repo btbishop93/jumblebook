@@ -20,4 +20,5 @@ abstract class AuthRepository {
   
   // Account Management
   Future<void> deleteAccount();
+  Future<void> reauthenticateAndDeleteAccount(String email, String password);
 }

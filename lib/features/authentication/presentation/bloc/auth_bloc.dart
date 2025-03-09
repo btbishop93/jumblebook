@@ -57,6 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutRequested>(_onSignOutRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
     on<DeleteAccountRequested>(_onDeleteAccountRequested);
+    on<ReauthenticateAndDeleteAccountRequested>(_onReauthenticateAndDeleteAccountRequested);
 
     // Subscribe to auth state changes when bloc is created
     _subscribeToAuthChanges();
@@ -232,12 +233,83 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading(state.data));
 
     try {
-      await _deleteUserData(const NoParams());
-      // Preserve the email for convenience on next login
+      // Get the email before deleting the account
       final lastEmail = state.data.email;
+      
+      // Delete user data and account
+      await _deleteUserData(const NoParams());
+      
+      // After successful deletion, emit AccountDeleted state
+      // Firebase automatically signs out the user after account deletion
       emit(AccountDeleted(AuthData(email: lastEmail)));
     } catch (e) {
-      emit(AuthError(state.data, e.toString()));
+      // Create a more user-friendly error message
+      String errorMessage = 'Failed to delete account: ${e.toString()}';
+      
+      // Special case for re-authentication requirement
+      if (e.toString().contains('requires-recent-login')) {
+        emit(AuthError(state.data, 'requires-recent-login'));
+        return;
+      }
+      
+      // Handle other common errors
+      if (e.toString().contains('permission-denied')) {
+        // If we get a permission error but the account was actually deleted,
+        // consider it a success and emit AccountDeleted
+        if (_authRepository.currentUser == null) {
+          final lastEmail = state.data.email;
+          emit(AccountDeleted(AuthData(email: lastEmail)));
+          return;
+        }
+        
+        errorMessage = 'Permission denied. Please try signing in again before deleting your account.';
+      }
+      
+      emit(AuthError(state.data, errorMessage));
+    }
+  }
+  
+  // Handle re-authentication and account deletion request
+  Future<void> _onReauthenticateAndDeleteAccountRequested(
+    ReauthenticateAndDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading(state.data));
+
+    try {
+      // Get the email before deleting the account
+      final lastEmail = state.data.email;
+      
+      // Re-authenticate and delete user data and account
+      await _deleteUserData.reauthenticateAndDelete(
+        event.email,
+        event.password,
+      );
+      
+      // After successful deletion, emit AccountDeleted state
+      emit(AccountDeleted(AuthData(email: lastEmail)));
+    } catch (e) {
+      // Create a more user-friendly error message
+      String errorMessage = 'Failed to delete account: ${e.toString()}';
+      
+      // Handle common authentication errors
+      if (e.toString().contains('wrong-password')) {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (e.toString().contains('user-mismatch')) {
+        errorMessage = 'The provided email does not match your account.';
+      } else if (e.toString().contains('permission-denied')) {
+        // If we get a permission error but the account was actually deleted,
+        // consider it a success and emit AccountDeleted
+        if (_authRepository.currentUser == null) {
+          final lastEmail = state.data.email;
+          emit(AccountDeleted(AuthData(email: lastEmail)));
+          return;
+        }
+        
+        errorMessage = 'Permission denied. Please try signing in again.';
+      }
+      
+      emit(AuthError(state.data, errorMessage));
     }
   }
 

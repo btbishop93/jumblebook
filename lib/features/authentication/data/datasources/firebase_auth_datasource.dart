@@ -14,6 +14,7 @@ abstract class AuthDataSource {
   Stream<UserModel?> get authStateChanges;
   UserModel? get currentUser;
   Future<void> deleteAccount();
+  Future<void> reauthenticateAndDeleteAccount(String email, String password);
 }
 
 class FirebaseAuthDataSource implements AuthDataSource {
@@ -157,6 +158,30 @@ class FirebaseAuthDataSource implements AuthDataSource {
     try {
       final user = _firebaseAuth.currentUser;
       if (user != null) {
+        await user.delete();
+      } else {
+        throw Exception('No user is currently signed in');
+      }
+    } catch (e) {
+      throw _handleFirebaseAuthError(e);
+    }
+  }
+
+  @override
+  Future<void> reauthenticateAndDeleteAccount(String email, String password) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        // Create credential
+        final credential = firebase_auth.EmailAuthProvider.credential(
+          email: email,
+          password: password,
+        );
+        
+        // Re-authenticate
+        await user.reauthenticateWithCredential(credential);
+        
+        // Delete account
         await user.delete();
       } else {
         throw Exception('No user is currently signed in');
