@@ -88,6 +88,36 @@ class _NotesPageState extends State<NotesPage> {
     );
   }
 
+  void _showDeleteAccountConfirmationDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Account'),
+        content: Text(
+          'Are you sure you want to delete your account? This will permanently delete all your notes and account information. This action cannot be undone.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(DeleteAccountRequested());
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -150,6 +180,7 @@ class _NotesPageState extends State<NotesPage> {
                       context.read<AuthBloc>().add(SignOutRequested());
                     },
                   ),
+                  const SizedBox(height: 16),
                   if (_canResetPassword)
                     TextButton.icon(
                       icon: Icon(Icons.security, color: theme.primaryColor),
@@ -167,6 +198,16 @@ class _NotesPageState extends State<NotesPage> {
                         );
                       },
                     ),
+                    const SizedBox(height: 16),
+                  TextButton.icon(
+                    icon: Icon(Icons.delete_forever, color: theme.primaryColor),
+                    label: Text('Delete account',
+                        style: theme.textTheme.labelLarge),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showDeleteAccountConfirmationDialog(context);
+                    },
+                  ),
                   const SizedBox(height: 16),
                   const ThemeSwitcher(),
                   Container(

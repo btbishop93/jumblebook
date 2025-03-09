@@ -6,3 +6,5 @@ export 'sign_in_anonymously.dart';
 export 'sign_out.dart';
 export 'reset_password.dart';
 export 'auth_params.dart';
+export 'delete_account.dart';
+export 'delete_user_data.dart';

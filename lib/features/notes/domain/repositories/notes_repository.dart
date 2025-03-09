@@ -13,6 +13,9 @@ abstract class NotesRepository {
   /// Delete a note
   Future<void> deleteNote(String userId, String noteId);
 
+  /// Delete all notes for a user
+  Future<void> deleteAllNotes(String userId);
+
   /// Get the total count of notes for a user
   Future<int> getNoteCount(String userId);
 

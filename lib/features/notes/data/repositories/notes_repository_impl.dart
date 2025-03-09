@@ -30,6 +30,11 @@ class NotesRepositoryImpl implements NotesRepository {
   }
 
   @override
+  Future<void> deleteAllNotes(String userId) async {
+    return _remoteDataSource.deleteAllNotes(userId);
+  }
+
+  @override
   Future<int> getNoteCount(String userId) async {
     return _remoteDataSource.getNoteCount(userId);
   }

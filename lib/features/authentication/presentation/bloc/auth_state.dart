@@ -71,3 +71,16 @@ final class PasswordResetEmailSent extends AuthState {
           ),
         );
 }
+
+// State when account is deleted
+final class AccountDeleted extends AuthState {
+  AccountDeleted(AuthData data)
+      : super(
+          data.copyWith(
+            isAuthenticated: false,
+            user: null,
+            isLoading: false,
+            errorMessage: null,
+          ),
+        );
+}

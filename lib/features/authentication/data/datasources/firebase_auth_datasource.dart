@@ -13,6 +13,7 @@ abstract class AuthDataSource {
   Future<UserModel> signInAnonymously();
   Stream<UserModel?> get authStateChanges;
   UserModel? get currentUser;
+  Future<void> deleteAccount();
 }
 
 class FirebaseAuthDataSource implements AuthDataSource {
@@ -149,6 +150,20 @@ class FirebaseAuthDataSource implements AuthDataSource {
     return firebaseUser == null
         ? null
         : UserModel.fromFirebaseUser(firebaseUser);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        await user.delete();
+      } else {
+        throw Exception('No user is currently signed in');
+      }
+    } catch (e) {
+      throw _handleFirebaseAuthError(e);
+    }
   }
 
   Exception _handleFirebaseAuthError(dynamic error) {

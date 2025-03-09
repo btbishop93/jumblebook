@@ -6,6 +6,7 @@ abstract class NotesRemoteDataSource {
   Future<NoteModel> getNote(String userId, String noteId);
   Future<void> saveNote(String userId, NoteModel note);
   Future<void> deleteNote(String userId, String noteId);
+  Future<void> deleteAllNotes(String userId);
   Future<int> getNoteCount(String userId);
   Future<void> updateLockCounter(String userId, String noteId, int lockCounter);
 }
@@ -52,6 +53,18 @@ class FirebaseNotesDataSource implements NotesRemoteDataSource {
   @override
   Future<void> deleteNote(String userId, String noteId) async {
     await _notesCollection(userId).doc(noteId).delete();
+  }
+
+  @override
+  Future<void> deleteAllNotes(String userId) async {
+    final batch = _firestore.batch();
+    final snapshots = await _notesCollection(userId).get();
+    
+    for (var doc in snapshots.docs) {
+      batch.delete(doc.reference);
+    }
+    
+    await batch.commit();
   }
 
   @override

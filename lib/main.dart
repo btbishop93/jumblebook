@@ -54,6 +54,7 @@ Future<void> main() async {
     final jumbleNote = notes_usecases.JumbleNote(notesRepository);
     final unjumbleNote = notes_usecases.UnjumbleNote(notesRepository);
     final updateLockCounter = notes_usecases.UpdateLockCounter(notesRepository);
+    final deleteAllNotes = notes_usecases.DeleteAllNotes(notesRepository);
 
     runApp(
       MultiBlocProvider(
@@ -70,6 +71,10 @@ Future<void> main() async {
                   auth_usecases.SignInAnonymously(authRepository),
               signOut: auth_usecases.SignOut(authRepository),
               resetPassword: auth_usecases.ResetPassword(authRepository),
+              deleteUserData: auth_usecases.DeleteUserData(
+                authRepository: authRepository,
+                deleteAllNotes: deleteAllNotes,
+              ),
             )..add(CheckAuthStatus()), // Check auth status when app starts
           ),
           BlocProvider(

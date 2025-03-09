@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/auth_params.dart';
+import '../../domain/usecases/delete_user_data.dart';
 import '../../domain/usecases/reset_password.dart';
 import '../../domain/usecases/sign_in_anonymously.dart';
 import '../../domain/usecases/sign_in_with_apple.dart';
@@ -23,6 +24,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInAnonymously _signInAnonymously;
   final SignOut _signOut;
   final ResetPassword _resetPassword;
+  final DeleteUserData _deleteUserData;
   StreamSubscription<User?>? _authStateSubscription;
 
   AuthBloc({
@@ -34,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SignInAnonymously signInAnonymously,
     required SignOut signOut,
     required ResetPassword resetPassword,
+    required DeleteUserData deleteUserData,
   })  : _authRepository = authRepository,
         _signInWithEmail = signInWithEmail,
         _signUpWithEmail = signUpWithEmail,
@@ -42,6 +45,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _signInAnonymously = signInAnonymously,
         _signOut = signOut,
         _resetPassword = resetPassword,
+        _deleteUserData = deleteUserData,
         super(AuthInitial()) {
     // Register event handlers
     on<CheckAuthStatus>(_onCheckAuthStatus);
@@ -52,6 +56,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInAnonymouslyRequested>(_onSignInAnonymouslyRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
+    on<DeleteAccountRequested>(_onDeleteAccountRequested);
 
     // Subscribe to auth state changes when bloc is created
     _subscribeToAuthChanges();
@@ -214,6 +219,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await _resetPassword(EmailOnlyParams(email: event.email));
       emit(PasswordResetEmailSent(state.data.copyWith(email: event.email)));
+    } catch (e) {
+      emit(AuthError(state.data, e.toString()));
+    }
+  }
+
+  // Handle account deletion request
+  Future<void> _onDeleteAccountRequested(
+    DeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading(state.data));
+
+    try {
+      await _deleteUserData(const NoParams());
+      // Preserve the email for convenience on next login
+      final lastEmail = state.data.email;
+      emit(AccountDeleted(AuthData(email: lastEmail)));
     } catch (e) {
       emit(AuthError(state.data, e.toString()));
     }
