@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mocktail/mocktail.dart';
+import 'dart:async';
 import 'package:jumblebook/features/notes/domain/entities/note.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_bloc.dart';
 import 'package:jumblebook/features/notes/presentation/bloc/notes_event.dart';
@@ -10,9 +11,29 @@ import 'package:jumblebook/features/notes/presentation/pages/notes_page.dart';
 import 'package:jumblebook/features/notes/presentation/widgets/notes_list.dart';
 import 'package:jumblebook/features/notes/presentation/widgets/note_view.dart';
 import 'package:jumblebook/features/authentication/domain/entities/user.dart';
+import 'package:jumblebook/features/authentication/presentation/bloc/auth_bloc.dart';
+import 'package:jumblebook/features/authentication/presentation/bloc/auth_state.dart';
+import 'package:jumblebook/features/authentication/presentation/bloc/auth_data.dart';
 
 // Mock classes
 class MockNotesBloc extends Mock implements NotesBloc {}
+
+class MockAuthBloc extends Mock implements AuthBloc {
+  final _controller = StreamController<AuthState>.broadcast();
+
+  @override
+  Stream<AuthState> get stream => _controller.stream;
+
+  @override
+  Future<void> close() async {
+    await _controller.close();
+  }
+
+  @override
+  void emit(AuthState state) {
+    _controller.add(state);
+  }
+}
 
 class MockBlocStream extends Mock implements Stream<NotesState> {}
 
@@ -20,6 +41,7 @@ class MockNavigatorObserver extends Mock implements NavigatorObserver {}
 
 void main() {
   late MockNotesBloc mockNotesBloc;
+  late MockAuthBloc mockAuthBloc;
   late MockBlocStream mockStream;
   final testUserId = 'test-user-id';
   final testUser = User(
@@ -53,6 +75,7 @@ void main() {
 
   setUp(() {
     mockNotesBloc = MockNotesBloc();
+    mockAuthBloc = MockAuthBloc();
     mockStream = MockBlocStream();
 
     // Setup default behaviors
@@ -61,6 +84,11 @@ void main() {
     when(() => mockStream.listen(any())).thenAnswer(
       (invocation) => Stream<NotesState>.empty().listen((event) {}),
     );
+
+    // Setup AuthBloc default behavior
+    final authState = Authenticated(AuthData(user: testUser));
+    when(() => mockAuthBloc.state).thenReturn(authState);
+    mockAuthBloc.emit(authState);
 
     // Mock event handlers
     when(() => mockNotesBloc.add(any(that: isA<NotesEvent>())))
@@ -73,8 +101,11 @@ void main() {
   Widget createWidgetUnderTest() {
     return MaterialApp(
       builder: (context, child) {
-        return BlocProvider<NotesBloc>.value(
-          value: mockNotesBloc,
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<NotesBloc>.value(value: mockNotesBloc),
+            BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+          ],
           child: child!,
         );
       },
@@ -151,8 +182,13 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         navigatorObservers: [mockObserver],
         builder: (context, child) {
-          return BlocProvider<NotesBloc>.value(
-              value: mockNotesBloc, child: child!);
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<NotesBloc>.value(value: mockNotesBloc),
+              BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+            ],
+            child: child!,
+          );
         },
         home: NotesPage(currentUser: testUser),
       ));

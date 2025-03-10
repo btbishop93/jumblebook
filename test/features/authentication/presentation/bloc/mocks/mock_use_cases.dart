@@ -6,6 +6,7 @@ import 'package:jumblebook/features/authentication/domain/usecases/sign_in_with_
 import 'package:jumblebook/features/authentication/domain/usecases/sign_in_anonymously.dart';
 import 'package:jumblebook/features/authentication/domain/usecases/sign_out.dart';
 import 'package:jumblebook/features/authentication/domain/usecases/reset_password.dart';
+import 'package:jumblebook/features/authentication/domain/usecases/delete_user_data.dart';
 
 class MockSignInWithEmail extends Mock implements SignInWithEmail {}
 
@@ -20,3 +21,5 @@ class MockSignInAnonymously extends Mock implements SignInAnonymously {}
 class MockSignOut extends Mock implements SignOut {}
 
 class MockResetPassword extends Mock implements ResetPassword {}
+
+class MockDeleteUserData extends Mock implements DeleteUserData {}

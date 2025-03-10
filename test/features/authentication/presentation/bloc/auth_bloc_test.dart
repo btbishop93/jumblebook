@@ -43,6 +43,7 @@ void main() {
   late MockSignInAnonymously signInAnonymously;
   late MockSignOut signOut;
   late MockResetPassword resetPassword;
+  late MockDeleteUserData deleteUserData;
 
   // Test user fixture for reuse across tests
   final testUser = User(
@@ -71,6 +72,7 @@ void main() {
     signInAnonymously = MockSignInAnonymously();
     signOut = MockSignOut();
     resetPassword = MockResetPassword();
+    deleteUserData = MockDeleteUserData();
 
     // Set up default stub behavior
     when(() => authRepository.authStateChanges)
@@ -87,6 +89,7 @@ void main() {
       signInAnonymously: signInAnonymously,
       signOut: signOut,
       resetPassword: resetPassword,
+      deleteUserData: deleteUserData,
     );
   });
 
