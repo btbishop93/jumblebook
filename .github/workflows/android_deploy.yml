@@ -202,9 +202,12 @@ jobs:
             
           # Create a new release in the internal testing track
           echo "Creating release in internal testing track..."
-          google-play releases create \
-            --bundle "$APP_FILE" \
+          google-play tracks update \
             --track internal \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --release-name "$(cat VERSION)" \
             --release-notes "en-US=Automated release from GitHub Actions" \
+            --in-app-update-priority 0 \
+            --status completed \
+            --rollout 1.0 \
             --log-stream stderr
