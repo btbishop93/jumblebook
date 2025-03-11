@@ -41,7 +41,10 @@ jobs:
           flutter analyze --fatal-infos
 
       - name: Install the CodeMagic CLI
-        run: pip install codemagic-cli-tools
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade codemagic-cli-tools
+          google-play --version
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -66,7 +69,43 @@ jobs:
 
       - name: Set up Play Store Service Account
         run: |
-          echo $PLAY_STORE_SERVICE_ACCOUNT_JSON > play-store-service-account.json
+          # Create a dedicated directory for credentials
+          CREDENTIALS_DIR="$GITHUB_WORKSPACE/.credentials"
+          mkdir -p "$CREDENTIALS_DIR"
+          chmod 700 "$CREDENTIALS_DIR"
+          
+          # Parse and validate JSON using Python (same way the CLI tools do it)
+          python3 - <<EOF
+          import json
+          import os
+          import sys
+          
+          try:
+              # Parse JSON to ensure it's valid and properly formatted
+              json_str = os.environ['PLAY_STORE_SERVICE_ACCOUNT_JSON']
+              credentials = json.loads(json_str)
+              
+              # Verify required fields
+              required_fields = ['type', 'project_id', 'private_key', 'client_email']
+              missing = [f for f in required_fields if f not in credentials]
+              if missing:
+                  print(f"Error: Missing required fields: {missing}")
+                  sys.exit(1)
+              
+              # Write the properly formatted JSON
+              with open("$CREDENTIALS_DIR/service-account.json", 'w') as f:
+                  json.dump(credentials, f)
+              
+              print("Service account JSON validated and written successfully")
+          except json.JSONDecodeError as e:
+              print(f"Error: Invalid JSON format - {str(e)}")
+              sys.exit(1)
+          except Exception as e:
+              print(f"Error: {str(e)}")
+              sys.exit(1)
+          EOF
+          
+          chmod 600 "$CREDENTIALS_DIR/service-account.json"
 
       - name: Update Version
         run: |
@@ -183,43 +222,11 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # Create a temporary directory
-          TEMP_DIR=$(mktemp -d)
-          chmod 700 "$TEMP_DIR"
-          
-          # Debug: Print length and attempt to fix JSON
-          echo "Length of original JSON: ${#PLAY_STORE_SERVICE_ACCOUNT_JSON}"
-          
-          # Clean and validate JSON
-          echo "Cleaning and validating JSON..."
-          python3 -c "import json,os,sys;s=os.environ['PLAY_STORE_SERVICE_ACCOUNT_JSON'].strip();print('First chars:',s[:50]);d=json.loads(s);r=['type','project_id','private_key','client_email'];m=[k for k in r if k not in d];print('Missing:',m) if m else (json.dump(d,open('$TEMP_DIR/service-account.json','w')) or print('Valid keys:',list(d.keys())));sys.exit(1 if m else 0)" || exit 1
-          
-          chmod 600 "$TEMP_DIR/service-account.json"
-          
-          echo "File created at: $TEMP_DIR/service-account.json"
-          echo "File size: $(stat --format=%s "$TEMP_DIR/service-account.json") bytes"
-          
-          # Extract package name
-          PACKAGE_NAME=$(grep 'applicationId' android/app/build.gradle | awk '{print $2}' | tr -d '"')
-          echo "Package name: $PACKAGE_NAME"
-          
-          # Final verification
-          echo "Final JSON verification..."
-          if ! jq -r '.type' "$TEMP_DIR/service-account.json" > /dev/null 2>&1; then
-            echo "Error: Final JSON validation failed"
-            echo "First few lines of content:"
-            head -n 3 "$TEMP_DIR/service-account.json"
-            exit 1
-          fi
-          
           # Upload to Play Store
           echo "Uploading to Play Store..."
           set -x  # Enable command printing
           google-play bundles upload \
             --bundle "$APP_FILE" \
-            --credentials "$TEMP_DIR/service-account.json" \
+            --credentials "$GITHUB_WORKSPACE/.credentials/service-account.json" \
             --track beta \
             --log-stream stderr
-          
-          # Clean up
-          rm -rf "$TEMP_DIR"
