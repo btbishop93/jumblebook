@@ -187,32 +187,27 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           chmod 700 "$TEMP_DIR"
           
-          # Debug: Print length and structure
-          echo "Length of PLAY_STORE_SERVICE_ACCOUNT_JSON: ${#PLAY_STORE_SERVICE_ACCOUNT_JSON}"
-          echo "JSON Structure (first line of each key):"
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | grep -o '"[^"]*":' | sort -u
+          # Debug: Print length and attempt to fix JSON
+          echo "Length of original JSON: ${#PLAY_STORE_SERVICE_ACCOUNT_JSON}"
           
-          # Create a clean JSON file
-          echo "Creating service account JSON file..."
-          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$TEMP_DIR/service-account.json"
+          # Clean and validate JSON
+          echo "Cleaning and validating JSON..."
+          python3 -c "import json,os,sys;s=os.environ['PLAY_STORE_SERVICE_ACCOUNT_JSON'].strip();print('First chars:',s[:50]);d=json.loads(s);r=['type','project_id','private_key','client_email'];m=[k for k in r if k not in d];print('Missing:',m) if m else (json.dump(d,open('$TEMP_DIR/service-account.json','w')) or print('Valid keys:',list(d.keys())));sys.exit(1 if m else 0)" || exit 1
+          
           chmod 600 "$TEMP_DIR/service-account.json"
           
           echo "File created at: $TEMP_DIR/service-account.json"
           echo "File size: $(stat --format=%s "$TEMP_DIR/service-account.json") bytes"
           
-          # Validate JSON structure
-          echo "Validating JSON structure..."
-          python3 -c "import json,sys;f=open('$TEMP_DIR/service-account.json');d=json.load(f);k=['type','project_id','private_key','client_email'];m=[x for x in k if x not in d];print('Missing:',m) if m else print('Valid keys:',list(d.keys()));sys.exit(1 if m else 0)"
-          
           # Extract package name
           PACKAGE_NAME=$(grep 'applicationId' android/app/build.gradle | awk '{print $2}' | tr -d '"')
           echo "Package name: $PACKAGE_NAME"
           
-          # Verify JSON format with jq
-          echo "Verifying JSON format..."
+          # Final verification
+          echo "Final JSON verification..."
           if ! jq -r '.type' "$TEMP_DIR/service-account.json" > /dev/null 2>&1; then
-            echo "Error: Not a valid service account JSON"
-            echo "Content preview (first 3 lines):"
+            echo "Error: Final JSON validation failed"
+            echo "First few lines of content:"
             head -n 3 "$TEMP_DIR/service-account.json"
             exit 1
           fi
