@@ -61,9 +61,10 @@ android {
         versionName flutterVersionName
         multiDexEnabled true
         
-        // Disable advertising ID
+        // Disable advertising ID and set application name
         manifestPlaceholders = [
-            ADVERTISING_ID_ENABLED: "false"
+            ADVERTISING_ID_ENABLED: "false",
+            applicationName: "androidx.startup.InitializationProvider"
         ]
     }
 
