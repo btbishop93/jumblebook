@@ -67,46 +67,6 @@ jobs:
         run: |
           echo $ANDROID_GOOGLE_SERVICES_JSON | base64 -d > android/app/google-services.json
 
-      - name: Set up Play Store Service Account
-        run: |
-          # Create a dedicated directory for credentials
-          CREDENTIALS_DIR="$GITHUB_WORKSPACE/.credentials"
-          mkdir -p "$CREDENTIALS_DIR"
-          chmod 700 "$CREDENTIALS_DIR"
-          
-          # Parse and validate JSON using Python (same way the CLI tools do it)
-          python3 - <<EOF
-          import json
-          import os
-          import sys
-          
-          try:
-              # Parse JSON to ensure it's valid and properly formatted
-              json_str = os.environ['PLAY_STORE_SERVICE_ACCOUNT_JSON']
-              credentials = json.loads(json_str)
-              
-              # Verify required fields
-              required_fields = ['type', 'project_id', 'private_key', 'client_email']
-              missing = [f for f in required_fields if f not in credentials]
-              if missing:
-                  print(f"Error: Missing required fields: {missing}")
-                  sys.exit(1)
-              
-              # Write the properly formatted JSON
-              with open("$CREDENTIALS_DIR/service-account.json", 'w') as f:
-                  json.dump(credentials, f)
-              
-              print("Service account JSON validated and written successfully")
-          except json.JSONDecodeError as e:
-              print(f"Error: Invalid JSON format - {str(e)}")
-              sys.exit(1)
-          except Exception as e:
-              print(f"Error: {str(e)}")
-              sys.exit(1)
-          EOF
-          
-          chmod 600 "$CREDENTIALS_DIR/service-account.json"
-
       - name: Update Version
         run: |
           set -x  # Enable debug mode to see each command
@@ -222,11 +182,11 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # Upload to Play Store
+          # Upload to Play Store using direct JSON
           echo "Uploading to Play Store..."
           set -x  # Enable command printing
           google-play bundles upload \
             --bundle "$APP_FILE" \
-            --credentials "$GITHUB_WORKSPACE/.credentials/service-account.json" \
+            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
             --track beta \
             --log-stream stderr
