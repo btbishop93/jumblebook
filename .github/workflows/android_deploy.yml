@@ -45,6 +45,7 @@ jobs:
           pip install --upgrade pip
           pip install --upgrade codemagic-cli-tools
           google-play --version
+          sudo apt-get update && sudo apt-get install -y jq
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -190,32 +191,47 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # Upload to Play Store using direct JSON
-          echo "Uploading to Play Store..."
-          set -x  # Enable command printing
+          # First, verify the bundle information
+          echo "Verifying bundle information..."
+          BUNDLE_INFO=$(google-play bundles info \
+            --bundle "$APP_FILE" \
+            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --json)
+            
+          # Extract key information
+          VERSION_CODE=$(echo "$BUNDLE_INFO" | jq -r '.version_code')
+          PACKAGE_NAME=$(echo "$BUNDLE_INFO" | jq -r '.package_name')
+          
+          echo "Bundle Info:"
+          echo "- Package Name: $PACKAGE_NAME"
+          echo "- Version Code: $VERSION_CODE"
           
           # Upload the bundle
+          echo "Uploading bundle to Play Store..."
           google-play bundles upload \
             --bundle "$APP_FILE" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
             --log-stream stderr
             
+          # Get the latest version code from the internal track
+          echo "Getting latest version from internal track..."
+          TRACK_INFO=$(google-play tracks get \
+            --package-name "$PACKAGE_NAME" \
+            --track internal \
+            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --json)
+            
           # Create a new release in the internal testing track
           echo "Creating release in internal testing track..."
-          
-          # Get the version code from the bundle info output
-          VERSION_CODE=$(google-play bundles info \
-            --bundle "$APP_FILE" \
-            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --json | jq -r '.version_code')
-            
           google-play tracks set-release \
+            --package-name "$PACKAGE_NAME" \
             --track internal \
-            --package-name "xyz.bsquared.jumblebook" \
+            --version-code "$VERSION_CODE" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
             --name "$(cat VERSION)" \
-            --version-code "$VERSION_CODE" \
             --release-notes '[{"language": "en-US", "text": "Automated release from GitHub Actions"}]' \
             --status completed \
             --rollout 1.0 \
             --log-stream stderr
+            
+          echo "Release process completed. Please check Play Console in a few minutes."
