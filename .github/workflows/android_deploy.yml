@@ -187,27 +187,40 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           chmod 700 "$TEMP_DIR"
           
-          # Write service account JSON directly
+          # Debug: Print length of the JSON content
+          echo "Length of PLAY_STORE_SERVICE_ACCOUNT_JSON: ${#PLAY_STORE_SERVICE_ACCOUNT_JSON}"
+          
+          # Debug: Show first few characters (safely)
+          echo "First 10 characters of JSON (should start with {):"
+          echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" | cut -c1-10
+          
+          # Write service account JSON with explicit formatting
+          echo '${PLAY_STORE_SERVICE_ACCOUNT_JSON}' | sed 's/^/DEBUG: /' >&2
           echo "$PLAY_STORE_SERVICE_ACCOUNT_JSON" > "$TEMP_DIR/service-account.json"
           chmod 600 "$TEMP_DIR/service-account.json"
           
-          # Debug: Check file content format (showing first line safely)
-          echo "First line of service account JSON (should start with {):"
-          head -n 1 "$TEMP_DIR/service-account.json"
+          echo "File created at: $TEMP_DIR/service-account.json"
+          echo "File size: $(stat -f%z "$TEMP_DIR/service-account.json") bytes"
           
-          # Debug: Verify JSON validity
-          if ! jq '.' "$TEMP_DIR/service-account.json" > /dev/null 2>&1; then
-            echo "Error: Invalid JSON detected. Please verify the secret is a raw JSON file content."
-            echo "Hint: The secret should start with { and end with }, containing no extra encoding."
-            exit 1
-          fi
+          # Try to parse with Python (more detailed error messages)
+          echo "Validating JSON with Python..."
+          python3 -c "import json, sys; f=open('$TEMP_DIR/service-account.json'); content=f.read(); print('Content starts with:', content[:50]); json.loads(content); print('JSON is valid')" || { echo "JSON validation failed"; exit 1; }
           
           # Extract package name
           PACKAGE_NAME=$(grep 'applicationId' android/app/build.gradle | awk '{print $2}' | tr -d '"')
           echo "Package name: $PACKAGE_NAME"
           
+          # Try parsing with jq for additional validation
+          echo "Validating with jq..."
+          if ! jq . "$TEMP_DIR/service-account.json" > /dev/null 2>&1; then
+            echo "Error: jq validation failed"
+            echo "File content type: $(file "$TEMP_DIR/service-account.json")"
+            exit 1
+          fi
+          
           # Upload to Play Store
           echo "Uploading to Play Store..."
+          set -x  # Enable command printing
           google-play bundles upload \
             --bundle "$APP_FILE" \
             --credentials "$TEMP_DIR/service-account.json" \
