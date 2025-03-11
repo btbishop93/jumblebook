@@ -202,11 +202,20 @@ jobs:
             
           # Create a new release in the internal testing track
           echo "Creating release in internal testing track..."
+          
+          # Get the version code from the bundle info output
+          VERSION_CODE=$(google-play bundles info \
+            --bundle "$APP_FILE" \
+            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --json | jq -r '.version_code')
+            
           google-play tracks set-release \
             --track internal \
+            --package-name "xyz.bsquared.jumblebook" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
             --name "$(cat VERSION)" \
-            --release-notes "en-US=Automated release from GitHub Actions" \
+            --version-code "$VERSION_CODE" \
+            --release-notes '[{"language": "en-US", "text": "Automated release from GitHub Actions"}]' \
             --status completed \
             --rollout 1.0 \
             --log-stream stderr
