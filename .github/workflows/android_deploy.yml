@@ -199,10 +199,12 @@ jobs:
             --track internal \
             --release-name "$(cat VERSION)" \
             --release-notes '[{"language": "en-US", "text": "Automated release from GitHub Actions"}]' \
+            --status draft \
             --json \
             --log-stream stderr)
             
           echo "Upload response:"
           echo "$UPLOAD_OUTPUT"
           
-          echo "Release process completed. Please check Play Console in a few minutes."
+          echo "Release process completed. The release has been created as a draft in the Play Console."
+          echo "Please go to the Play Console to review and submit the release for review."
