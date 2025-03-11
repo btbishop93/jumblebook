@@ -179,7 +179,7 @@ jobs:
           
           flutter build appbundle --release --build-number=$buildNumber --build-name=$buildName
 
-      - name: Upload to Play Store
+      - name: Upload and Release to Play Store
         run: |
           APP_FILE="build/app/outputs/bundle/release/app-release.aab"
           
@@ -193,7 +193,18 @@ jobs:
           # Upload to Play Store using direct JSON
           echo "Uploading to Play Store..."
           set -x  # Enable command printing
+          
+          # Upload the bundle
           google-play bundles upload \
             --bundle "$APP_FILE" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --log-stream stderr
+            
+          # Create a new release in the internal testing track
+          echo "Creating release in internal testing track..."
+          google-play releases create \
+            --bundle "$APP_FILE" \
+            --track internal \
+            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
+            --release-notes "en-US=Automated release from GitHub Actions" \
             --log-stream stderr
