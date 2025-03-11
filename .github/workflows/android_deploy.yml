@@ -191,47 +191,18 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # First, verify the bundle information
-          echo "Verifying bundle information..."
-          BUNDLE_INFO=$(google-play bundles info \
-            --bundle "$APP_FILE" \
-            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --json)
-            
-          # Extract key information
-          VERSION_CODE=$(echo "$BUNDLE_INFO" | jq -r '.version_code')
-          PACKAGE_NAME=$(echo "$BUNDLE_INFO" | jq -r '.package_name')
-          
-          echo "Bundle Info:"
-          echo "- Package Name: $PACKAGE_NAME"
-          echo "- Version Code: $VERSION_CODE"
-          
-          # Upload the bundle
+          # Upload the bundle and capture the output
           echo "Uploading bundle to Play Store..."
-          google-play bundles upload \
+          UPLOAD_OUTPUT=$(google-play bundles publish \
             --bundle "$APP_FILE" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --log-stream stderr
-            
-          # Get the latest version code from the internal track
-          echo "Getting latest version from internal track..."
-          TRACK_INFO=$(google-play tracks get \
-            --package-name "$PACKAGE_NAME" \
             --track internal \
-            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --json)
-            
-          # Create a new release in the internal testing track
-          echo "Creating release in internal testing track..."
-          google-play tracks set-release \
-            --package-name "$PACKAGE_NAME" \
-            --track internal \
-            --version-code "$VERSION_CODE" \
-            --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --name "$(cat VERSION)" \
+            --release-name "$(cat VERSION)" \
             --release-notes '[{"language": "en-US", "text": "Automated release from GitHub Actions"}]' \
-            --status completed \
-            --rollout 1.0 \
-            --log-stream stderr
+            --json \
+            --log-stream stderr)
             
+          echo "Upload response:"
+          echo "$UPLOAD_OUTPUT"
+          
           echo "Release process completed. Please check Play Console in a few minutes."
