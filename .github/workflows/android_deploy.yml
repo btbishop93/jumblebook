@@ -17,11 +17,10 @@ jobs:
   android_deployment:
     runs-on: ubuntu-latest
     env:
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}  # For building/signing the bundle
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      ANDROID_KEYSTORE_UPLOAD: ${{ secrets.ANDROID_KEYSTORE_UPLOAD }}  # For Play Store upload verification
       PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
       ANDROID_GOOGLE_SERVICES_JSON: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON }}
 
@@ -53,7 +52,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android build keystore
+      - name: Setup Android keystore
         run: |
           echo $ANDROID_KEYSTORE_BASE64 | base64 -d > android/app/upload-keystore.jks
           
@@ -172,12 +171,6 @@ jobs:
           
           flutter build appbundle --release --build-number=$buildNumber --build-name=$buildName
 
-      - name: Setup upload keystore
-        run: |
-          mkdir -p $HOME/.upload-certs
-          echo $ANDROID_KEYSTORE_UPLOAD | base64 -d > $HOME/.upload-certs/upload-key.jks
-          chmod 600 $HOME/.upload-certs/upload-key.jks
-
       - name: Upload to Play Store
         run: |
           APP_FILE="build/app/outputs/bundle/release/app-release.aab"
@@ -189,19 +182,7 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
-          # Re-sign the AAB with the upload keystore
-          echo "Re-signing AAB with upload keystore..."
-          jarsigner -verbose \
-            -keystore $HOME/.upload-certs/upload-key.jks \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
-            -keypass "$ANDROID_KEY_PASSWORD" \
-            -signedjar "$APP_FILE.signed" \
-            "$APP_FILE" \
-            "upload"
-            
-          # Move the signed AAB back to the original location
-          mv "$APP_FILE.signed" "$APP_FILE"
-          
+          # Upload to Play Store using direct JSON
           echo "Uploading to Play Store..."
           set -x  # Enable command printing
           google-play bundles upload \
