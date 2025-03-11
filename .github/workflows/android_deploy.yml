@@ -189,10 +189,22 @@ jobs:
           
           echo "Found AAB file at: $APP_FILE"
           
+          # Re-sign the AAB with the upload keystore
+          echo "Re-signing AAB with upload keystore..."
+          jarsigner -verbose \
+            -keystore $HOME/.upload-certs/upload-key.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$ANDROID_KEY_PASSWORD" \
+            -signedjar "$APP_FILE.signed" \
+            "$APP_FILE" \
+            "upload"
+            
+          # Move the signed AAB back to the original location
+          mv "$APP_FILE.signed" "$APP_FILE"
+          
           echo "Uploading to Play Store..."
           set -x  # Enable command printing
           google-play bundles upload \
             --bundle "$APP_FILE" \
             --credentials "$PLAY_STORE_SERVICE_ACCOUNT_JSON" \
-            --key $HOME/.upload-certs/upload-key.jks \
             --log-stream stderr
