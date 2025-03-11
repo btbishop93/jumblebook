@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/note_model.dart';
 
 abstract class NotesRemoteDataSource {
@@ -69,7 +70,7 @@ class FirebaseNotesDataSource implements NotesRemoteDataSource {
     } catch (e) {
       // Log the error but don't throw it
       // This allows the account deletion to proceed even if note deletion fails
-      print('Error deleting notes: $e');
+      debugPrint('Error deleting notes: $e');
     }
   }
 
