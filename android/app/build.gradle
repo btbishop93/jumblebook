@@ -60,10 +60,6 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
-        
-        manifestPlaceholders = [
-            ADVERTISING_ID_ENABLED: false
-        ]
     }
 
     signingConfigs {
@@ -80,10 +76,6 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt')
-            
-            manifestPlaceholders = [
-                ADVERTISING_ID_ENABLED: false
-            ]
         }
         debug {
             signingConfig signingConfigs.debug
