@@ -199,7 +199,6 @@ jobs:
             --track internal \
             --release-name "$(cat VERSION)" \
             --release-notes '[{"language": "en-US", "text": "Automated release from GitHub Actions"}]' \
-            --status draft \
             --json \
             --log-stream stderr)
             
