@@ -54,14 +54,22 @@ jobs:
 
       - name: Setup Android keystore
         run: |
-          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > android/app/upload-keystore.jks
+          mkdir -p $GITHUB_WORKSPACE/keystore
+          echo $ANDROID_KEYSTORE_BASE64 | base64 -d > $GITHUB_WORKSPACE/keystore/upload-keystore.jks
+          # Verify keystore file was created
+          if [ ! -f "$GITHUB_WORKSPACE/keystore/upload-keystore.jks" ]; then
+            echo "Error: Keystore file was not created"
+            exit 1
+          fi
+          # List keystore contents to verify the alias
+          keytool -list -v -keystore $GITHUB_WORKSPACE/keystore/upload-keystore.jks -storepass $ANDROID_KEYSTORE_PASSWORD || echo "Failed to read keystore"
           
       - name: Setup key.properties
         run: |
           echo "storePassword=$ANDROID_KEYSTORE_PASSWORD" > android/key.properties
           echo "keyPassword=$ANDROID_KEY_PASSWORD" >> android/key.properties
           echo "keyAlias=$ANDROID_KEY_ALIAS" >> android/key.properties
-          echo "storeFile=upload-keystore.jks" >> android/key.properties
+          echo "storeFile=$GITHUB_WORKSPACE/keystore/upload-keystore.jks" >> android/key.properties
 
       - name: Set up Google Services JSON
         run: |
