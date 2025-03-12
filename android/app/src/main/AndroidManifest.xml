@@ -9,7 +9,7 @@
          FlutterApplication and put your custom class here. -->
     <application
             android:name="${applicationName}"
-            android:label="jumblebook"
+            android:label="Jumblebook"
             android:icon="@mipmap/ic_launcher">
         <activity
                 android:name=".MainActivity"
