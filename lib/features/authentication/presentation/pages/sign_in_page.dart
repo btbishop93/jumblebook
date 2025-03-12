@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:io' show Platform;
 import '../../domain/entities/form_data.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -66,20 +67,22 @@ class SignInPage extends StatelessWidget {
                         },
                       ),
                       const SizedBox(height: 16),
-                      SignInButton(
-                        text: 'Sign in with Apple',
-                        icon: Icon(
-                          FontAwesomeIcons.apple,
-                          size: 24,
-                          color: theme.textTheme.bodyMedium?.color,
+                      if (!Platform.isAndroid) ...[
+                        SignInButton(
+                          text: 'Sign in with Apple',
+                          icon: Icon(
+                            FontAwesomeIcons.apple,
+                            size: 24,
+                            color: theme.textTheme.bodyMedium?.color,
+                          ),
+                          onPressed: () {
+                            context
+                                .read<AuthBloc>()
+                                .add(SignInWithAppleRequested());
+                          },
                         ),
-                        onPressed: () {
-                          context
-                              .read<AuthBloc>()
-                              .add(SignInWithAppleRequested());
-                        },
-                      ),
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
+                      ],
                       // Divider
                       Row(
                         children: [
